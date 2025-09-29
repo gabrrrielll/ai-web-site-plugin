@@ -212,7 +212,7 @@ class AI_Web_Site_Admin
         }
 
         // Redirect back with success message
-        wp_redirect(add_query_arg('message', 'options_saved', admin_url('options-general.php?page=ai-web-site')));
+        wp_redirect(add_query_arg('message', 'options_saved', admin_url('options-general.php?page=ai-web-site-plugin')));
         exit;
     }
 
@@ -223,7 +223,7 @@ class AI_Web_Site_Admin
     {
         // Simple log to see if this method is called at all
         error_log('AI-Web-Site: debug_admin_post method called');
-        
+
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('ADMIN', 'ADMIN_POST_DEBUG', 'admin_post hook triggered', array(
             'action' => isset($_POST['action']) ? $_POST['action'] : 'not_set',
@@ -271,7 +271,7 @@ class AI_Web_Site_Admin
         }
 
         // Redirect back with result message
-        wp_redirect(add_query_arg('message', $message, admin_url('options-general.php?page=ai-web-site')));
+        wp_redirect(add_query_arg('message', $message, admin_url('options-general.php?page=ai-web-site-plugin')));
         exit;
     }
 
