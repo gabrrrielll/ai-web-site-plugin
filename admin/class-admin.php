@@ -221,6 +221,9 @@ class AI_Web_Site_Admin
      */
     public function debug_admin_post()
     {
+        // Simple log to see if this method is called at all
+        error_log('AI-Web-Site: debug_admin_post method called');
+        
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('ADMIN', 'ADMIN_POST_DEBUG', 'admin_post hook triggered', array(
             'action' => isset($_POST['action']) ? $_POST['action'] : 'not_set',
