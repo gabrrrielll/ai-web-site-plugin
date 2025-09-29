@@ -50,8 +50,6 @@ class AI_Web_Site
         // Add REST API endpoints
         add_action('rest_api_init', array($this, 'register_rest_routes'));
 
-        // Add admin menu
-        add_action('admin_menu', array($this, 'add_admin_menu'));
 
         // Handle AJAX requests
         add_action('wp_ajax_create_subdomain', array($this, 'handle_create_subdomain'));
@@ -162,28 +160,6 @@ class AI_Web_Site
         ));
     }
 
-    /**
-     * Add admin menu
-     */
-    public function add_admin_menu()
-    {
-        add_options_page(
-            __('AI Web Site Manager', 'ai-web-site'),
-            __('AI Web Site', 'ai-web-site'),
-            'manage_options',
-            'ai-web-site',
-            array($this, 'admin_page')
-        );
-    }
-
-    /**
-     * Admin page callback
-     */
-    public function admin_page()
-    {
-        // Include admin template
-        include AI_WEB_SITE_PLUGIN_DIR . 'admin/admin-page.php';
-    }
 
     /**
      * Handle create subdomain AJAX request
