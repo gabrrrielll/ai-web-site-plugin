@@ -55,6 +55,12 @@ class AI_Web_Site_Admin
         // Handle form submissions
         add_action('admin_post_save_ai_web_site_options', array($this, 'save_options'));
         add_action('admin_post_test_cpanel_connection', array($this, 'test_connection'));
+        
+        // Log hook registration
+        $logger->info('ADMIN', 'FORM_HOOKS_REGISTERED', 'Form hooks registered', array(
+            'save_hook' => 'admin_post_save_ai_web_site_options',
+            'test_hook' => 'admin_post_test_cpanel_connection'
+        ));
 
         // Also add for non-logged in users (if needed)
         add_action('wp_ajax_save_ai_web_site_options', array($this, 'save_options'));
