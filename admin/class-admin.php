@@ -49,6 +49,9 @@ class AI_Web_Site_Admin
      */
     private function init_hooks()
     {
+        // Get logger instance first
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        
         // Add admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
 
@@ -72,7 +75,6 @@ class AI_Web_Site_Admin
         add_action('admin_menu', array($this, 'add_admin_menu'));
 
         // Log hook registration
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('ADMIN', 'HOOKS_REGISTERED', 'Admin hooks registered successfully');
     }
 
