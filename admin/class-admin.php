@@ -51,14 +51,14 @@ class AI_Web_Site_Admin
     {
         // Get logger instance first
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        
+
         // Add admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
 
         // Handle form submissions
         add_action('admin_post_save_ai_web_site_options', array($this, 'save_options'));
         add_action('admin_post_test_cpanel_connection', array($this, 'test_connection'));
-        
+
         // Log hook registration
         $logger->info('ADMIN', 'FORM_HOOKS_REGISTERED', 'Form hooks registered', array(
             'save_hook' => 'admin_post_save_ai_web_site_options',

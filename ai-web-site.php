@@ -71,7 +71,6 @@ class AI_Web_Site_Plugin
 
         // Add global hooks for debugging
         add_action('admin_init', array($this, 'debug_admin_init'));
-        add_action('admin_post', array($this, 'debug_admin_post'));
         add_action('wp_ajax_save_ai_web_site_options', array($this, 'debug_ajax_save'));
         add_action('wp_ajax_nopriv_save_ai_web_site_options', array($this, 'debug_ajax_save'));
     }
@@ -146,20 +145,6 @@ class AI_Web_Site_Plugin
         ));
     }
 
-    /**
-     * Debug admin_post hook
-     */
-    public function debug_admin_post()
-    {
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('PLUGIN', 'ADMIN_POST', 'admin_post hook triggered', array(
-            'action' => $_POST['action'] ?? 'not_set',
-            'all_post_data' => $_POST,
-            'request_method' => $_SERVER['REQUEST_METHOD'],
-            'user_id' => get_current_user_id(),
-            'user_can_manage_options' => current_user_can('manage_options')
-        ));
-    }
 
     /**
      * Debug AJAX save hook
