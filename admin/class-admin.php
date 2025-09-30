@@ -123,7 +123,7 @@ class AI_Web_Site_Admin
     public function save_options()
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        
+
         // Check nonce
         if (!wp_verify_nonce($_POST['_wpnonce'], 'ai_web_site_options')) {
             $logger->error('ADMIN', 'SAVE_OPTIONS_ERROR', 'Nonce verification failed', array('nonce_post' => $_POST['_wpnonce'] ?? 'not_set'));

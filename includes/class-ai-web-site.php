@@ -231,7 +231,7 @@ class AI_Web_Site
         // Delete from database
         $database = AI_Web_Site_Database::get_instance();
         $db_result = $database->delete_subdomain($subdomain, $domain);
-        
+
         if ($db_result) {
             $logger->info('PLUGIN', 'DB_DELETE_SUCCESS', 'Subdomain marked as inactive in database', array('subdomain' => $subdomain, 'domain' => $domain));
         } else {

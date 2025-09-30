@@ -63,7 +63,7 @@ class AI_Web_Site_CPanel_API
     public function create_subdomain($subdomain, $domain, $target_ip = null)
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        
+
         $logger->info('CPANEL_API', 'CREATE_SUBDOMAIN_START', 'Starting subdomain creation', array(
             'subdomain' => $subdomain,
             'domain' => $domain,
@@ -160,7 +160,7 @@ class AI_Web_Site_CPanel_API
         }
 
         // Prepare API URL
-        $api_url = "https://{$this->config['host']}:2083/execute/SubDomain/delsubdomain";
+        $api_url = "https://{$this->config['host']}:2083/execute/SubDomain/delete_subdomain";
 
         // Prepare parameters
         $params = array(
@@ -223,9 +223,9 @@ class AI_Web_Site_CPanel_API
     public function test_connection()
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        
+
         $logger->info('CPANEL_API', 'TEST_CONNECTION_START', 'Starting connection test');
-        
+
         if (empty($this->config['api_token'])) {
             $logger->error('CPANEL_API', 'TEST_CONNECTION_ERROR', 'API token not configured');
             return array(
