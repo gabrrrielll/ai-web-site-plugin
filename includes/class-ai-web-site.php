@@ -203,13 +203,20 @@ class AI_Web_Site
      */
     public function handle_delete_subdomain()
     {
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('PLUGIN', 'HANDLE_DELETE_SUBDOMAIN_START', 'Starting handle_delete_subdomain AJAX request', array(
+            'post_data' => $_POST
+        ));
+
         // Check nonce
         if (!wp_verify_nonce($_POST['nonce'], 'ai_web_site_nonce')) {
+            $logger->error('PLUGIN', 'HANDLE_DELETE_SUBDOMAIN_ERROR', 'Nonce verification failed');
             wp_die('Security check failed');
         }
 
         // Check permissions
         if (!current_user_can('manage_options')) {
+            $logger->error('PLUGIN', 'HANDLE_DELETE_SUBDOMAIN_ERROR', 'Insufficient permissions');
             wp_die('Insufficient permissions');
         }
 
@@ -217,13 +224,30 @@ class AI_Web_Site
         $domain = sanitize_text_field($_POST['domain']);
 
         if (empty($subdomain) || empty($domain)) {
+            $logger->error('PLUGIN', 'HANDLE_DELETE_SUBDOMAIN_ERROR', 'Subdomain and domain are required', array('subdomain' => $subdomain, 'domain' => $domain));
             wp_send_json_error('Subdomain and domain are required');
         }
 
         // Delete from database
         $database = AI_Web_Site_Database::get_instance();
-        $database->delete_subdomain($subdomain, $domain);
+        $db_result = $database->delete_subdomain($subdomain, $domain);
+        
+        if ($db_result) {
+            $logger->info('PLUGIN', 'DB_DELETE_SUCCESS', 'Subdomain marked as inactive in database', array('subdomain' => $subdomain, 'domain' => $domain));
+        } else {
+            $logger->error('PLUGIN', 'DB_DELETE_FAILED', 'Failed to mark subdomain as inactive in database', array('subdomain' => $subdomain, 'domain' => $domain));
+        }
 
-        wp_send_json_success('Subdomain deleted successfully');
+        // Delete from cPanel using API
+        $cpanel_api = AI_Web_Site_CPanel_API::get_instance();
+        $api_result = $cpanel_api->delete_subdomain($subdomain, $domain);
+
+        if ($api_result['success']) {
+            $logger->info('PLUGIN', 'CPANEL_DELETE_SUCCESS', 'Subdomain deleted from cPanel', array('subdomain' => $subdomain, 'domain' => $domain));
+            wp_send_json_success('Subdomain deleted successfully');
+        } else {
+            $logger->error('PLUGIN', 'CPANEL_DELETE_FAILED', 'Failed to delete subdomain from cPanel', array('subdomain' => $subdomain, 'domain' => $domain, 'message' => $api_result['message']));
+            wp_send_json_error($api_result['message']);
+        }
     }
 }
