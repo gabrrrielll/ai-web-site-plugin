@@ -87,10 +87,9 @@ $subdomains = $database->get_all_subdomains();
                 
                 <p class="submit">
                     <input type="submit" class="button-primary" value="<?php _e('Save Settings', 'ai-web-site-plugin'); ?>">
-                    <input type="submit" name="test_connection" class="button-secondary" 
-                           value="<?php _e('Test Connection', 'ai-web-site-plugin'); ?>" 
-                           formaction="<?php echo admin_url('admin-post.php'); ?>">
-                    <input type="hidden" name="action" value="test_cpanel_connection" formaction="<?php echo admin_url('admin-post.php'); ?>">
+                    <button type="submit" name="action" value="test_cpanel_connection" class="button-secondary">
+                           <?php _e('Test Connection', 'ai-web-site-plugin'); ?>
+                    </button>
                 </p>
             </form>
         </div>

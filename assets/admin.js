@@ -1,15 +1,15 @@
 // Wait for DOM to be ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('AI Web Site Admin: Page loaded');
 
     // Handle settings form submission
     var settingsForms = document.querySelectorAll('form[action*="admin-post.php"]');
-    settingsForms.forEach(function(form) {
-        form.addEventListener('submit', function(e) {
+    settingsForms.forEach(function (form) {
+        form.addEventListener('submit', function (e) {
             console.log('AI Web Site Admin: Settings form submitted');
             console.log('Form action:', form.action);
             console.log('Form data:', Object.fromEntries(new FormData(form).entries())); // Log all form data
-            
+
             // Let the form submit normally
             return true;
         });
@@ -60,40 +60,40 @@ document.addEventListener('DOMContentLoaded', function() {
                         domain: domain
                     })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show success message
-                        showNotice('success', 'Subdomain created successfully: ' + subdomain + '.' + domain);
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            showNotice('success', 'Subdomain created successfully: ' + subdomain + '.' + domain);
 
-                        // Clear form
-                        if (subdomainInput) {
-                            subdomainInput.value = '';
+                            // Clear form
+                            if (subdomainInput) {
+                                subdomainInput.value = '';
+                            }
+
+                            // Reload page to show new subdomain
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            // Show error message
+                            showNotice('error', 'Error creating subdomain: ' + (data.data || 'Unknown error'));
                         }
-
-                        // Reload page to show new subdomain
-                        setTimeout(function () {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        // Show error message
-                        showNotice('error', 'Error creating subdomain: ' + (data.data || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    showNotice('error', 'Network error occurred');
-                })
-                .finally(() => {
-                    // Reset button
-                    submitBtn.value = originalText;
-                    submitBtn.disabled = false;
-                });
+                    })
+                    .catch(error => {
+                        showNotice('error', 'Network error occurred');
+                    })
+                    .finally(() => {
+                        // Reset button
+                        submitBtn.value = originalText;
+                        submitBtn.disabled = false;
+                    });
             }
         });
     }
 
     // Handle delete subdomain
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (e.target.classList.contains('delete-subdomain')) {
             e.preventDefault();
 
@@ -126,39 +126,39 @@ document.addEventListener('DOMContentLoaded', function() {
                         domain: domain
                     })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show success message
-                        showNotice('success', 'Subdomain deleted successfully');
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            showNotice('success', 'Subdomain deleted successfully');
 
-                        // Remove row from table
-                        var row = button.closest('tr');
-                        if (row) {
-                            row.style.opacity = '0';
-                            setTimeout(function() {
-                                row.remove();
-                            }, 300);
+                            // Remove row from table
+                            var row = button.closest('tr');
+                            if (row) {
+                                row.style.opacity = '0';
+                                setTimeout(function () {
+                                    row.remove();
+                                }, 300);
+                            }
+                        } else {
+                            // Show error message
+                            showNotice('error', 'Error deleting subdomain: ' + (data.data || 'Unknown error'));
                         }
-                    } else {
-                        // Show error message
-                        showNotice('error', 'Error deleting subdomain: ' + (data.data || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    showNotice('error', 'Network error occurred');
-                })
-                .finally(() => {
-                    // Reset button
-                    button.textContent = originalText;
-                    button.disabled = false;
-                });
+                    })
+                    .catch(error => {
+                        showNotice('error', 'Network error occurred');
+                    })
+                    .finally(() => {
+                        // Reset button
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    });
             }
         }
     });
 
     // Handle test connection button
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (e.target.name === 'test_connection') {
             e.preventDefault();
 
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Auto-dismiss after 5 seconds
         setTimeout(function () {
             notice.style.opacity = '0';
-            setTimeout(function() {
+            setTimeout(function () {
                 if (notice.parentNode) {
                     notice.parentNode.removeChild(notice);
                 }
