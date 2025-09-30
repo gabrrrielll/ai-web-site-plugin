@@ -81,9 +81,12 @@ class AI_Web_Site_Home_Page_Shortcode
         // Start output buffering
         ob_start();
 
+        // Output inline styles first
+        $this->output_inline_styles();
+
         // Include the template file with variables available
         $template_path = AI_WEB_SITE_PLUGIN_DIR . 'assets/home-page/home-page-template.php';
-
+        
         if (file_exists($template_path)) {
             include $template_path;
         } else {
@@ -103,9 +106,9 @@ class AI_Web_Site_Home_Page_Shortcode
     {
         // Only enqueue if shortcode is being used on the current page
         global $post;
-
+        
         if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'ai_website_builder_home')) {
-            $this->enqueue_styles();
+            $this->output_inline_styles();
         }
     }
 
@@ -116,24 +119,29 @@ class AI_Web_Site_Home_Page_Shortcode
     {
         // Enqueue on post edit screens
         if (in_array($hook, array('post.php', 'post-new.php', 'widgets.php'))) {
-            $this->enqueue_styles();
+            $this->output_inline_styles();
         }
     }
 
     /**
-     * Enqueue the CSS styles
+     * Output the CSS styles inline
      */
-    private function enqueue_styles()
+    private function output_inline_styles()
     {
+        static $styles_loaded = false;
+        
+        // Prevent loading styles multiple times
+        if ($styles_loaded) {
+            return;
+        }
+        
         $css_path = AI_WEB_SITE_PLUGIN_DIR . 'assets/home-page/home-page-styles.css';
-
+        
         if (file_exists($css_path)) {
-            wp_enqueue_style(
-                'ai-website-builder-home-styles',
-                AI_WEB_SITE_PLUGIN_URL . 'assets/home-page/home-page-styles.css',
-                array(),
-                AI_WEB_SITE_PLUGIN_VERSION
-            );
+            echo '<style type="text/css" id="ai-website-builder-home-styles">';
+            echo file_get_contents($css_path);
+            echo '</style>';
+            $styles_loaded = true;
         }
     }
 
