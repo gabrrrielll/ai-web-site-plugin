@@ -78,29 +78,53 @@ class AI_Web_Site_Database
 
         $table_name = $wpdb->prefix . 'ai_web_sites';
 
-        $result = $wpdb->insert(
-            $table_name,
-            array(
-                'user_id' => $user_id,
-                'subdomain' => $subdomain,
-                'domain' => $domain,
-                'site_config' => json_encode($site_config),
-                'status' => 'active'
-            ),
-            array(
-                '%d',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-            )
-        );
+        // Check if subdomain already exists (active or inactive)
+        $existing_subdomain = $wpdb->get_row($wpdb->prepare(
+            "SELECT id FROM {$table_name} WHERE subdomain = %s AND domain = %s",
+            $subdomain,
+            $domain
+        ));
 
-        if ($result === false) {
-            return false;
+        if ($existing_subdomain) {
+            // Update existing entry
+            $result = $wpdb->update(
+                $table_name,
+                array(
+                    'user_id' => $user_id,
+                    'site_config' => json_encode($site_config),
+                    'status' => 'active',
+                    'updated_at' => current_time('mysql')
+                ),
+                array(
+                    'id' => $existing_subdomain->id
+                ),
+                array('%d', '%s', '%s', '%s'),
+                array('%d')
+            );
+
+            return $result !== false ? $existing_subdomain->id : false;
+        } else {
+            // Insert new entry
+            $result = $wpdb->insert(
+                $table_name,
+                array(
+                    'user_id' => $user_id,
+                    'subdomain' => $subdomain,
+                    'domain' => $domain,
+                    'site_config' => json_encode($site_config),
+                    'status' => 'active'
+                ),
+                array(
+                    '%d',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                )
+            );
+
+            return $result !== false ? $wpdb->insert_id : false;
         }
-
-        return $wpdb->insert_id;
     }
 
     /**
