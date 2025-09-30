@@ -160,7 +160,7 @@ class AI_Web_Site_CPanel_API
         }
 
         // Prepare API URL
-        $api_url = "https://{$this->config['host']}:2083/execute/SubDomain/delete_subdomain";
+        $api_url = "https://{$this->config['host']}:2083/execute/SubDomain/delsubdomain";
 
         // Prepare parameters
         $params = array(
