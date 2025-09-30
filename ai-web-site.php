@@ -68,10 +68,9 @@ class AI_Web_Site_Plugin
 
         // Initialize plugin
         add_action('plugins_loaded', array($this, 'init'));
-
+        
         // Add global hooks for debugging
         add_action('admin_init', array($this, 'debug_admin_init'));
-        add_action('admin_post', array($this, 'debug_admin_post'));
         add_action('wp_ajax_save_ai_web_site_options', array($this, 'debug_ajax_save'));
         add_action('wp_ajax_nopriv_save_ai_web_site_options', array($this, 'debug_ajax_save'));
     }
@@ -85,10 +84,6 @@ class AI_Web_Site_Plugin
         AI_Web_Site::get_instance();
         AI_Web_Site_CPanel_API::get_instance();
         AI_Web_Site_Database::get_instance();
-
-        // Log before initializing admin class
-        // $logger = AI_Web_Site_Debug_Logger::get_instance();
-        // $logger->info('PLUGIN', 'INIT_ADMIN', 'Initializing admin class');
 
         AI_Web_Site_Admin::get_instance();
 

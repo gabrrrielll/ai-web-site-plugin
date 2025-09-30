@@ -122,14 +122,8 @@ class AI_Web_Site_Admin
      */
     public function save_options()
     {
-        // NEW LOG: Confirm this method is called and capture all POST data
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('ADMIN', 'SAVE_OPTIONS_ENTRY', 'Entering save_options method and capturing POST data', array(
-            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
-            'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
-            'all_post_data' => $_POST
-        ));
-
+        
         // Check nonce
         if (!wp_verify_nonce($_POST['_wpnonce'], 'ai_web_site_options')) {
             $logger->error('ADMIN', 'SAVE_OPTIONS_ERROR', 'Nonce verification failed', array('nonce_post' => $_POST['_wpnonce'] ?? 'not_set'));
@@ -142,8 +136,6 @@ class AI_Web_Site_Admin
             wp_die('Insufficient permissions');
         }
 
-        $logger->info('ADMIN', 'SAVE_OPTIONS_VALIDATION', 'Nonce and permissions check passed');
-
         // Get current options
         $options = get_option('ai_web_site_options', array());
 
@@ -151,13 +143,6 @@ class AI_Web_Site_Admin
         $options['cpanel_username'] = sanitize_text_field($_POST['cpanel_username']);
         $options['cpanel_api_token'] = sanitize_text_field($_POST['cpanel_api_token']);
         $options['main_domain'] = sanitize_text_field($_POST['main_domain']);
-
-        // Log the options before saving
-        $logger->info('ADMIN', 'SAVE_OPTIONS_BEFORE_UPDATE', 'Options before update_option', array(
-            'cpanel_username' => $options['cpanel_username'],
-            'cpanel_api_token_length_options' => strlen($options['cpanel_api_token']),
-            'main_domain' => $options['main_domain']
-        ));
 
         // Save options
         $result = update_option('ai_web_site_options', $options);
@@ -179,8 +164,8 @@ class AI_Web_Site_Admin
     public function debug_admin_post()
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('ADMIN', 'ADMIN_POST_DEBUG', 'admin_post hook triggered', array(
-            'action' => isset($_POST['action']) ? $_POST['action'] : 'not_set',
+        $logger->info('PLUGIN', 'ADMIN_POST', 'admin_post hook triggered', array(
+            'action' => $_POST['action'] ?? 'not_set',
             'all_post_data' => $_POST,
             'request_method' => $_SERVER['REQUEST_METHOD']
         ));

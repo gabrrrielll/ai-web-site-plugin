@@ -55,16 +55,6 @@ class AI_Web_Site_CPanel_API
 
         // Generate cPanel host automatically from main domain
         $this->config['host'] = $this->config['main_domain'];
-
-        // Log configuration loading
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->debug('CPANEL_API', 'CONFIG_LOAD', 'Configuration loaded', array(
-            'username' => $this->config['username'],
-            'host' => $this->config['host'],
-            'main_domain' => $this->config['main_domain'],
-            'api_token_length' => strlen($this->config['api_token']),
-            'options_from_db' => get_option('ai_web_site_options', array()) // Added for direct DB check
-        ));
     }
 
     /**
@@ -73,7 +63,7 @@ class AI_Web_Site_CPanel_API
     public function create_subdomain($subdomain, $domain, $target_ip = null)
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-
+        
         $logger->info('CPANEL_API', 'CREATE_SUBDOMAIN_START', 'Starting subdomain creation', array(
             'subdomain' => $subdomain,
             'domain' => $domain,
@@ -99,12 +89,6 @@ class AI_Web_Site_CPanel_API
             'disallowdot' => 0
         );
 
-        $logger->debug('CPANEL_API', 'CREATE_SUBDOMAIN_REQUEST', 'Making API request', array(
-            'api_url' => $api_url,
-            'params' => $params,
-            'username' => $this->config['username']
-        ));
-
         // Make API request
         $response = wp_remote_post($api_url, array(
             'headers' => array(
@@ -129,11 +113,6 @@ class AI_Web_Site_CPanel_API
 
         $response_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
-
-        $logger->debug('CPANEL_API', 'CREATE_SUBDOMAIN_RESPONSE', 'API response received', array(
-            'response_code' => $response_code,
-            'body' => $body
-        ));
 
         $result = json_decode($body, true);
 
@@ -166,7 +145,14 @@ class AI_Web_Site_CPanel_API
      */
     public function delete_subdomain($subdomain, $domain)
     {
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_START', 'Starting subdomain deletion', array(
+            'subdomain' => $subdomain,
+            'domain' => $domain
+        ));
+
         if (empty($this->config['api_token'])) {
+            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_ERROR', 'API token not configured');
             return array(
                 'success' => false,
                 'message' => 'cPanel API token not configured'
@@ -193,9 +179,14 @@ class AI_Web_Site_CPanel_API
         ));
 
         if (is_wp_error($response)) {
+            $error_message = $response->get_error_message();
+            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_ERROR', 'HTTP request failed', array(
+                'error' => $error_message,
+                'error_code' => $response->get_error_code()
+            ));
             return array(
                 'success' => false,
-                'message' => $response->get_error_message()
+                'message' => $error_message
             );
         }
 
@@ -203,6 +194,7 @@ class AI_Web_Site_CPanel_API
         $result = json_decode($body, true);
 
         if (isset($result['status']) && $result['status'] === 1) {
+            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_SUCCESS', 'Subdomain deleted successfully');
             return array(
                 'success' => true,
                 'message' => 'Subdomain deleted successfully'
@@ -212,6 +204,11 @@ class AI_Web_Site_CPanel_API
             if (isset($result['errors']) && is_array($result['errors'])) {
                 $error_message = implode(', ', $result['errors']);
             }
+
+            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_ERROR', 'API returned error', array(
+                'result' => $result,
+                'error_message' => $error_message
+            ));
 
             return array(
                 'success' => false,
@@ -226,9 +223,9 @@ class AI_Web_Site_CPanel_API
     public function test_connection()
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-
+        
         $logger->info('CPANEL_API', 'TEST_CONNECTION_START', 'Starting connection test');
-
+        
         if (empty($this->config['api_token'])) {
             $logger->error('CPANEL_API', 'TEST_CONNECTION_ERROR', 'API token not configured');
             return array(
@@ -239,11 +236,6 @@ class AI_Web_Site_CPanel_API
 
         // Test with a simple API call
         $api_url = "https://{$this->config['host']}:2083/execute/StatsBar/get_stats";
-
-        $logger->debug('CPANEL_API', 'TEST_CONNECTION_REQUEST', 'Making test API request', array(
-            'api_url' => $api_url,
-            'username' => $this->config['username']
-        ));
 
         $response = wp_remote_get($api_url, array(
             'headers' => array(
@@ -267,11 +259,6 @@ class AI_Web_Site_CPanel_API
 
         $response_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
-
-        $logger->debug('CPANEL_API', 'TEST_CONNECTION_RESPONSE', 'Test API response received', array(
-            'response_code' => $response_code,
-            'body' => $body
-        ));
 
         $result = json_decode($body, true);
 
