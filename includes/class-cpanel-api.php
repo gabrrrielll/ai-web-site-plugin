@@ -194,15 +194,20 @@ class AI_Web_Site_CPanel_API
 
         $body = wp_remote_retrieve_body($response);
         $result = json_decode($body, true);
+        $logger->debug('CPANEL_API', 'DELETE_SUBDOMAIN_API_RESPONSE_PARSED', 'Parsed API response for deletion', array('parsed_result' => $result));
 
         // cPanel API 2 JSON API responses are structured differently
-        if (isset($result['cpanelresult']['data'][0]['result']) && $result['cpanelresult']['data'][0]['result'] === 1) {
-            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_SUCCESS', 'Subdomain deleted successfully');
+        $is_success = isset($result['cpanelresult']['data'][0]['result']) && $result['cpanelresult']['data'][0]['result'] === 1;
+        $logger->debug('CPANEL_API', 'DELETE_SUBDOMAIN_IS_SUCCESS', 'Is API response considered success?', array('is_success' => $is_success));
+
+        if ($is_success) {
+            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_SUCCESS_BLOCK', 'Entering success block');
             return array(
                 'success' => true,
                 'message' => $result['cpanelresult']['data'][0]['reason'] ?? 'Subdomain deleted successfully'
             );
         } else {
+            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_ERROR_BLOCK', 'Entering error block');
             $error_message = 'Unknown error';
             if (isset($result['cpanelresult']['errors']) && is_array($result['cpanelresult']['errors'])) {
                 $error_message = implode(', ', $result['cpanelresult']['errors']);
