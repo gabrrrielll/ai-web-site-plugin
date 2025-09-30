@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Get form data
             var subdomainInput = document.getElementById('new_subdomain');
             var subdomain = subdomainInput ? subdomainInput.value.trim() : '';
-            var domain = 'ai-web.site'; // Default domain
+            var domain = aiWebSite.options.main_domain; // Get main domain from PHP-generated options
 
             if (!subdomain) {
                 alert('Please enter a subdomain name');
