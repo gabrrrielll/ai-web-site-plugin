@@ -65,10 +65,6 @@ class AI_Web_Site_Admin
             echo '<style type="text/css">';
             echo file_get_contents($css_path);
             echo '</style>';
-        } else {
-            // Log error if CSS not found
-            $logger = AI_Web_Site_Debug_Logger::get_instance();
-            $logger->error('ADMIN', 'CSS_NOT_FOUND', 'CSS file not found', array('css_path' => $css_path));
         }
 
         // Load JavaScript inline
@@ -88,10 +84,6 @@ class AI_Web_Site_Admin
             )) . ';';
             echo file_get_contents($js_path);
             echo '</script>';
-        } else {
-            // Log error if JS not found
-            $logger = AI_Web_Site_Debug_Logger::get_instance();
-            $logger->error('ADMIN', 'JS_NOT_FOUND', 'JS file not found', array('js_path' => $js_path));
         }
     }
 
@@ -122,9 +114,15 @@ class AI_Web_Site_Admin
      */
     public function save_options()
     {
+        // NEW LOG: Confirm this method is called and capture all POST data
         $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('ADMIN', 'SAVE_OPTIONS_ENTRY', 'Entering save_options method and capturing POST data', array(
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
+            'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+            'all_post_data' => $_POST
+        ));
 
-        // Check nonce
+        // Nonce and permissions check
         if (!wp_verify_nonce($_POST['_wpnonce'], 'ai_web_site_options')) {
             $logger->error('ADMIN', 'SAVE_OPTIONS_ERROR', 'Nonce verification failed', array('nonce_post' => $_POST['_wpnonce'] ?? 'not_set'));
             wp_die('Security check failed');
@@ -159,19 +157,6 @@ class AI_Web_Site_Admin
     }
 
     /**
-     * Debug all admin_post requests
-     */
-    public function debug_admin_post()
-    {
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('PLUGIN', 'ADMIN_POST', 'admin_post hook triggered', array(
-            'action' => $_POST['action'] ?? 'not_set',
-            'all_post_data' => $_POST,
-            'request_method' => $_SERVER['REQUEST_METHOD']
-        ));
-    }
-
-    /**
      * Test cPanel connection
      */
     public function test_connection()
@@ -196,7 +181,6 @@ class AI_Web_Site_Admin
         $cpanel_api = AI_Web_Site_CPanel_API::get_instance();
         $result = $cpanel_api->test_connection();
 
-        // Log test result
         if ($result['success']) {
             $logger->info('ADMIN', 'TEST_CONNECTION_SUCCESS', 'Admin test connection successful');
         } else {

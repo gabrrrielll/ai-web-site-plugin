@@ -44,9 +44,6 @@ class AI_Web_Site
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->create_table();
 
-        // Log plugin initialization
-        $logger->info('PLUGIN', 'INIT', 'AI Web Site plugin initialized');
-
         // Add REST API endpoints
         add_action('rest_api_init', array($this, 'register_rest_routes'));
 
@@ -204,9 +201,6 @@ class AI_Web_Site
     public function handle_delete_subdomain()
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('PLUGIN', 'HANDLE_DELETE_SUBDOMAIN_START', 'Starting handle_delete_subdomain AJAX request', array(
-            'post_data' => $_POST
-        ));
 
         // Check nonce
         if (!wp_verify_nonce($_POST['nonce'], 'ai_web_site_nonce')) {

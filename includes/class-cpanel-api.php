@@ -64,12 +64,6 @@ class AI_Web_Site_CPanel_API
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
 
-        $logger->info('CPANEL_API', 'CREATE_SUBDOMAIN_START', 'Starting subdomain creation', array(
-            'subdomain' => $subdomain,
-            'domain' => $domain,
-            'target_ip' => $target_ip
-        ));
-
         if (empty($this->config['api_token'])) {
             $logger->error('CPANEL_API', 'CREATE_SUBDOMAIN_ERROR', 'API token not configured');
             return array(
@@ -95,16 +89,12 @@ class AI_Web_Site_CPanel_API
                 'Authorization' => 'cpanel ' . $this->config['username'] . ':' . $this->config['api_token']
             ),
             'body' => $params,
-            'sslverify' => false,
             'timeout' => 30
         ));
 
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
-            $logger->error('CPANEL_API', 'CREATE_SUBDOMAIN_ERROR', 'HTTP request failed', array(
-                'error' => $error_message,
-                'error_code' => $response->get_error_code()
-            ));
+            $logger->error('CPANEL_API', 'CREATE_SUBDOMAIN_HTTP_ERROR', 'HTTP request failed', array('error' => $error_message));
             return array(
                 'success' => false,
                 'message' => $error_message
@@ -115,28 +105,13 @@ class AI_Web_Site_CPanel_API
         $body = wp_remote_retrieve_body($response);
 
         $result = json_decode($body, true);
-
         if (isset($result['status']) && $result['status'] === 1) {
-            $logger->info('CPANEL_API', 'CREATE_SUBDOMAIN_SUCCESS', 'Subdomain created successfully');
-            return array(
-                'success' => true,
-                'message' => 'Subdomain created successfully'
-            );
+            $logger->info('CPANEL_API', 'CREATE_SUBDOMAIN_SUCCESS', 'Subdomain created successfully', array('subdomain' => $subdomain, 'domain' => $domain));
+            return array('success' => true, 'message' => 'Subdomain created successfully');
         } else {
-            $error_message = 'Unknown error';
-            if (isset($result['errors']) && is_array($result['errors'])) {
-                $error_message = implode(', ', $result['errors']);
-            }
-
-            $logger->error('CPANEL_API', 'CREATE_SUBDOMAIN_ERROR', 'API returned error', array(
-                'result' => $result,
-                'error_message' => $error_message
-            ));
-
-            return array(
-                'success' => false,
-                'message' => $error_message
-            );
+            $error_message = isset($result['errors']) && is_array($result['errors']) ? implode(', ', $result['errors']) : 'Unknown error';
+            $logger->error('CPANEL_API', 'CREATE_SUBDOMAIN_API_ERROR', 'cPanel API returned error during creation', array('subdomain' => $subdomain, 'domain' => $domain, 'message' => $error_message));
+            return array('success' => false, 'message' => $error_message);
         }
     }
 
@@ -176,16 +151,12 @@ class AI_Web_Site_CPanel_API
                 'Authorization' => 'cpanel ' . $this->config['username'] . ':' . $this->config['api_token']
             ),
             'body' => $params,
-            'sslverify' => false,
             'timeout' => 30
         ));
 
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
-            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_ERROR', 'HTTP request failed', array(
-                'error' => $error_message,
-                'error_code' => $response->get_error_code()
-            ));
+            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_HTTP_ERROR', 'HTTP request failed', array('error' => $error_message));
             return array(
                 'success' => false,
                 'message' => $error_message
@@ -194,37 +165,18 @@ class AI_Web_Site_CPanel_API
 
         $body = wp_remote_retrieve_body($response);
         $result = json_decode($body, true);
-        $logger->debug('CPANEL_API', 'DELETE_SUBDOMAIN_API_RESPONSE_PARSED', 'Parsed API response for deletion', array('parsed_result' => $result));
-
-        // cPanel API 2 JSON API responses are structured differently
+        // cPanel API 2 JSON API responses are structured differently. Check if result is 1.
         $is_success = isset($result['cpanelresult']['data'][0]['result']) && $result['cpanelresult']['data'][0]['result'] === 1;
-        $logger->debug('CPANEL_API', 'DELETE_SUBDOMAIN_IS_SUCCESS', 'Is API response considered success?', array('is_success' => $is_success));
-
         if ($is_success) {
-            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_SUCCESS_BLOCK', 'Entering success block');
+            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_SUCCESS', 'Subdomain deleted successfully', array('subdomain' => $subdomain, 'domain' => $domain));
             return array(
                 'success' => true,
                 'message' => $result['cpanelresult']['data'][0]['reason'] ?? 'Subdomain deleted successfully'
             );
         } else {
-            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_ERROR_BLOCK', 'Entering error block');
-            $error_message = 'Unknown error';
-            if (isset($result['cpanelresult']['errors']) && is_array($result['cpanelresult']['errors'])) {
-                $error_message = implode(', ', $result['cpanelresult']['errors']);
-            } elseif (isset($result['cpanelresult']['data'][0]['reason'])) {
-                // Sometimes reason is given even on error, so we capture it
-                $error_message = $result['cpanelresult']['data'][0]['reason'];
-            }
-
-            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_ERROR', 'API returned error', array(
-                'result' => $result,
-                'error_message' => $error_message
-            ));
-
-            return array(
-                'success' => false,
-                'message' => $error_message
-            );
+            $error_message = isset($result['cpanelresult']['errors']) && is_array($result['cpanelresult']['errors']) ? implode(', ', $result['cpanelresult']['errors']) : ($result['cpanelresult']['data'][0]['reason'] ?? 'Unknown error');
+            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_API_ERROR', 'cPanel API returned error during deletion', array('subdomain' => $subdomain, 'domain' => $domain, 'message' => $error_message, 'result' => $result));
+            return array('success' => false, 'message' => $error_message);
         }
     }
 
@@ -252,16 +204,12 @@ class AI_Web_Site_CPanel_API
             'headers' => array(
                 'Authorization' => 'cpanel ' . $this->config['username'] . ':' . $this->config['api_token']
             ),
-            'sslverify' => false,
             'timeout' => 10
         ));
 
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
-            $logger->error('CPANEL_API', 'TEST_CONNECTION_ERROR', 'HTTP request failed', array(
-                'error' => $error_message,
-                'error_code' => $response->get_error_code()
-            ));
+            $logger->error('CPANEL_API', 'TEST_CONNECTION_HTTP_ERROR', 'HTTP request failed', array('error' => $error_message));
             return array(
                 'success' => false,
                 'message' => $error_message
@@ -280,9 +228,8 @@ class AI_Web_Site_CPanel_API
                 'message' => 'API connection successful'
             );
         } else {
-            $logger->error('CPANEL_API', 'TEST_CONNECTION_ERROR', 'Connection test failed', array(
-                'result' => $result
-            ));
+            $error_message = isset($result['errors']) && is_array($result['errors']) ? implode(', ', $result['errors']) : 'Unknown error';
+            $logger->error('CPANEL_API', 'TEST_CONNECTION_API_ERROR', 'cPanel API connection failed', array('message' => $error_message, 'result' => $result));
             return array(
                 'success' => false,
                 'message' => 'API connection failed'
