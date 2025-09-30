@@ -9,11 +9,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Log that admin class file is loaded
-if (function_exists('error_log')) {
-    error_log('AI-Web-Site: Admin class file loaded');
-}
-
 class AI_Web_Site_Admin
 {
     /**
@@ -156,8 +151,14 @@ class AI_Web_Site_Admin
      */
     public function save_options()
     {
-        // Log that save_options was called
+        // NEW LOG: Confirm this method is called
         $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('ADMIN', 'SAVE_OPTIONS_ENTRY', 'Entering save_options method', array(
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
+            'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown'
+        ));
+
+        // Log that save_options was called
         $logger->info('ADMIN', 'SAVE_OPTIONS_CALLED', 'save_options method called', array(
             'post_data' => $_POST,
             'nonce' => isset($_POST['_wpnonce']) ? $_POST['_wpnonce'] : 'not_set'

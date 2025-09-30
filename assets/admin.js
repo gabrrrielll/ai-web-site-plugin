@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             console.log('AI Web Site Admin: Settings form submitted');
             console.log('Form action:', form.action);
-            console.log('Form data:', new FormData(form));
+            console.log('Form data:', Object.fromEntries(new FormData(form).entries())); // Log all form data
             
             // Let the form submit normally
             return true;
