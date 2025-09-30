@@ -284,4 +284,67 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Tab functionality
+    var tabLinks = document.querySelectorAll('.nav-tab');
+    var tabContents = document.querySelectorAll('.tab-content');
+
+    tabLinks.forEach(function (tabLink) {
+        tabLink.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            var targetTab = this.getAttribute('data-tab');
+
+            // Remove active class from all tabs and contents
+            tabLinks.forEach(function (link) {
+                link.classList.remove('nav-tab-active');
+            });
+            tabContents.forEach(function (content) {
+                content.classList.remove('active');
+            });
+
+            // Add active class to clicked tab and corresponding content
+            this.classList.add('nav-tab-active');
+            var targetContent = document.getElementById(targetTab);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        });
+    });
+
+    // Copy shortcode functionality
+    var copyButtons = document.querySelectorAll('.copy-shortcode');
+    copyButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            var shortcode = this.getAttribute('data-shortcode');
+
+            // Create temporary textarea to copy text
+            var textarea = document.createElement('textarea');
+            textarea.value = shortcode;
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+
+                // Show success feedback
+                var originalText = this.textContent;
+                this.textContent = 'Copied!';
+                this.style.backgroundColor = '#46b450';
+                this.style.color = 'white';
+
+                setTimeout(function () {
+                    button.textContent = originalText;
+                    button.style.backgroundColor = '';
+                    button.style.color = '';
+                }, 2000);
+
+            } catch (err) {
+                console.error('Failed to copy shortcode:', err);
+                alert('Failed to copy shortcode. Please copy manually: ' + shortcode);
+            }
+
+            document.body.removeChild(textarea);
+        });
+    });
+
 });

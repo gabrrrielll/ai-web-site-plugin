@@ -194,12 +194,12 @@ class AI_Web_Site_UMP_Integration
     public function init_domain_override()
     {
         $domain_override = $this->get_ump_domain_override();
-        
+
         if (!empty($domain_override)) {
             add_filter('option_siteurl', array($this, 'filter_siteurl_for_ump'), 10, 1);
             add_filter('option_home', array($this, 'filter_siteurl_for_ump'), 10, 1);
         }
-        
+
         // Disable UMP tracking and annoying popups if enabled
         if ($this->is_tracking_disabled()) {
             $this->disable_ump_tracking();
@@ -213,10 +213,10 @@ class AI_Web_Site_UMP_Integration
     {
         // Disable the tracking popup by setting the option to already confirmed
         add_action('admin_init', array($this, 'disable_tracking_popup'), 1);
-        
+
         // Remove tracking scripts and AJAX calls
         add_action('wp_loaded', array($this, 'remove_tracking_hooks'), 999);
-        
+
         // Block tracking requests
         add_filter('pre_http_request', array($this, 'block_ump_tracking_requests'), 10, 3);
     }
@@ -230,7 +230,7 @@ class AI_Web_Site_UMP_Integration
         update_option('ihc_tracking_code_popup', 1); // Mark as already shown
         update_option('ihc_tracking_code_confirmed', 0); // Declined
         update_option('ihc_tracking_code_declined', 1); // Explicitly declined
-        
+
         // Also set some other tracking-related options
         update_option('ihc_disable_tracking', 1);
         update_option('ihc_tracking_disabled', 1);
@@ -244,7 +244,7 @@ class AI_Web_Site_UMP_Integration
         // Remove tracking-related actions and filters
         remove_all_actions('ihc_tracking_code_popup');
         remove_all_actions('ihc_send_tracking_data');
-        
+
         // Remove tracking scripts from admin
         add_action('admin_print_scripts', array($this, 'remove_tracking_scripts'), 999);
         add_action('admin_print_footer_scripts', array($this, 'remove_tracking_scripts'), 999);
@@ -312,7 +312,7 @@ class AI_Web_Site_UMP_Integration
         if (strpos($url, 'portal.ultimatemembershippro.com/tracking') !== false ||
             strpos($url, 'ultimatemembershippro.com/tracking') !== false ||
             strpos($url, 'wpindeed.com/tracking') !== false) {
-            
+
             // Return a fake successful response to prevent errors
             return array(
                 'headers' => array(),
@@ -325,7 +325,7 @@ class AI_Web_Site_UMP_Integration
                 'filename' => null
             );
         }
-        
+
         return $preempt;
     }
 

@@ -142,12 +142,12 @@ class AI_Web_Site_Admin
         $options = get_option('ai_web_site_options', array());
 
         // Update options (only essential fields)
-               $options['cpanel_username'] = sanitize_text_field($_POST['cpanel_username']);
-               $options['cpanel_api_token'] = sanitize_text_field($_POST['cpanel_api_token']);
-               $options['main_domain'] = sanitize_text_field($_POST['main_domain']);
-               $options['required_ump_level_id'] = (int)sanitize_text_field($_POST['required_ump_level_id']);
-               $options['ump_domain_override'] = sanitize_text_field($_POST['ump_domain_override']);
-               $options['disable_ump_tracking'] = isset($_POST['disable_ump_tracking']) ? 1 : 0;
+        $options['cpanel_username'] = sanitize_text_field($_POST['cpanel_username']);
+        $options['cpanel_api_token'] = sanitize_text_field($_POST['cpanel_api_token']);
+        $options['main_domain'] = sanitize_text_field($_POST['main_domain']);
+        $options['required_ump_level_id'] = (int)sanitize_text_field($_POST['required_ump_level_id']);
+        $options['ump_domain_override'] = sanitize_text_field($_POST['ump_domain_override']);
+        $options['disable_ump_tracking'] = isset($_POST['disable_ump_tracking']) ? 1 : 0;
 
         // Save options
         $result = update_option('ai_web_site_options', $options);

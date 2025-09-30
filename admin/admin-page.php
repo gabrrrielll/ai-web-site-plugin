@@ -30,6 +30,19 @@ $subdomains = $database->get_all_subdomains();
     <?php endif; ?>
     
     <div class="ai-web-site-plugin-admin">
+        <!-- Tab Navigation -->
+        <nav class="nav-tab-wrapper">
+            <a href="#settings-tab" class="nav-tab nav-tab-active" data-tab="settings-tab">
+                <?php _e('Settings', 'ai-web-site-plugin'); ?>
+            </a>
+            <a href="#subdomains-tab" class="nav-tab" data-tab="subdomains-tab">
+                <?php _e('Subdomains', 'ai-web-site-plugin'); ?>
+            </a>
+            <a href="#shortcode-tab" class="nav-tab" data-tab="shortcode-tab">
+                <?php _e('Home Page Shortcode', 'ai-web-site-plugin'); ?>
+            </a>
+        </nav>
+
         <!-- Settings Tab -->
         <div class="tab-content active" id="settings-tab">
             <h2><?php _e('cPanel Settings', 'ai-web-site-plugin-plugin'); ?></h2>
@@ -223,6 +236,82 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                         </tbody>
                     </table>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Shortcode Usage Tab -->
+        <div class="tab-content" id="shortcode-tab">
+            <h2><?php _e('Home Page Shortcode', 'ai-web-site-plugin'); ?></h2>
+            
+            <div class="card">
+                <h3><?php _e('Usage Instructions', 'ai-web-site-plugin'); ?></h3>
+                <p><?php _e('Use the following shortcode to display the AI Website Builder home page content on any page or post:', 'ai-web-site-plugin'); ?></p>
+                
+                <div class="shortcode-example">
+                    <code>[ai_website_builder_home]</code>
+                    <button type="button" class="button button-small copy-shortcode" data-shortcode="[ai_website_builder_home]">
+                        <?php _e('Copy', 'ai-web-site-plugin'); ?>
+                    </button>
+                </div>
+                
+                <h4><?php _e('Available Parameters:', 'ai-web-site-plugin'); ?></h4>
+                <table class="widefat">
+                    <thead>
+                        <tr>
+                            <th><?php _e('Parameter', 'ai-web-site-plugin'); ?></th>
+                            <th><?php _e('Description', 'ai-web-site-plugin'); ?></th>
+                            <th><?php _e('Default Value', 'ai-web-site-plugin'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>cta_url</code></td>
+                            <td><?php _e('The URL for the "Start Building Now" button', 'ai-web-site-plugin'); ?></td>
+                            <td>https://editor.ai-web.site</td>
+                        </tr>
+                        <tr>
+                            <td><code>show_features</code></td>
+                            <td><?php _e('Show features section (true/false)', 'ai-web-site-plugin'); ?></td>
+                            <td>true</td>
+                        </tr>
+                        <tr>
+                            <td><code>show_pricing</code></td>
+                            <td><?php _e('Show pricing section (true/false)', 'ai-web-site-plugin'); ?></td>
+                            <td>true</td>
+                        </tr>
+                        <tr>
+                            <td><code>show_how_it_works</code></td>
+                            <td><?php _e('Show how it works section (true/false)', 'ai-web-site-plugin'); ?></td>
+                            <td>true</td>
+                        </tr>
+                        <tr>
+                            <td><code>title</code></td>
+                            <td><?php _e('Main hero title text', 'ai-web-site-plugin'); ?></td>
+                            <td>AI Website Free Live Frontend Builder</td>
+                        </tr>
+                        <tr>
+                            <td><code>subtitle</code></td>
+                            <td><?php _e('Hero subtitle text', 'ai-web-site-plugin'); ?></td>
+                            <td>Create stunning websites in just 5 minutes...</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h4><?php _e('Example Usage:', 'ai-web-site-plugin'); ?></h4>
+                <div class="shortcode-example">
+                    <code>[ai_website_builder_home cta_url="https://your-editor.com" show_pricing="false"]</code>
+                    <button type="button" class="button button-small copy-shortcode" data-shortcode='[ai_website_builder_home cta_url="https://your-editor.com" show_pricing="false"]'>
+                        <?php _e('Copy', 'ai-web-site-plugin'); ?>
+                    </button>
+                </div>
+                
+                <div class="shortcode-preview">
+                    <h4><?php _e('Preview:', 'ai-web-site-plugin'); ?></h4>
+                    <p><?php _e('To see how the shortcode looks, add it to any page or post and view it on the frontend.', 'ai-web-site-plugin'); ?></p>
+                    <a href="<?php echo admin_url('post-new.php?post_type=page'); ?>" class="button button-primary">
+                        <?php _e('Create New Page', 'ai-web-site-plugin'); ?>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
