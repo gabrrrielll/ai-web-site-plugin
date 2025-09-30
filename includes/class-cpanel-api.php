@@ -159,11 +159,14 @@ class AI_Web_Site_CPanel_API
             );
         }
 
-        // Prepare API URL
-        $api_url = "https://{$this->config['host']}:2083/execute/DomainInfo/remove_subdomain";
+        // Prepare API URL for cPanel API 2 (JSON API)
+        $api_url = "https://{$this->config['host']}:2083/json-api/cpanel";
 
-        // Prepare parameters (domain must be full subdomain, e.g., test.example.com)
+        // Prepare parameters for cPanel API 2
         $params = array(
+            'cpanel_jsonapi_apiversion' => 2,
+            'cpanel_jsonapi_module' => 'SubDomain',
+            'cpanel_jsonapi_func' => 'delsubdomain',
             'domain' => "{$subdomain}.{$domain}"
         );
 
