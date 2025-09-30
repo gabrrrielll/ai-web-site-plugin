@@ -138,7 +138,7 @@
 
 /* Grid system */
 .grid {
-    display: grid;
+    display: grid !important;
 }
 
 .grid-cols-1 {
@@ -147,6 +147,23 @@
 
 .gap-8 {
     gap: 2rem;
+}
+
+/* Force grid layout on desktop - explicit rule */
+@media (min-width: 1024px) {
+    .ai-website-builder-home .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 2rem !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .ai-website-builder-home .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 2rem !important;
+    }
 }
 
 /* Additional padding utilities */
@@ -189,11 +206,11 @@
         line-height: 1;
     }
 
-    .sm\\:space-y-0 > :not([hidden]) ~ :not([hidden]) {
+    .sm\\:space-y-0> :not([hidden])~ :not([hidden]) {
         margin-top: 0;
     }
 
-    .sm\\:space-x-8 > :not([hidden]) ~ :not([hidden]) {
+    .sm\\:space-x-8> :not([hidden])~ :not([hidden]) {
         margin-left: 2rem;
     }
 
@@ -205,11 +222,11 @@
 /* Medium screens (768px and up) */
 @media (min-width: 768px) {
     .md\\:grid-cols-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 
     .md\\:grid-cols-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
 
@@ -230,7 +247,7 @@
     }
 
     .lg\\:grid-cols-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
 
