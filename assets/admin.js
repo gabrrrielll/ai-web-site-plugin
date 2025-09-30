@@ -140,6 +140,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                     row.remove();
                                 }, 300);
                             }
+
+                            // Reload page to show updated list
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1000);
                         } else {
                             // Show error message
                             showNotice('error', 'Error deleting subdomain: ' + (data.data || 'Unknown error'));
