@@ -86,6 +86,12 @@ class AI_Web_Site_Plugin
         AI_Web_Site_CPanel_API::get_instance();
         AI_Web_Site_Database::get_instance();
 
+        // Log before initializing admin class
+        // $logger = AI_Web_Site_Debug_Logger::get_instance();
+        // $logger->info('PLUGIN', 'INIT_ADMIN', 'Initializing admin class');
+
+        AI_Web_Site_Admin::get_instance();
+
         // Load text domain for translations
         load_plugin_textdomain('ai-web-site-plugin', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
