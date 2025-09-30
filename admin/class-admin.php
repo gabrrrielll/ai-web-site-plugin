@@ -194,6 +194,20 @@ class AI_Web_Site_Admin
         $options['cpanel_api_token'] = sanitize_text_field($_POST['cpanel_api_token']);
         $options['main_domain'] = sanitize_text_field($_POST['main_domain']);
 
+        // Log the POSTed token for debugging
+        $logger->info('ADMIN', 'SAVE_OPTIONS_POST_DATA', 'POST data for options', array(
+            'cpanel_username' => $_POST['cpanel_username'] ?? 'not_set',
+            'cpanel_api_token_length_post' => strlen($_POST['cpanel_api_token'] ?? ''),
+            'main_domain' => $_POST['main_domain'] ?? 'not_set'
+        ));
+
+        // Log the options before saving
+        $logger->info('ADMIN', 'SAVE_OPTIONS_BEFORE_UPDATE', 'Options before update_option', array(
+            'cpanel_username' => $options['cpanel_username'],
+            'cpanel_api_token_length_options' => strlen($options['cpanel_api_token']),
+            'main_domain' => $options['main_domain']
+        ));
+
         // Log the save operation
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('ADMIN', 'SAVE_OPTIONS', 'Saving plugin options', array(

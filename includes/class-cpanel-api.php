@@ -67,7 +67,8 @@ class AI_Web_Site_CPanel_API
             'username' => $this->config['username'],
             'host' => $this->config['host'],
             'main_domain' => $this->config['main_domain'],
-            'api_token_length' => strlen($this->config['api_token'])
+            'api_token_length' => strlen($this->config['api_token']),
+            'options_from_db' => get_option('ai_web_site_options', array()) // Added for direct DB check
         ));
     }
 

@@ -23,15 +23,25 @@ define('AI_WEB_SITE_PLUGIN_FILE', __FILE__);
 
 // Include required files
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-debug-logger.php';
-if (function_exists('error_log')) { error_log('AI-Web-Site: class-debug-logger.php loaded'); }
+if (function_exists('error_log')) {
+    error_log('AI-Web-Site: class-debug-logger.php loaded');
+}
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ai-web-site.php';
-if (function_exists('error_log')) { error_log('AI-Web-Site: class-ai-web-site.php loaded'); }
+if (function_exists('error_log')) {
+    error_log('AI-Web-Site: class-ai-web-site.php loaded');
+}
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-cpanel-api.php';
-if (function_exists('error_log')) { error_log('AI-Web-Site: class-cpanel-api.php loaded'); }
+if (function_exists('error_log')) {
+    error_log('AI-Web-Site: class-cpanel-api.php loaded');
+}
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-database.php';
-if (function_exists('error_log')) { error_log('AI-Web-Site: class-database.php loaded'); }
+if (function_exists('error_log')) {
+    error_log('AI-Web-Site: class-database.php loaded');
+}
 require_once AI_WEB_SITE_PLUGIN_DIR . 'admin/class-admin.php';
-if (function_exists('error_log')) { error_log('AI-Web-Site: class-admin.php loaded'); }
+if (function_exists('error_log')) {
+    error_log('AI-Web-Site: class-admin.php loaded');
+}
 
 /**
  * Main plugin class
