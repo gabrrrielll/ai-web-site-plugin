@@ -43,12 +43,15 @@ class AI_Web_Site_Admin
         // Add admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
 
-        // Handle form submissions
-        add_action('admin_post_save_ai_web_site_options', array($this, 'save_options'));
-        add_action('admin_post_test_cpanel_connection', array($this, 'test_connection'));
-
-        // Also add for non-logged in users (if needed)
-        add_action('wp_ajax_save_ai_web_site_options', array($this, 'save_options'));
+            // Handle form submissions
+            add_action('admin_post_save_ai_web_site_options', array($this, 'save_options'));
+            add_action('admin_post_test_cpanel_connection', array($this, 'test_connection'));
+            
+            // Also add for non-logged in users (if needed)
+            add_action('wp_ajax_save_ai_web_site_options', array($this, 'save_options'));
+            
+            // Handle UMP license activation
+            add_action('wp_ajax_activate_ump_license', array($this, 'activate_ump_license'));
 
         // Add admin menu
         add_action('admin_menu', array($this, 'add_admin_menu'));
@@ -75,12 +78,13 @@ class AI_Web_Site_Admin
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('ai_web_site_nonce'),
                 'options' => get_option('ai_web_site_options', array()), // Add plugin options
-                'strings' => array(
-                    'confirmDelete' => __('Are you sure you want to delete this subdomain?', 'ai-web-site-plugin'),
-                    'creating' => __('Creating...', 'ai-web-site-plugin'),
-                    'deleting' => __('Deleting...', 'ai-web-site-plugin'),
-                    'testing' => __('Testing...', 'ai-web-site-plugin')
-                )
+                       'strings' => array(
+                           'confirmDelete' => __('Are you sure you want to delete this subdomain?', 'ai-web-site-plugin'),
+                           'creating' => __('Creating...', 'ai-web-site-plugin'),
+                           'deleting' => __('Deleting...', 'ai-web-site-plugin'),
+                           'testing' => __('Testing...', 'ai-web-site-plugin'),
+                           'activating' => __('Activating...', 'ai-web-site-plugin')
+                       )
             )) . ';';
             echo file_get_contents($js_path);
             echo '</script>';
@@ -233,5 +237,44 @@ class AI_Web_Site_Admin
         }
 
         return $messages;
+    }
+
+    /**
+     * Handle UMP license activation
+     */
+    public function activate_ump_license()
+    {
+        // Check nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'ai_web_site_nonce')) {
+            wp_send_json_error('Security check failed');
+        }
+
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+
+        // Get UMP integration instance
+        $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+        
+        if (!$ump_integration->is_ump_available()) {
+            wp_send_json_error('Ultimate Membership Pro plugin is not available or not properly loaded');
+        }
+
+        // Get the configured domain override
+        $domain_override = $ump_integration->get_ump_domain_override();
+        
+        if (empty($domain_override)) {
+            wp_send_json_error('UMP License Domain is not configured. Please set it in the settings above.');
+        }
+
+        // Try to redirect to UMP license activation page
+        $ump_admin_url = admin_url('admin.php?page=ihc_manage&tab=help');
+        
+        wp_send_json_success(array(
+            'message' => 'Please go to Ultimate Membership Pro → Help to activate your license.',
+            'redirect_url' => $ump_admin_url,
+            'domain' => $domain_override
+        ));
     }
 }

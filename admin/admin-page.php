@@ -109,6 +109,19 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                            <p class="description"><?php _e('Domain to report to Ultimate Membership Pro for license validation (use the domain where your UMP license was purchased).', 'ai-web-site-plugin'); ?></p>
                        </td>
                    </tr>
+
+                   <tr>
+                       <th scope="row">
+                           <label><?php _e('UMP License Activation', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <button type="button" id="activate_ump_license" class="button button-secondary">
+                               <?php _e('Activate UMP License', 'ai-web-site-plugin'); ?>
+                           </button>
+                           <p class="description"><?php _e('Click to activate your Ultimate Membership Pro license. Make sure the UMP License Domain above is correct before activating.', 'ai-web-site-plugin'); ?></p>
+                           <div id="ump_license_status" style="margin-top: 10px;"></div>
+                       </td>
+                   </tr>
                </table>
                 
                 <p class="submit">

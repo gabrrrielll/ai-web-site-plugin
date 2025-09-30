@@ -110,7 +110,7 @@ class AI_Web_Site_UMP_Integration
             // UMP plugin is not active or not properly loaded
             return false;
         }
-        
+
         // The isActive method already handles expiry and grace periods
         return \Indeed\Ihc\UserSubscriptions::isActive($user_id, $ump_level_id);
     }
@@ -138,7 +138,7 @@ class AI_Web_Site_UMP_Integration
         if (!$this->is_ump_available() || !class_exists('\Indeed\Ihc\Db\Memberships')) {
             return [];
         }
-        
+
         try {
             $levels_data = \Indeed\Ihc\Db\Memberships::getAll();
             $formatted_levels = [];
@@ -193,32 +193,67 @@ class AI_Web_Site_UMP_Integration
 
     /**
      * Filter siteurl option when called from UMP context.
+     * Only applies to API calls and license validation, not menu links.
      * @param string $value The original site URL.
-     * @return string The modified URL if called from UMP, original otherwise.
+     * @return string The modified URL if called from UMP API context, original otherwise.
      */
     public function filter_siteurl_for_ump($value)
     {
         // Check if we're in UMP context by examining the call stack
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 15);
-
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 20);
+        
+        $is_api_call = false;
+        $is_menu_link = false;
+        
         foreach ($backtrace as $trace) {
             if (isset($trace['file'])) {
+                $file = $trace['file'];
+                
                 // Check if the call comes from UMP plugin files
-                if (strpos($trace['file'], 'indeed-membership-pro') !== false ||
-                    strpos($trace['file'], 'ultimate-membership-pro') !== false) {
-
-                    $domain_override = $this->get_ump_domain_override();
-                    if (!empty($domain_override)) {
-                        // Add protocol if not present
-                        if (!preg_match('/^https?:\/\//', $domain_override)) {
-                            $domain_override = 'https://' . $domain_override;
-                        }
-                        return $domain_override;
+                if (strpos($file, 'indeed-membership-pro') !== false || 
+                    strpos($file, 'ultimate-membership-pro') !== false) {
+                    
+                    // Check if it's an API call (license validation, etc.)
+                    if (strpos($file, 'classes/Levels.php') !== false ||
+                        strpos($file, 'classes/services/ElCheck.php') !== false ||
+                        strpos($file, 'classes/OldLogs.php') !== false ||
+                        (isset($trace['function']) && (
+                            strpos($trace['function'], 'wp_remote_get') !== false ||
+                            strpos($trace['function'], 'wp_remote_post') !== false ||
+                            $trace['function'] === 'n' || // The obfuscated license check method
+                            $trace['function'] === 'ajax'
+                        ))) {
+                        $is_api_call = true;
+                        break;
+                    }
+                    
+                    // Check if it's a menu link generation (admin interface)
+                    if (strpos($file, 'admin/') !== false ||
+                        strpos($file, 'utilities.php') !== false ||
+                        (isset($trace['function']) && (
+                            strpos($trace['function'], 'admin_url') !== false ||
+                            strpos($trace['function'], 'menu') !== false ||
+                            strpos($trace['function'], 'add_menu') !== false
+                        ))) {
+                        $is_menu_link = true;
+                        break;
                     }
                 }
             }
         }
-
+        
+        // Only override domain for API calls, not for menu links
+        if ($is_api_call && !$is_menu_link) {
+            $domain_override = $this->get_ump_domain_override();
+            if (!empty($domain_override)) {
+                // Add protocol if not present
+                if (!preg_match('/^https?:\/\//', $domain_override)) {
+                    $domain_override = 'https://' . $domain_override;
+                }
+                return $domain_override;
+            }
+        }
+        
         return $value;
     }
 }
