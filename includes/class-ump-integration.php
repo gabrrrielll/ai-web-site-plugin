@@ -178,17 +178,155 @@ class AI_Web_Site_UMP_Integration
     }
 
     /**
+     * Check if UMP tracking should be disabled.
+     * @return bool True if tracking should be disabled, false otherwise.
+     */
+    public function is_tracking_disabled()
+    {
+        $options = get_option('ai_web_site_options', array());
+        return (bool)($options['disable_ump_tracking'] ?? 1); // Default to disabled
+    }
+
+    /**
      * Initialize UMP domain override hook.
      * This will intercept siteurl requests from UMP and return the configured domain.
      */
     public function init_domain_override()
     {
         $domain_override = $this->get_ump_domain_override();
-
+        
         if (!empty($domain_override)) {
             add_filter('option_siteurl', array($this, 'filter_siteurl_for_ump'), 10, 1);
             add_filter('option_home', array($this, 'filter_siteurl_for_ump'), 10, 1);
         }
+        
+        // Disable UMP tracking and annoying popups if enabled
+        if ($this->is_tracking_disabled()) {
+            $this->disable_ump_tracking();
+        }
+    }
+
+    /**
+     * Disable UMP tracking and annoying popups
+     */
+    public function disable_ump_tracking()
+    {
+        // Disable the tracking popup by setting the option to already confirmed
+        add_action('admin_init', array($this, 'disable_tracking_popup'), 1);
+        
+        // Remove tracking scripts and AJAX calls
+        add_action('wp_loaded', array($this, 'remove_tracking_hooks'), 999);
+        
+        // Block tracking requests
+        add_filter('pre_http_request', array($this, 'block_ump_tracking_requests'), 10, 3);
+    }
+
+    /**
+     * Disable the tracking popup by setting the required options
+     */
+    public function disable_tracking_popup()
+    {
+        // Set the tracking option to declined to prevent popup
+        update_option('ihc_tracking_code_popup', 1); // Mark as already shown
+        update_option('ihc_tracking_code_confirmed', 0); // Declined
+        update_option('ihc_tracking_code_declined', 1); // Explicitly declined
+        
+        // Also set some other tracking-related options
+        update_option('ihc_disable_tracking', 1);
+        update_option('ihc_tracking_disabled', 1);
+    }
+
+    /**
+     * Remove UMP tracking hooks and scripts
+     */
+    public function remove_tracking_hooks()
+    {
+        // Remove tracking-related actions and filters
+        remove_all_actions('ihc_tracking_code_popup');
+        remove_all_actions('ihc_send_tracking_data');
+        
+        // Remove tracking scripts from admin
+        add_action('admin_print_scripts', array($this, 'remove_tracking_scripts'), 999);
+        add_action('admin_print_footer_scripts', array($this, 'remove_tracking_scripts'), 999);
+    }
+
+    /**
+     * Remove tracking scripts from output
+     */
+    public function remove_tracking_scripts()
+    {
+        // Add JavaScript to remove any tracking popups that might still appear
+        echo '<script type="text/javascript">
+        (function() {
+            function removeTrackingElements() {
+                // Remove any tracking popups using vanilla JavaScript
+                var trackingElements = document.querySelectorAll(".ihc-tracking-popup, .ihc-popup-wrapper, [id*=\"tracking\"], [class*=\"tracking\"]");
+                trackingElements.forEach(function(element) {
+                    element.remove();
+                });
+                
+                // Block any tracking modal dialogs
+                if (typeof window.ihcTrackingPopup !== "undefined") {
+                    window.ihcTrackingPopup = function() { return false; };
+                }
+                
+                // Remove tracking confirmation dialogs
+                document.addEventListener("click", function(e) {
+                    var target = e.target;
+                    if (target.hasAttribute("data-tracking") || 
+                        (target.getAttribute("onclick") && target.getAttribute("onclick").indexOf("tracking") !== -1)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                });
+            }
+            
+            // Run immediately and also when DOM is ready
+            removeTrackingElements();
+            
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", removeTrackingElements);
+            }
+            
+            // Also try with jQuery if available
+            if (typeof jQuery !== "undefined") {
+                jQuery(document).ready(function($) {
+                    removeTrackingElements();
+                    
+                    // Additional jQuery-specific cleanup
+                    $(".ihc-tracking-popup, .ihc-popup-wrapper").remove();
+                    $(document).off("click", "[data-tracking], [onclick*=\"tracking\"]");
+                });
+            }
+        })();
+        </script>';
+    }
+
+    /**
+     * Block UMP tracking HTTP requests
+     */
+    public function block_ump_tracking_requests($preempt, $parsed_args, $url)
+    {
+        // Block requests to UMP tracking endpoints
+        if (strpos($url, 'portal.ultimatemembershippro.com/tracking') !== false ||
+            strpos($url, 'ultimatemembershippro.com/tracking') !== false ||
+            strpos($url, 'wpindeed.com/tracking') !== false) {
+            
+            // Return a fake successful response to prevent errors
+            return array(
+                'headers' => array(),
+                'body' => json_encode(array('success' => true)),
+                'response' => array(
+                    'code' => 200,
+                    'message' => 'OK'
+                ),
+                'cookies' => array(),
+                'filename' => null
+            );
+        }
+        
+        return $preempt;
     }
 
     /**
@@ -201,18 +339,18 @@ class AI_Web_Site_UMP_Integration
     {
         // Check if we're in UMP context by examining the call stack
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 20);
-        
+
         $is_api_call = false;
         $is_menu_link = false;
-        
+
         foreach ($backtrace as $trace) {
             if (isset($trace['file'])) {
                 $file = $trace['file'];
-                
+
                 // Check if the call comes from UMP plugin files
-                if (strpos($file, 'indeed-membership-pro') !== false || 
+                if (strpos($file, 'indeed-membership-pro') !== false ||
                     strpos($file, 'ultimate-membership-pro') !== false) {
-                    
+
                     // Check if it's an API call (license validation, etc.)
                     if (strpos($file, 'classes/Levels.php') !== false ||
                         strpos($file, 'classes/services/ElCheck.php') !== false ||
@@ -226,7 +364,7 @@ class AI_Web_Site_UMP_Integration
                         $is_api_call = true;
                         break;
                     }
-                    
+
                     // Check if it's a menu link generation (admin interface)
                     if (strpos($file, 'admin/') !== false ||
                         strpos($file, 'utilities.php') !== false ||
@@ -241,7 +379,7 @@ class AI_Web_Site_UMP_Integration
                 }
             }
         }
-        
+
         // Only override domain for API calls, not for menu links
         if ($is_api_call && !$is_menu_link) {
             $domain_override = $this->get_ump_domain_override();
@@ -253,7 +391,7 @@ class AI_Web_Site_UMP_Integration
                 return $domain_override;
             }
         }
-        
+
         return $value;
     }
 }

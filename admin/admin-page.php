@@ -122,6 +122,18 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                            <div id="ump_license_status" style="margin-top: 10px;"></div>
                        </td>
                    </tr>
+
+                   <tr>
+                       <th scope="row">
+                           <label for="disable_ump_tracking"><?php _e('Disable UMP Tracking', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="checkbox" id="disable_ump_tracking" name="disable_ump_tracking" value="1" 
+                                  <?php checked(($options['disable_ump_tracking'] ?? 1), 1); ?>>
+                           <label for="disable_ump_tracking"><?php _e('Disable Ultimate Membership Pro tracking and annoying popups', 'ai-web-site-plugin'); ?></label>
+                           <p class="description"><?php _e('This will prevent UMP from collecting technical information and showing tracking consent popups.', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
                </table>
                 
                 <p class="submit">

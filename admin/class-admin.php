@@ -43,15 +43,15 @@ class AI_Web_Site_Admin
         // Add admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
 
-            // Handle form submissions
-            add_action('admin_post_save_ai_web_site_options', array($this, 'save_options'));
-            add_action('admin_post_test_cpanel_connection', array($this, 'test_connection'));
-            
-            // Also add for non-logged in users (if needed)
-            add_action('wp_ajax_save_ai_web_site_options', array($this, 'save_options'));
-            
-            // Handle UMP license activation
-            add_action('wp_ajax_activate_ump_license', array($this, 'activate_ump_license'));
+        // Handle form submissions
+        add_action('admin_post_save_ai_web_site_options', array($this, 'save_options'));
+        add_action('admin_post_test_cpanel_connection', array($this, 'test_connection'));
+
+        // Also add for non-logged in users (if needed)
+        add_action('wp_ajax_save_ai_web_site_options', array($this, 'save_options'));
+
+        // Handle UMP license activation
+        add_action('wp_ajax_activate_ump_license', array($this, 'activate_ump_license'));
 
         // Add admin menu
         add_action('admin_menu', array($this, 'add_admin_menu'));
@@ -142,11 +142,12 @@ class AI_Web_Site_Admin
         $options = get_option('ai_web_site_options', array());
 
         // Update options (only essential fields)
-        $options['cpanel_username'] = sanitize_text_field($_POST['cpanel_username']);
-        $options['cpanel_api_token'] = sanitize_text_field($_POST['cpanel_api_token']);
-        $options['main_domain'] = sanitize_text_field($_POST['main_domain']);
-        $options['required_ump_level_id'] = (int)sanitize_text_field($_POST['required_ump_level_id']);
-        $options['ump_domain_override'] = sanitize_text_field($_POST['ump_domain_override']);
+               $options['cpanel_username'] = sanitize_text_field($_POST['cpanel_username']);
+               $options['cpanel_api_token'] = sanitize_text_field($_POST['cpanel_api_token']);
+               $options['main_domain'] = sanitize_text_field($_POST['main_domain']);
+               $options['required_ump_level_id'] = (int)sanitize_text_field($_POST['required_ump_level_id']);
+               $options['ump_domain_override'] = sanitize_text_field($_POST['ump_domain_override']);
+               $options['disable_ump_tracking'] = isset($_POST['disable_ump_tracking']) ? 1 : 0;
 
         // Save options
         $result = update_option('ai_web_site_options', $options);
@@ -256,21 +257,21 @@ class AI_Web_Site_Admin
 
         // Get UMP integration instance
         $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
-        
+
         if (!$ump_integration->is_ump_available()) {
             wp_send_json_error('Ultimate Membership Pro plugin is not available or not properly loaded');
         }
 
         // Get the configured domain override
         $domain_override = $ump_integration->get_ump_domain_override();
-        
+
         if (empty($domain_override)) {
             wp_send_json_error('UMP License Domain is not configured. Please set it in the settings above.');
         }
 
         // Try to redirect to UMP license activation page
         $ump_admin_url = admin_url('admin.php?page=ihc_manage&tab=help');
-        
+
         wp_send_json_success(array(
             'message' => 'Please go to Ultimate Membership Pro → Help to activate your license.',
             'redirect_url' => $ump_admin_url,

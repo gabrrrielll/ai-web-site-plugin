@@ -234,17 +234,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // UMP License Activation
     var activateButton = document.getElementById('activate_ump_license');
     var statusDiv = document.getElementById('ump_license_status');
-    
+
     if (activateButton && statusDiv) {
-        activateButton.addEventListener('click', function() {
+        activateButton.addEventListener('click', function () {
             var button = this;
             var originalText = button.textContent;
-            
+
             // Disable button and show loading
             button.disabled = true;
             button.textContent = aiWebSite.strings.activating || 'Activating...';
             statusDiv.innerHTML = '<div style="color: #0073aa;">Activating UMP license...</div>';
-            
+
             // Make AJAX request
             fetch(aiWebSite.ajaxUrl, {
                 method: 'POST',
@@ -256,31 +256,31 @@ document.addEventListener('DOMContentLoaded', function () {
                     nonce: aiWebSite.nonce
                 })
             })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.success) {
-                    var message = data.data.message || 'UMP license activated successfully!';
-                    statusDiv.innerHTML = '<div style="color: #46b450;">✓ ' + message + '</div>';
-                    
-                    // If there's a redirect URL, show it as a link
-                    if (data.data.redirect_url) {
-                        statusDiv.innerHTML += '<div style="margin-top: 10px;"><a href="' + data.data.redirect_url + '" class="button button-primary" target="_blank">Go to UMP License Page</a></div>';
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data.success) {
+                        var message = data.data.message || 'UMP license activated successfully!';
+                        statusDiv.innerHTML = '<div style="color: #46b450;">✓ ' + message + '</div>';
+
+                        // If there's a redirect URL, show it as a link
+                        if (data.data.redirect_url) {
+                            statusDiv.innerHTML += '<div style="margin-top: 10px;"><a href="' + data.data.redirect_url + '" class="button button-primary" target="_blank">Go to UMP License Page</a></div>';
+                        }
+                    } else {
+                        statusDiv.innerHTML = '<div style="color: #dc3232;">✗ ' + (data.data || 'Failed to activate UMP license.') + '</div>';
                     }
-                } else {
-                    statusDiv.innerHTML = '<div style="color: #dc3232;">✗ ' + (data.data || 'Failed to activate UMP license.') + '</div>';
-                }
-            })
-            .catch(function(error) {
-                console.error('Error:', error);
-                statusDiv.innerHTML = '<div style="color: #dc3232;">✗ Error activating UMP license.</div>';
-            })
-            .finally(function() {
-                // Re-enable button
-                button.disabled = false;
-                button.textContent = originalText;
-            });
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                    statusDiv.innerHTML = '<div style="color: #dc3232;">✗ Error activating UMP license.</div>';
+                })
+                .finally(function () {
+                    // Re-enable button
+                    button.disabled = false;
+                    button.textContent = originalText;
+                });
         });
     }
 
