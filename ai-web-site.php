@@ -26,6 +26,7 @@ require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-debug-logger.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ai-web-site.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-cpanel-api.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-database.php';
+require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ump-integration.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'admin/class-admin.php';
 
 /**
@@ -79,6 +80,10 @@ class AI_Web_Site_Plugin
         AI_Web_Site::get_instance();
         AI_Web_Site_CPanel_API::get_instance();
         AI_Web_Site_Database::get_instance();
+        
+        // Initialize UMP integration and domain override
+        $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+        $ump_integration->init_domain_override();
 
         AI_Web_Site_Admin::get_instance();
 

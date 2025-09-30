@@ -75,7 +75,41 @@ $subdomains = $database->get_all_subdomains();
                             <p class="description"><?php _e('Main domain for subdomains (e.g., ai-web.site)', 'ai-web-site-plugin'); ?></p>
                         </td>
                     </tr>
-                </table>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="required_ump_level_id"><?php _e('Required UMP Level', 'ai-web-site-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <?php
+                            $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+$ump_levels = $ump_integration->get_all_ump_levels();
+$current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
+?>
+                            <select id="required_ump_level_id" name="required_ump_level_id" class="regular-text">
+                                <option value="0"><?php _e('No specific level required', 'ai-web-site-plugin'); ?></option>
+                                <?php foreach ($ump_levels as $level_id => $level_label): ?>
+                                    <option value="<?php echo esc_attr($level_id); ?>" <?php selected($current_ump_level, $level_id); ?> >
+                                        <?php echo esc_html($level_label); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                           <p class="description"><?php _e('Select the Ultimate Membership Pro level required to create and manage subdomains.', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+
+                   <tr>
+                       <th scope="row">
+                           <label for="ump_domain_override"><?php _e('UMP License Domain', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="text" id="ump_domain_override" name="ump_domain_override" 
+                                  value="<?php echo esc_attr($options['ump_domain_override'] ?? 'andradadan.com'); ?>" 
+                                  class="regular-text" placeholder="andradadan.com">
+                           <p class="description"><?php _e('Domain to report to Ultimate Membership Pro for license validation (use the domain where your UMP license was purchased).', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+               </table>
                 
                 <p class="submit">
                     <button type="submit" class="button-primary" name="action" value="save_ai_web_site_options">

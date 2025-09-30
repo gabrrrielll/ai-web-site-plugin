@@ -180,6 +180,17 @@ class AI_Web_Site
             wp_send_json_error('Subdomain and domain are required');
         }
 
+        // Check UMP subscription
+        $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+        $required_ump_level_id = $ump_integration->get_required_ump_level_id();
+        $current_user_id = get_current_user_id();
+
+        if ($required_ump_level_id > 0) {
+            if (!$ump_integration->user_has_active_ump_level($current_user_id, $required_ump_level_id)) {
+                wp_send_json_error(__('You need an active Ultimate Membership Pro subscription to perform this action.', 'ai-web-site-plugin'));
+            }
+        }
+
         // Create subdomain using cPanel API
         $cpanel_api = AI_Web_Site_CPanel_API::get_instance();
         $result = $cpanel_api->create_subdomain($subdomain, $domain);
@@ -220,6 +231,18 @@ class AI_Web_Site
         if (empty($subdomain) || empty($domain)) {
             $logger->error('PLUGIN', 'HANDLE_DELETE_SUBDOMAIN_ERROR', 'Subdomain and domain are required', array('subdomain' => $subdomain, 'domain' => $domain));
             wp_send_json_error('Subdomain and domain are required');
+        }
+
+        // Check UMP subscription
+        $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+        $required_ump_level_id = $ump_integration->get_required_ump_level_id();
+        $current_user_id = get_current_user_id();
+
+        if ($required_ump_level_id > 0) {
+            if (!$ump_integration->user_has_active_ump_level($current_user_id, $required_ump_level_id)) {
+                $logger->error('PLUGIN', 'HANDLE_DELETE_SUBDOMAIN_UMP_ERROR', 'User does not have required UMP subscription', array('user_id' => $current_user_id, 'required_level' => $required_ump_level_id));
+                wp_send_json_error(__('You need an active Ultimate Membership Pro subscription to perform this action.', 'ai-web-site-plugin'));
+            }
         }
 
         // Delete from database
