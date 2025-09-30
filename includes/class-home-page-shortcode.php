@@ -86,7 +86,7 @@ class AI_Web_Site_Home_Page_Shortcode
 
         // Include the template file with variables available
         $template_path = AI_WEB_SITE_PLUGIN_DIR . 'assets/home-page/home-page-template.php';
-        
+
         if (file_exists($template_path)) {
             include $template_path;
         } else {
@@ -106,7 +106,7 @@ class AI_Web_Site_Home_Page_Shortcode
     {
         // Only enqueue if shortcode is being used on the current page
         global $post;
-        
+
         if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'ai_website_builder_home')) {
             $this->output_inline_styles();
         }
@@ -129,14 +129,14 @@ class AI_Web_Site_Home_Page_Shortcode
     private function output_inline_styles()
     {
         static $styles_loaded = false;
-        
+
         // Prevent loading styles multiple times
         if ($styles_loaded) {
             return;
         }
-        
+
         $css_path = AI_WEB_SITE_PLUGIN_DIR . 'assets/home-page/home-page-styles.css';
-        
+
         if (file_exists($css_path)) {
             echo '<style type="text/css" id="ai-website-builder-home-styles">';
             echo file_get_contents($css_path);
