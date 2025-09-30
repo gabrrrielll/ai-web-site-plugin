@@ -80,19 +80,42 @@ class AI_Web_Site_Plugin
      */
     public function init()
     {
+        // Log plugin initialization
+        if (function_exists('error_log')) {
+            error_log('AI-Web-Site: Plugin init() method called');
+        }
+        
         // Initialize main classes
+        if (function_exists('error_log')) {
+            error_log('AI-Web-Site: Initializing AI_Web_Site class');
+        }
         AI_Web_Site::get_instance();
+        
+        if (function_exists('error_log')) {
+            error_log('AI-Web-Site: Initializing AI_Web_Site_CPanel_API class');
+        }
         AI_Web_Site_CPanel_API::get_instance();
+        
+        if (function_exists('error_log')) {
+            error_log('AI-Web-Site: Initializing AI_Web_Site_Database class');
+        }
         AI_Web_Site_Database::get_instance();
 
         // Log before initializing admin class
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('PLUGIN', 'INIT_ADMIN', 'Initializing admin class');
 
+        if (function_exists('error_log')) {
+            error_log('AI-Web-Site: Initializing AI_Web_Site_Admin class');
+        }
         AI_Web_Site_Admin::get_instance();
 
         // Load text domain for translations
         load_plugin_textdomain('ai-web-site', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        
+        if (function_exists('error_log')) {
+            error_log('AI-Web-Site: Plugin initialization completed');
+        }
     }
 
     /**
@@ -163,4 +186,10 @@ class AI_Web_Site_Plugin
 }
 
 // Initialize the plugin
+if (function_exists('error_log')) {
+    error_log('AI-Web-Site: About to initialize main plugin class');
+}
 AI_Web_Site_Plugin::get_instance();
+if (function_exists('error_log')) {
+    error_log('AI-Web-Site: Main plugin class initialized');
+}
