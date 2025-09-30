@@ -41,7 +41,7 @@ class AI_Web_Site_CPanel_API
         if (function_exists('error_log')) {
             error_log('AI-Web-Site: AI_Web_Site_CPanel_API class initialized');
         }
-        
+
         $this->load_config();
     }
 

@@ -39,7 +39,7 @@ class AI_Web_Site_Debug_Logger
     {
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'ai_web_site_logs';
-        
+
         // Log class initialization
         if (function_exists('error_log')) {
             error_log('AI-Web-Site: AI_Web_Site_Debug_Logger class initialized');

@@ -36,7 +36,7 @@ class AI_Web_Site_Database
         if (function_exists('error_log')) {
             error_log('AI-Web-Site: AI_Web_Site_Database class initialized');
         }
-        
+
         // Constructor is empty as we only need static methods
     }
 
