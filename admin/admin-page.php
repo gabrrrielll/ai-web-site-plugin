@@ -8,14 +8,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Log admin page load
-$logger = AI_Web_Site_Debug_Logger::get_instance();
-$logger->info('ADMIN', 'PAGE_LOAD', 'Admin page loaded', array(
-    'current_user' => get_current_user_id(),
-    'user_can_manage_options' => current_user_can('manage_options'),
-    'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown'
-));
-
 // Get current options
 $options = get_option('ai_web_site_options', array());
 $admin = AI_Web_Site_Admin::get_instance();

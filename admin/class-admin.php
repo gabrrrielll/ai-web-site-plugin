@@ -32,10 +32,6 @@ class AI_Web_Site_Admin
      */
     private function __construct()
     {
-        // Log admin class initialization
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('ADMIN', 'CLASS_INIT', 'AI_Web_Site_Admin class initialized');
-
         $this->init_hooks();
     }
 
@@ -44,9 +40,6 @@ class AI_Web_Site_Admin
      */
     private function init_hooks()
     {
-        // Get logger instance first
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-
         // Add admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
 
@@ -59,9 +52,6 @@ class AI_Web_Site_Admin
 
         // Add admin menu
         add_action('admin_menu', array($this, 'add_admin_menu'));
-
-        // Log hook registration
-        $logger->info('ADMIN', 'HOOKS_REGISTERED', 'Admin hooks registered successfully');
     }
 
     /**
@@ -69,35 +59,21 @@ class AI_Web_Site_Admin
      */
     public function enqueue_admin_scripts($hook)
     {
-        // Log all admin hooks for debugging
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('ADMIN', 'ENQUEUE_SCRIPTS_CALLED', 'enqueue_admin_scripts called', array(
-            'hook' => $hook,
-            'current_screen' => get_current_screen() ? get_current_screen()->id : 'unknown'
-        ));
-
-        // Always load scripts for debugging - remove the hook check temporarily
-        $logger->info('ADMIN', 'ENQUEUE_SCRIPTS_LOADING', 'Loading scripts for hook', array(
-            'hook' => $hook,
-            'expected' => 'settings_page_ai-web-site-plugin',
-            'is_correct_hook' => ($hook === 'settings_page_ai-web-site-plugin')
-        ));
-
         // Load CSS inline
         $css_path = AI_WEB_SITE_PLUGIN_DIR . 'assets/admin.css';
         if (file_exists($css_path)) {
-            $logger->info('ADMIN', 'CSS_LOAD', 'Loading CSS inline', array('css_path' => $css_path));
             echo '<style type="text/css">';
             echo file_get_contents($css_path);
             echo '</style>';
         } else {
+            // Log error if CSS not found
+            $logger = AI_Web_Site_Debug_Logger::get_instance();
             $logger->error('ADMIN', 'CSS_NOT_FOUND', 'CSS file not found', array('css_path' => $css_path));
         }
 
         // Load JavaScript inline
         $js_path = AI_WEB_SITE_PLUGIN_DIR . 'assets/admin.js';
         if (file_exists($js_path)) {
-            $logger->info('ADMIN', 'JS_LOAD', 'Loading JS inline', array('js_path' => $js_path));
             echo '<script type="text/javascript">';
             echo 'var aiWebSite = ' . json_encode(array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -112,6 +88,8 @@ class AI_Web_Site_Admin
             echo file_get_contents($js_path);
             echo '</script>';
         } else {
+            // Log error if JS not found
+            $logger = AI_Web_Site_Debug_Logger::get_instance();
             $logger->error('ADMIN', 'JS_NOT_FOUND', 'JS file not found', array('js_path' => $js_path));
         }
     }
@@ -121,9 +99,6 @@ class AI_Web_Site_Admin
      */
     public function add_admin_menu()
     {
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('ADMIN', 'MENU_ADD', 'Adding admin menu');
-
         add_options_page(
             __('AI Web Site Plugin', 'ai-web-site-plugin'),
             __('AI Web Site Plugin', 'ai-web-site-plugin'),
@@ -131,8 +106,6 @@ class AI_Web_Site_Admin
             'ai-web-site-plugin',
             array($this, 'admin_page')
         );
-
-        $logger->info('ADMIN', 'MENU_ADDED', 'Admin menu added successfully');
     }
 
     /**
@@ -140,9 +113,6 @@ class AI_Web_Site_Admin
      */
     public function admin_page()
     {
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('ADMIN', 'PAGE_CALLBACK', 'Admin page callback called');
-
         include AI_WEB_SITE_PLUGIN_DIR . 'admin/admin-page.php';
     }
 
@@ -151,28 +121,23 @@ class AI_Web_Site_Admin
      */
     public function save_options()
     {
-        // NEW LOG: Confirm this method is called
+        // NEW LOG: Confirm this method is called and capture all POST data
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('ADMIN', 'SAVE_OPTIONS_ENTRY', 'Entering save_options method', array(
+        $logger->info('ADMIN', 'SAVE_OPTIONS_ENTRY', 'Entering save_options method and capturing POST data', array(
             'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
-            'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown'
-        ));
-
-        // Log that save_options was called
-        $logger->info('ADMIN', 'SAVE_OPTIONS_CALLED', 'save_options method called', array(
-            'post_data' => $_POST,
-            'nonce' => isset($_POST['_wpnonce']) ? $_POST['_wpnonce'] : 'not_set'
+            'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+            'all_post_data' => $_POST
         ));
 
         // Check nonce
         if (!wp_verify_nonce($_POST['_wpnonce'], 'ai_web_site_options')) {
-            $logger->error('ADMIN', 'SAVE_OPTIONS_ERROR', 'Nonce verification failed');
+            $logger->error('ADMIN', 'SAVE_OPTIONS_ERROR', 'Nonce verification failed', array('nonce_post' => $_POST['_wpnonce'] ?? 'not_set'));
             wp_die('Security check failed');
         }
 
         // Check permissions
         if (!current_user_can('manage_options')) {
-            $logger->error('ADMIN', 'SAVE_OPTIONS_ERROR', 'Insufficient permissions');
+            $logger->error('ADMIN', 'SAVE_OPTIONS_ERROR', 'Insufficient permissions', array('user_id' => get_current_user_id()));
             wp_die('Insufficient permissions');
         }
 
@@ -186,26 +151,11 @@ class AI_Web_Site_Admin
         $options['cpanel_api_token'] = sanitize_text_field($_POST['cpanel_api_token']);
         $options['main_domain'] = sanitize_text_field($_POST['main_domain']);
 
-        // Log the POSTed token for debugging
-        $logger->info('ADMIN', 'SAVE_OPTIONS_POST_DATA', 'POST data for options', array(
-            'cpanel_username' => $_POST['cpanel_username'] ?? 'not_set',
-            'cpanel_api_token_length_post' => strlen($_POST['cpanel_api_token'] ?? ''),
-            'main_domain' => $_POST['main_domain'] ?? 'not_set'
-        ));
-
         // Log the options before saving
         $logger->info('ADMIN', 'SAVE_OPTIONS_BEFORE_UPDATE', 'Options before update_option', array(
             'cpanel_username' => $options['cpanel_username'],
             'cpanel_api_token_length_options' => strlen($options['cpanel_api_token']),
             'main_domain' => $options['main_domain']
-        ));
-
-        // Log the save operation
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('ADMIN', 'SAVE_OPTIONS', 'Saving plugin options', array(
-            'username' => $options['cpanel_username'],
-            'main_domain' => $options['main_domain'],
-            'api_token_length' => strlen($options['cpanel_api_token'])
         ));
 
         // Save options
@@ -227,9 +177,6 @@ class AI_Web_Site_Admin
      */
     public function debug_admin_post()
     {
-        // Simple log to see if this method is called at all
-        error_log('AI-Web-Site: debug_admin_post method called');
-
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('ADMIN', 'ADMIN_POST_DEBUG', 'admin_post hook triggered', array(
             'action' => isset($_POST['action']) ? $_POST['action'] : 'not_set',
@@ -245,11 +192,13 @@ class AI_Web_Site_Admin
     {
         // Check nonce
         if (!wp_verify_nonce($_POST['_wpnonce'], 'ai_web_site_options')) {
+            $logger->error('ADMIN', 'TEST_CONNECTION_ERROR', 'Nonce verification failed', array('nonce_post' => $_POST['_wpnonce'] ?? 'not_set'));
             wp_die('Security check failed');
         }
 
         // Check permissions
         if (!current_user_can('manage_options')) {
+            $logger->error('ADMIN', 'TEST_CONNECTION_ERROR', 'Insufficient permissions', array('user_id' => get_current_user_id()));
             wp_die('Insufficient permissions');
         }
 
@@ -293,19 +242,19 @@ class AI_Web_Site_Admin
                 case 'options_saved':
                     $messages[] = array(
                         'type' => 'success',
-                        'text' => __('Options saved successfully.', 'ai-web-site')
+                        'text' => __('Options saved successfully.', 'ai-web-site-plugin')
                     );
                     break;
                 case 'connection_success':
                     $messages[] = array(
                         'type' => 'success',
-                        'text' => __('cPanel connection test successful.', 'ai-web-site')
+                        'text' => __('cPanel connection test successful.', 'ai-web-site-plugin')
                     );
                     break;
                 case 'connection_failed':
                     $messages[] = array(
                         'type' => 'error',
-                        'text' => __('cPanel connection test failed. Please check your settings.', 'ai-web-site')
+                        'text' => __('cPanel connection test failed. Please check your settings.', 'ai-web-site-plugin')
                     );
                     break;
             }
