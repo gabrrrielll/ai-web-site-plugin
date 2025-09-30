@@ -23,25 +23,10 @@ define('AI_WEB_SITE_PLUGIN_FILE', __FILE__);
 
 // Include required files
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-debug-logger.php';
-if (function_exists('error_log')) {
-    error_log('AI-Web-Site: class-debug-logger.php loaded');
-}
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ai-web-site.php';
-if (function_exists('error_log')) {
-    error_log('AI-Web-Site: class-ai-web-site.php loaded');
-}
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-cpanel-api.php';
-if (function_exists('error_log')) {
-    error_log('AI-Web-Site: class-cpanel-api.php loaded');
-}
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-database.php';
-if (function_exists('error_log')) {
-    error_log('AI-Web-Site: class-database.php loaded');
-}
 require_once AI_WEB_SITE_PLUGIN_DIR . 'admin/class-admin.php';
-if (function_exists('error_log')) {
-    error_log('AI-Web-Site: class-admin.php loaded');
-}
 
 /**
  * Main plugin class
@@ -101,33 +86,19 @@ class AI_Web_Site_Plugin
         }
 
         // Initialize main classes
-        if (function_exists('error_log')) {
-            error_log('AI-Web-Site: Initializing AI_Web_Site class');
-        }
         AI_Web_Site::get_instance();
-
-        if (function_exists('error_log')) {
-            error_log('AI-Web-Site: Initializing AI_Web_Site_CPanel_API class');
-        }
         AI_Web_Site_CPanel_API::get_instance();
-
-        if (function_exists('error_log')) {
-            error_log('AI-Web-Site: Initializing AI_Web_Site_Database class');
-        }
         AI_Web_Site_Database::get_instance();
 
         // Log before initializing admin class
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('PLUGIN', 'INIT_ADMIN', 'Initializing admin class');
 
-        if (function_exists('error_log')) {
-            error_log('AI-Web-Site: Initializing AI_Web_Site_Admin class');
-        }
         AI_Web_Site_Admin::get_instance();
 
         // Load text domain for translations
-        load_plugin_textdomain('ai-web-site', false, dirname(plugin_basename(__FILE__)) . '/languages');
-
+        load_plugin_textdomain('ai-web-site-plugin', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        
         if (function_exists('error_log')) {
             error_log('AI-Web-Site: Plugin initialization completed');
         }

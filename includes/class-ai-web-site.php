@@ -32,11 +32,6 @@ class AI_Web_Site
      */
     private function __construct()
     {
-        // Log class initialization
-        if (function_exists('error_log')) {
-            error_log('AI-Web-Site: AI_Web_Site class initialized');
-        }
-
         $this->init_hooks();
     }
 
