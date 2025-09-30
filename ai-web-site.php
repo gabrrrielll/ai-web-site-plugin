@@ -80,7 +80,7 @@ class AI_Web_Site_Plugin
         AI_Web_Site::get_instance();
         AI_Web_Site_CPanel_API::get_instance();
         AI_Web_Site_Database::get_instance();
-        
+
         // Initialize UMP integration and domain override
         $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
         $ump_integration->init_domain_override();

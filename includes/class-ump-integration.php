@@ -9,23 +9,65 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Ensure UMP classes are available (autoloader should handle this, but for safety)
-if (!class_exists('\Indeed\Ihc\UserSubscriptions')) {
-    // Optionally include UMP autoload.php if not already loaded by WordPress
-    // require_once trailingslashit(WPMU_PLUGIN_DIR) . 'ultimate-membership-pro/autoload.php';
-    // For our temp_plugins setup, we'll try to rely on general availability or include directly
-    if (file_exists(ABSPATH . 'wp-content/plugins/indeed-membership-pro/classes/UserSubscriptions.php')) {
-        require_once ABSPATH . 'wp-content/plugins/indeed-membership-pro/classes/UserSubscriptions.php';
-    } elseif (file_exists(AI_WEB_SITE_PLUGIN_DIR . '../temp_plugins/indeed-membership-pro/classes/UserSubscriptions.php')) {
-        require_once AI_WEB_SITE_PLUGIN_DIR . '../temp_plugins/indeed-membership-pro/classes/UserSubscriptions.php';
+// Ensure UMP constants and classes are available
+$ump_plugin_path = null;
+
+// Check if UMP is installed in standard location
+if (file_exists(ABSPATH . 'wp-content/plugins/indeed-membership-pro/indeed-membership-pro.php')) {
+    $ump_plugin_path = ABSPATH . 'wp-content/plugins/indeed-membership-pro/';
+} elseif (file_exists(AI_WEB_SITE_PLUGIN_DIR . '../temp_plugins/indeed-membership-pro/indeed-membership-pro.php')) {
+    // Fallback to our temp_plugins directory
+    $ump_plugin_path = AI_WEB_SITE_PLUGIN_DIR . '../temp_plugins/indeed-membership-pro/';
+}
+
+// Define UMP constants if not already defined
+if ($ump_plugin_path && !defined('IHC_PATH')) {
+    define('IHC_PATH', $ump_plugin_path);
+}
+if ($ump_plugin_path && !defined('IHC_URL')) {
+    define('IHC_URL', plugins_url('/', $ump_plugin_path . 'indeed-membership-pro.php'));
+}
+if (!defined('IHC_PROTOCOL')) {
+    if (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1) || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&  $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
+        define('IHC_PROTOCOL', 'https://');
+    } else {
+        define('IHC_PROTOCOL', 'http://');
+    }
+}
+if (!defined('IUMP_VEND')) {
+    define('IUMP_VEND', [
+        'evt' => 'Envato Marketplace'
+    ]);
+}
+if (!defined('IHC_DEV')) {
+    define('IHC_DEV', "WPIndeed");
+}
+
+// Include UMP autoloader if available
+if ($ump_plugin_path && file_exists($ump_plugin_path . 'autoload.php')) {
+    require_once $ump_plugin_path . 'autoload.php';
+}
+
+// Include utilities if available
+if ($ump_plugin_path && file_exists($ump_plugin_path . 'utilities.php')) {
+    require_once $ump_plugin_path . 'utilities.php';
+}
+
+// Include database class if available (needed by Memberships class)
+if ($ump_plugin_path && file_exists($ump_plugin_path . 'classes/Ihc_Db.class.php')) {
+    require_once $ump_plugin_path . 'classes/Ihc_Db.class.php';
+}
+
+// Include specific classes we need if they're not autoloaded
+if (!class_exists('\Indeed\Ihc\UserSubscriptions') && $ump_plugin_path) {
+    if (file_exists($ump_plugin_path . 'classes/UserSubscriptions.php')) {
+        require_once $ump_plugin_path . 'classes/UserSubscriptions.php';
     }
 }
 
-if (!class_exists('\Indeed\Ihc\Db\Memberships')) {
-    if (file_exists(ABSPATH . 'wp-content/plugins/indeed-membership-pro/classes/Db/Memberships.php')) {
-        require_once ABSPATH . 'wp-content/plugins/indeed-membership-pro/classes/Db/Memberships.php';
-    } elseif (file_exists(AI_WEB_SITE_PLUGIN_DIR . '../temp_plugins/indeed-membership-pro/classes/Db/Memberships.php')) {
-        require_once AI_WEB_SITE_PLUGIN_DIR . '../temp_plugins/indeed-membership-pro/classes/Db/Memberships.php';
+if (!class_exists('\Indeed\Ihc\Db\Memberships') && $ump_plugin_path) {
+    if (file_exists($ump_plugin_path . 'classes/Db/Memberships.php')) {
+        require_once $ump_plugin_path . 'classes/Db/Memberships.php';
     }
 }
 
@@ -48,6 +90,15 @@ class AI_Web_Site_UMP_Integration
     }
 
     /**
+     * Check if UMP plugin is available and properly loaded.
+     * @return bool True if UMP is available, false otherwise.
+     */
+    public function is_ump_available()
+    {
+        return (defined('IHC_PATH') && class_exists('\Indeed\Ihc\UserSubscriptions'));
+    }
+
+    /**
      * Check if a user has an active UMP subscription for a specific level.
      * @param int $user_id The ID of the WordPress user.
      * @param int $ump_level_id The ID of the UMP membership level.
@@ -55,11 +106,11 @@ class AI_Web_Site_UMP_Integration
      */
     public function user_has_active_ump_level($user_id, $ump_level_id)
     {
-        if (!class_exists('\Indeed\Ihc\UserSubscriptions')) {
-            // UMP plugin is not active or class not found
+        if (!$this->is_ump_available()) {
+            // UMP plugin is not active or not properly loaded
             return false;
         }
-
+        
         // The isActive method already handles expiry and grace periods
         return \Indeed\Ihc\UserSubscriptions::isActive($user_id, $ump_level_id);
     }
@@ -72,7 +123,7 @@ class AI_Web_Site_UMP_Integration
      */
     public function get_user_ump_level_status($user_id, $ump_level_id)
     {
-        if (!class_exists('\Indeed\Ihc\UserSubscriptions')) {
+        if (!$this->is_ump_available()) {
             return false;
         }
         return \Indeed\Ihc\UserSubscriptions::getStatus($user_id, $ump_level_id);
@@ -84,19 +135,25 @@ class AI_Web_Site_UMP_Integration
      */
     public function get_all_ump_levels()
     {
-        if (!class_exists('\Indeed\Ihc\Db\Memberships')) {
+        if (!$this->is_ump_available() || !class_exists('\Indeed\Ihc\Db\Memberships')) {
             return [];
         }
-        $levels_data = \Indeed\Ihc\Db\Memberships::getAll();
-        $formatted_levels = [];
-        if (!empty($levels_data)) {
-            foreach ($levels_data as $level_id => $level_info) {
-                if (isset($level_info['label'])) {
-                    $formatted_levels[$level_id] = $level_info['label'];
+        
+        try {
+            $levels_data = \Indeed\Ihc\Db\Memberships::getAll();
+            $formatted_levels = [];
+            if (!empty($levels_data)) {
+                foreach ($levels_data as $level_id => $level_info) {
+                    if (isset($level_info['label'])) {
+                        $formatted_levels[$level_id] = $level_info['label'];
+                    }
                 }
             }
+            return $formatted_levels;
+        } catch (Exception $e) {
+            // If there's an error getting UMP levels, return empty array
+            return [];
         }
-        return $formatted_levels;
     }
 
     /**
@@ -127,7 +184,7 @@ class AI_Web_Site_UMP_Integration
     public function init_domain_override()
     {
         $domain_override = $this->get_ump_domain_override();
-        
+
         if (!empty($domain_override)) {
             add_filter('option_siteurl', array($this, 'filter_siteurl_for_ump'), 10, 1);
             add_filter('option_home', array($this, 'filter_siteurl_for_ump'), 10, 1);
@@ -143,13 +200,13 @@ class AI_Web_Site_UMP_Integration
     {
         // Check if we're in UMP context by examining the call stack
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 15);
-        
+
         foreach ($backtrace as $trace) {
             if (isset($trace['file'])) {
                 // Check if the call comes from UMP plugin files
-                if (strpos($trace['file'], 'indeed-membership-pro') !== false || 
+                if (strpos($trace['file'], 'indeed-membership-pro') !== false ||
                     strpos($trace['file'], 'ultimate-membership-pro') !== false) {
-                    
+
                     $domain_override = $this->get_ump_domain_override();
                     if (!empty($domain_override)) {
                         // Add protocol if not present
@@ -161,7 +218,7 @@ class AI_Web_Site_UMP_Integration
                 }
             }
         }
-        
+
         return $value;
     }
 }
