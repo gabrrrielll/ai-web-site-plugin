@@ -160,12 +160,11 @@ class AI_Web_Site_CPanel_API
         }
 
         // Prepare API URL
-        $api_url = "https://{$this->config['host']}:2083/execute/SubDomain/delsubdomain";
+        $api_url = "https://{$this->config['host']}:2083/execute/DomainInfo/remove_subdomain";
 
-        // Prepare parameters
+        // Prepare parameters (domain must be full subdomain, e.g., test.example.com)
         $params = array(
-            'domain' => $subdomain,
-            'rootdomain' => $domain
+            'domain' => "{$subdomain}.{$domain}"
         );
 
         // Make API request
