@@ -533,17 +533,26 @@
 
 /* CTA Button */
 .awb-cta-button {
-    background: var(--bg-gradient);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     transition: all 0.3s ease;
     text-decoration: none;
+    color: white !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 1rem 2rem !important;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .awb-cta-button:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     text-decoration: none;
-    color: white;
+    color: white !important;
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
 
 /* Feature Cards */
@@ -691,7 +700,7 @@
 }
 
 /* Ensure containers take full width */
-.ai-website-builder-home > section {
+.ai-website-builder-home>section {
     width: 100% !important;
     box-sizing: border-box !important;
 }
@@ -700,4 +709,14 @@
 .ai-website-builder-home .px-6,
 .ai-website-builder-home .px-8 {
     box-sizing: border-box !important;
+}
+
+/* Ensure CTA button is always visible */
+.ai-website-builder-home .awb-cta-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 10 !important;
 }
