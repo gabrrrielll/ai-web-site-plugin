@@ -14,13 +14,13 @@ if (!defined('ABSPATH')) {
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-gradient-to-br from-gray-50 to-white awb-hero-section">
         <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+            <div class="relative max-w-7xl mx-auto px-4 sm-px-6 lg-px-8 py-20 lg-py-32">
             <div class="text-center awb-animate-fade-in-up">
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+                <h1 class="text-4xl sm-text-5xl lg-text-6xl font-bold text-gray-900 mb-6">
                     <span class="block">AI Website Free Live</span>
                     <span class="block text-primary">Frontend Builder</span>
                 </h1>
-                <p class="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                <p class="text-xl sm-text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
                     Create stunning websites in just 5 minutes with AI assistance. 
                     Edit any element with a simple double-click. Forever free plan included.
                 </p>
@@ -37,7 +37,7 @@ if (!defined('ABSPATH')) {
                 </div>
                 
                 <!-- Trust Indicators -->
-                <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-sm text-gray-500">
+                <div class="flex flex-col sm-flex-row items-center justify-center space-y-4 sm-space-y-0 sm-space-x-8 text-sm text-gray-500">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
@@ -64,9 +64,9 @@ if (!defined('ABSPATH')) {
     <?php if ($show_features !== 'false'): ?>
     <!-- Features Section -->
     <section class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm-px-6 lg-px-8">
             <div class="text-center mb-16 awb-animate-fade-in">
-                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                <h2 class="text-3xl sm-text-4xl font-bold text-gray-900 mb-4">
                     Everything you need to build amazing websites
                 </h2>
                 <p class="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -74,10 +74,10 @@ if (!defined('ABSPATH')) {
                 </p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 gap-8">
                 <!-- Feature 1: Speed -->
                 <div class="awb-feature-card bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
-                    <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                    <div class="w-12 h-12 bg-primary-10 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
@@ -90,7 +90,7 @@ if (!defined('ABSPATH')) {
                 
                 <!-- Feature 2: AI Assistant -->
                 <div class="awb-feature-card bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
-                    <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-6">
+                    <div class="w-12 h-12 bg-secondary-10 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                         </svg>
@@ -160,9 +160,9 @@ if (!defined('ABSPATH')) {
     <?php if ($show_pricing !== 'false'): ?>
     <!-- Pricing Section -->
     <section class="py-20 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm-px-6 lg-px-8">
             <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                <h2 class="text-3xl sm-text-4xl font-bold text-gray-900 mb-4">
                     Simple, transparent pricing
                 </h2>
                 <p class="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -243,9 +243,9 @@ if (!defined('ABSPATH')) {
     <?php if ($show_how_it_works !== 'false'): ?>
     <!-- How It Works Section -->
     <section class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm-px-6 lg-px-8">
             <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                <h2 class="text-3xl sm-text-4xl font-bold text-gray-900 mb-4">
                     How it works
                 </h2>
                 <p class="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -293,11 +293,11 @@ if (!defined('ABSPATH')) {
 
     <!-- Final CTA Section -->
     <section class="py-20 awb-gradient-bg">
-        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-6">
+        <div class="max-w-4xl mx-auto text-center px-4 sm-px-6 lg-px-8">
+            <h2 class="text-3xl sm-text-4xl font-bold text-white mb-6">
                 Ready to build your dream website?
             </h2>
-            <p class="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+                <p class="text-xl text-white-90 mb-8 max-w-2xl mx-auto">
                 Join thousands of users who have already created amazing websites with our AI-powered builder.
             </p>
             <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site'); ?>" 
@@ -307,7 +307,7 @@ if (!defined('ABSPATH')) {
                 </svg>
                 Start Building for Free
             </a>
-            <p class="text-white/80 text-sm mt-4">No credit card required • Free forever plan</p>
+            <p class="text-white-80 text-sm mt-4">No credit card required • Free forever plan</p>
         </div>
     </section>
 </div>
