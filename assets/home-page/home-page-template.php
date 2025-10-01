@@ -256,7 +256,7 @@ if (!defined('ABSPATH')) {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Step 1 -->
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div class="w-16 h-16 bg-primary-10 rounded-full flex items-center justify-center mx-auto mb-6">
                         <span class="text-2xl font-bold text-primary">1</span>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900 mb-3">Design with AI</h3>
@@ -267,7 +267,7 @@ if (!defined('ABSPATH')) {
                 
                 <!-- Step 2 -->
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div class="w-16 h-16 bg-secondary-10 rounded-full flex items-center justify-center mx-auto mb-6">
                         <span class="text-2xl font-bold text-secondary">2</span>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900 mb-3">Customize Easily</h3>

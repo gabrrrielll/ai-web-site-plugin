@@ -679,11 +679,20 @@
 }
 
 .bg-primary-10 {
-    background-color: rgba(99, 102, 241, 0.1);
+    background-color: rgba(99, 102, 241, 0.1) !important;
 }
 
 .bg-secondary-10 {
-    background-color: rgba(245, 158, 11, 0.1);
+    background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Ensure step circles are visible */
+.ai-website-builder-home .bg-primary-10 {
+    background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+.ai-website-builder-home .bg-secondary-10 {
+    background-color: rgba(245, 158, 11, 0.1) !important;
 }
 
 /* Force full width layout */
