@@ -12,9 +12,9 @@ if (!defined('ABSPATH')) {
 
 <div class="ai-website-builder-home">
     <!-- Hero Section -->
-    <section class="relative overflow-hidden bg-gradient-to-br from-gray-50 to-white awb-hero-section">
-        <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
-            <div class="relative max-w-7xl mx-auto px-4 sm-px-6 lg-px-8 py-20 lg-py-32">
+    <section class="awb-hero-section">
+        <div class="bg-grid-pattern"></div>
+        <div class="max-w-7xl mx-auto px-4 sm-px-6 lg-px-8 py-20 lg-py-32">
             <div class="text-center awb-animate-fade-in-up">
                 <h1 class="text-4xl sm-text-5xl lg-text-6xl font-bold text-white mb-6">
                     <span class="block">AI Website Free Live</span>
