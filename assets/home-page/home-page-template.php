@@ -17,12 +17,12 @@ if (!defined('ABSPATH')) {
         <div class="max-w-7xl mx-auto px-4 sm-px-6 lg-px-8 py-20 lg-py-32">
             <div class="text-center awb-animate-fade-in-up">
                 <h1 class="text-4xl sm-text-5xl lg-text-6xl font-bold text-white mb-6">
-                    <span class="block">AI Website Free Live</span>
-                    <span class="block text-white">Frontend Builder</span>
+                    <span class="block">Financial infrastructure</span>
+                    <span class="block text-white">to grow your website</span>
                 </h1>
                 <p class="text-xl sm-text-2xl text-white-90 mb-8 max-w-3xl mx-auto leading-relaxed">
-                    Create stunning websites in just 5 minutes with AI assistance. 
-                    Edit any element with a simple double-click. Forever free plan included.
+                    Join the millions of companies that use AI to create stunning websites in minutes, 
+                    embed powerful features, and build a more profitable online presence.
                 </p>
                 
                 <!-- Main CTA Button -->
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) {
                         <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Start Building Now
+                        Start now
                     </a>
                 </div>
                 
