@@ -514,17 +514,73 @@
 
 /* Custom component styles */
 
-/* Hero Section */
+/* Hero Section with Animated Waves */
 .awb-hero-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     position: relative;
+    overflow: hidden;
+}
+
+.awb-hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
+    animation: waveFloat 20s ease-in-out infinite;
+    z-index: 1;
+}
+
+.awb-hero-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 60% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 90% 70%, rgba(255, 255, 255, 0.07) 0%, transparent 50%),
+        radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
+    animation: waveFloat 25s ease-in-out infinite reverse;
+    z-index: 1;
+}
+
+.awb-hero-section > * {
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes waveFloat {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 1;
+    }
+    25% {
+        transform: translate(-10px, -10px) rotate(1deg);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translate(10px, -5px) rotate(-1deg);
+        opacity: 0.9;
+    }
+    75% {
+        transform: translate(-5px, 10px) rotate(0.5deg);
+        opacity: 0.7;
+    }
 }
 
 .bg-grid-pattern {
     background-image:
-        linear-gradient(rgba(0, 0, 0, .1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 0, 0, .1) 1px, transparent 1px);
-    background-size: 20px 20px;
+        linear-gradient(rgba(255, 255, 255, .1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
 }
 
 .bg-gradient-to-br {
@@ -557,23 +613,73 @@
 
 /* Feature Cards */
 .awb-feature-card {
-    transition: all 0.3s ease;
-    border: 1px solid #e5e7eb;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.awb-feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.awb-feature-card:hover::before {
+    opacity: 1;
 }
 
 .awb-feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
-    border-color: var(--primary-color);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.15),
+        0 10px 20px -5px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+    border-color: rgba(102, 126, 234, 0.3);
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
 }
 
 /* Pricing Card */
 .awb-pricing-card {
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 
+        0 10px 25px -5px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.awb-pricing-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    z-index: 1;
 }
 
 .awb-pricing-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 
+        0 35px 60px -12px rgba(0, 0, 0, 0.18),
+        0 15px 25px -5px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
 }
 
 /* Gradient Background */
@@ -667,6 +773,31 @@
     margin: 0;
     width: 100%;
     min-width: 100%;
+}
+
+/* Subtle background for white sections */
+.ai-website-builder-home section.bg-white {
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    position: relative;
+}
+
+.ai-website-builder-home section.bg-white::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 10% 20%, rgba(102, 126, 234, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(118, 75, 162, 0.02) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.ai-website-builder-home section.bg-white > * {
+    position: relative;
+    z-index: 1;
 }
 
 /* Color opacity utilities */

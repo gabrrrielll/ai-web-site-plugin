@@ -16,11 +16,11 @@ if (!defined('ABSPATH')) {
         <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
             <div class="relative max-w-7xl mx-auto px-4 sm-px-6 lg-px-8 py-20 lg-py-32">
             <div class="text-center awb-animate-fade-in-up">
-                <h1 class="text-4xl sm-text-5xl lg-text-6xl font-bold text-gray-900 mb-6">
+                <h1 class="text-4xl sm-text-5xl lg-text-6xl font-bold text-white mb-6">
                     <span class="block">AI Website Free Live</span>
-                    <span class="block text-primary">Frontend Builder</span>
+                    <span class="block text-white">Frontend Builder</span>
                 </h1>
-                <p class="text-xl sm-text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                <p class="text-xl sm-text-2xl text-white-90 mb-8 max-w-3xl mx-auto leading-relaxed">
                     Create stunning websites in just 5 minutes with AI assistance. 
                     Edit any element with a simple double-click. Forever free plan included.
                 </p>
@@ -37,7 +37,7 @@ if (!defined('ABSPATH')) {
                 </div>
                 
                 <!-- Trust Indicators -->
-                <div class="flex flex-col sm-flex-row items-center justify-center space-y-4 sm-space-y-0 sm-space-x-8 text-sm text-gray-500">
+                <div class="flex flex-col sm-flex-row items-center justify-center space-y-4 sm-space-y-0 sm-space-x-8 text-sm text-white-80">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
