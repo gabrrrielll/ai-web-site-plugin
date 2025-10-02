@@ -152,9 +152,22 @@ class AI_Web_Site_Plugin
 
         if ($existing_config === null) {
             // Încarcă configurația din fișierul public/site-config.json
-            $config_file = AI_WEB_SITE_PLUGIN_DIR . '../frontend/public/site-config.json';
+            // Încearcă mai multe căi posibile
+            $possible_paths = array(
+                AI_WEB_SITE_PLUGIN_DIR . '../frontend/public/site-config.json',
+                AI_WEB_SITE_PLUGIN_DIR . '../../frontend/public/site-config.json',
+                ABSPATH . '../frontend/public/site-config.json'
+            );
+            
+            $config_file = null;
+            foreach ($possible_paths as $path) {
+                if (file_exists($path)) {
+                    $config_file = $path;
+                    break;
+                }
+            }
 
-            if (file_exists($config_file)) {
+            if ($config_file && file_exists($config_file)) {
                 $config_content = file_get_contents($config_file);
                 $config_data = json_decode($config_content, true);
 
@@ -171,16 +184,28 @@ class AI_Web_Site_Plugin
 
                         $logger = AI_Web_Site_Debug_Logger::get_instance();
                         $logger->info('PLUGIN', 'DEFAULT_CONFIG', 'Default editor configuration created', array(
-                            'website_id' => $result['website_id']
+                            'website_id' => $result['website_id'],
+                            'config_file' => $config_file
                         ));
 
                     } catch (Exception $e) {
                         $logger = AI_Web_Site_Debug_Logger::get_instance();
                         $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Failed to create default editor configuration', array(
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
+                            'config_file' => $config_file
                         ));
                     }
+                } else {
+                    $logger = AI_Web_Site_Debug_Logger::get_instance();
+                    $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Failed to parse config file', array(
+                        'config_file' => $config_file
+                    ));
                 }
+            } else {
+                $logger = AI_Web_Site_Debug_Logger::get_instance();
+                $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Config file not found', array(
+                    'possible_paths' => $possible_paths
+                ));
             }
         }
     }
