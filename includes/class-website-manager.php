@@ -282,7 +282,7 @@ class AI_Web_Site_Website_Manager
 
             // Încarcă configurația din fișierul default-config.json din plugin
             $config_file = AI_WEB_SITE_PLUGIN_DIR . 'assets/default-config.json';
-            
+
             if (!file_exists($config_file)) {
                 $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Default config file not found', array(
                     'config_file' => $config_file
@@ -356,14 +356,14 @@ class AI_Web_Site_Website_Manager
     public function rest_update_editor_config($request)
     {
         $this->set_cors_headers();
-        
+
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('WEBSITE_MANAGER', 'UPDATE_EDITOR_CONFIG', 'Updating existing editor configuration with original content');
 
         try {
             // Încarcă configurația din fișierul default-config.json din plugin
             $config_file = AI_WEB_SITE_PLUGIN_DIR . 'assets/default-config.json';
-            
+
             if (!file_exists($config_file)) {
                 $logger->error('WEBSITE_MANAGER', 'UPDATE_EDITOR_CONFIG', 'Default config file not found', array(
                     'config_file' => $config_file
@@ -696,7 +696,7 @@ class AI_Web_Site_Website_Manager
             if (count($parts) >= 2) {
                 $subdomain = $parts[0];
                 $base_domain = implode('.', array_slice($parts, 1));
-                
+
                 $result = $wpdb->update(
                     $this->table_name,
                     array(
