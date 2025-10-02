@@ -146,18 +146,18 @@ class AI_Web_Site_Plugin
     private function create_default_editor_config()
     {
         $website_manager = AI_Web_Site_Website_Manager::get_instance();
-        
+
         // Verifică dacă configurația pentru editor.ai-web.site există deja
         $existing_config = $website_manager->get_website_config_by_domain('editor.ai-web.site');
-        
+
         if ($existing_config === null) {
             // Încarcă configurația din fișierul public/site-config.json
             $config_file = AI_WEB_SITE_PLUGIN_DIR . '../frontend/public/site-config.json';
-            
+
             if (file_exists($config_file)) {
                 $config_content = file_get_contents($config_file);
                 $config_data = json_decode($config_content, true);
-                
+
                 if ($config_data) {
                     // Salvează configurația pentru editor.ai-web.site
                     $save_data = array(
@@ -165,15 +165,15 @@ class AI_Web_Site_Plugin
                         'domain' => 'editor.ai-web.site',
                         'subdomain' => 'editor'
                     );
-                    
+
                     try {
                         $result = $website_manager->save_website_config($save_data);
-                        
+
                         $logger = AI_Web_Site_Debug_Logger::get_instance();
                         $logger->info('PLUGIN', 'DEFAULT_CONFIG', 'Default editor configuration created', array(
                             'website_id' => $result['website_id']
                         ));
-                        
+
                     } catch (Exception $e) {
                         $logger = AI_Web_Site_Debug_Logger::get_instance();
                         $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Failed to create default editor configuration', array(

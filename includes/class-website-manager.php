@@ -250,7 +250,7 @@ class AI_Web_Site_Website_Manager
     public function rest_get_website_config_by_domain($request)
     {
         $this->set_cors_headers();
-        
+
         $domain = $request['domain'];
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
@@ -261,7 +261,7 @@ class AI_Web_Site_Website_Manager
         try {
             // Încearcă să găsească configurația pentru domeniul complet
             $config = $this->get_website_config_by_domain($domain);
-            
+
             if ($config === null) {
                 $logger->info('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'No configuration found', array('domain' => $domain));
                 return new WP_REST_Response(array(
@@ -524,7 +524,7 @@ class AI_Web_Site_Website_Manager
             if (count($parts) >= 2) {
                 $subdomain = $parts[0];
                 $base_domain = implode('.', array_slice($parts, 1));
-                
+
                 $config = $wpdb->get_row($wpdb->prepare(
                     "SELECT config FROM {$this->table_name} WHERE subdomain = %s AND domain = %s ORDER BY updated_at DESC LIMIT 1",
                     $subdomain,
