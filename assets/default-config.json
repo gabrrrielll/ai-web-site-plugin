@@ -1,0 +1,481 @@
+{
+    "plans-config": {
+        "isEditable": true,
+        "show_import_export_config": false,
+        "useLocal_site-config": false,
+        "show_save_button": true,
+        "services": {
+            "ai_image_generation": {
+                "name": "AI Image Generation",
+                "description": "Generate images using AI from text prompts",
+                "limits": {
+                    "localhost": {
+                        "type": "unlimited",
+                        "value": null,
+                        "description": "Unlimited usage on localhost"
+                    },
+                    "test_domain": {
+                        "type": "daily_limit",
+                        "value": 3,
+                        "description": "3 images per day for test domains"
+                    },
+                    "public_domain": {
+                        "type": "unlimited",
+                        "value": null,
+                        "description": "Unlimited usage for public domains"
+                    }
+                },
+                "enabled": true,
+                "provider": "pollinations_ai",
+                "fallback_provider": "canvas_picsum"
+            },
+            "ai_text_generation": {
+                "name": "AI Text Generation",
+                "description": "Generate articles and text content using AI",
+                "limits": {
+                    "localhost": {
+                        "type": "unlimited",
+                        "value": null,
+                        "description": "Unlimited usage on localhost"
+                    },
+                    "test_domain": {
+                        "type": "daily_limit",
+                        "value": 5,
+                        "description": "5 articles per day for test domains"
+                    },
+                    "public_domain": {
+                        "type": "unlimited",
+                        "value": null,
+                        "description": "Unlimited usage for public domains"
+                    }
+                },
+                "enabled": true,
+                "provider": "gemini",
+                "fallback_provider": "openai"
+            }
+        }
+    },
+    "site": {
+        "title": "AI Website Builder",
+        "description": "Create stunning websites with AI-powered tools",
+        "logo": "",
+        "favicon": "",
+        "language": "en",
+        "currency": "USD",
+        "timezone": "UTC"
+    },
+    "seo": {
+        "title": "AI Website Builder - Create Stunning Websites in Minutes",
+        "description": "Build professional websites with our AI-powered website builder. No coding required. Create, customize, and deploy your website in minutes.",
+        "keywords": "AI website builder, website creation, web design, no-code, AI tools, website generator",
+        "og_title": "AI Website Builder - Create Stunning Websites",
+        "og_description": "Build professional websites with AI. No coding required.",
+        "og_image": "",
+        "twitter_card": "summary_large_image",
+        "robots": "index, follow",
+        "canonical_url": "",
+        "sitemap_url": "/sitemap.xml"
+    },
+    "theme": {
+        "primary_color": "#6366f1",
+        "secondary_color": "#f59e0b",
+        "accent_color": "#10b981",
+        "background_color": "#ffffff",
+        "text_color": "#111827",
+        "font_family": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        "font_size": "16px",
+        "line_height": "1.6",
+        "border_radius": "8px",
+        "box_shadow": "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+        "spacing_unit": "8px",
+        "max_width": "1200px",
+        "animation_duration": "300ms",
+        "animation_easing": "cubic-bezier(0.4, 0, 0.2, 1)"
+    },
+    "layout": {
+        "header": {
+            "enabled": true,
+            "style": "modern",
+            "height": "80px",
+            "background": "transparent",
+            "sticky": true,
+            "logo_position": "left",
+            "menu_position": "right",
+            "show_search": true,
+            "show_cta_button": true,
+            "cta_text": "Get Started",
+            "cta_url": "/signup"
+        },
+        "footer": {
+            "enabled": true,
+            "style": "dark",
+            "background": "#1f2937",
+            "text_color": "#ffffff",
+            "show_social_links": true,
+            "show_newsletter": true,
+            "show_copyright": true,
+            "copyright_text": "© 2024 AI Website Builder. All rights reserved."
+        },
+        "sidebar": {
+            "enabled": false,
+            "position": "right",
+            "width": "300px",
+            "sticky": true,
+            "show_search": true,
+            "show_categories": true,
+            "show_recent_posts": true
+        }
+    },
+    "content": {
+        "hero": {
+            "title": "Create Stunning Websites with AI",
+            "subtitle": "Build professional websites in minutes, not days. Our AI-powered builder makes web design effortless.",
+            "background_image": "",
+            "background_video": "",
+            "overlay_opacity": 0.5,
+            "text_alignment": "center",
+            "show_cta_button": true,
+            "cta_text": "Start Building",
+            "cta_url": "/create",
+            "show_features": true,
+            "features": [
+                {
+                    "icon": "🚀",
+                    "title": "Lightning Fast",
+                    "description": "Build and deploy in minutes"
+                },
+                {
+                    "icon": "🤖",
+                    "title": "AI-Powered",
+                    "description": "Smart design suggestions"
+                },
+                {
+                    "icon": "📱",
+                    "title": "Mobile Ready",
+                    "description": "Responsive by default"
+                }
+            ]
+        },
+        "features": {
+            "enabled": true,
+            "title": "Powerful Features",
+            "subtitle": "Everything you need to create amazing websites",
+            "columns": 3,
+            "show_icons": true,
+            "show_descriptions": true,
+            "items": [
+                {
+                    "icon": "⚡",
+                    "title": "Lightning Fast",
+                    "description": "Build and deploy your website in minutes, not days. Our optimized platform ensures rapid development.",
+                    "color": "#6366f1"
+                },
+                {
+                    "icon": "🤖",
+                    "title": "AI-Powered",
+                    "description": "Leverage advanced AI to generate content, suggest designs, and optimize your site for performance.",
+                    "color": "#f59e0b"
+                },
+                {
+                    "icon": "✍️",
+                    "title": "Live Editor",
+                    "description": "See your changes in real-time with our intuitive drag-and-drop live editor. No coding required.",
+                    "color": "#10b981"
+                },
+                {
+                    "icon": "🌐",
+                    "title": "Custom Domains",
+                    "description": "Connect your own domain or use a free subdomain provided by us. Get online instantly.",
+                    "color": "#8b5cf6"
+                },
+                {
+                    "icon": "📈",
+                    "title": "SEO Optimized",
+                    "description": "Built-in SEO tools and best practices ensure your website ranks high on search engines.",
+                    "color": "#f59e0b"
+                },
+                {
+                    "icon": "🔒",
+                    "title": "Secure & Reliable",
+                    "description": "Your website is hosted on secure, high-performance servers with automatic backups and SSL.",
+                    "color": "#ef4444"
+                }
+            ]
+        },
+        "how_it_works": {
+            "enabled": true,
+            "title": "How it works",
+            "subtitle": "Get your website online in three simple steps",
+            "steps": [
+                {
+                    "number": 1,
+                    "title": "Design with AI",
+                    "description": "Tell our AI what kind of website you want. Get 3 different designs to choose from in seconds.",
+                    "icon": "🎨",
+                    "color": "#6366f1"
+                },
+                {
+                    "number": 2,
+                    "title": "Customize Easily",
+                    "description": "Double-click any element to edit it. Change text, images, colors, and layout with ease.",
+                    "icon": "⚙️",
+                    "color": "#f59e0b"
+                },
+                {
+                    "number": 3,
+                    "title": "Publish & Share",
+                    "description": "Create your account and get a free subdomain. Your website goes live instantly.",
+                    "icon": "🚀",
+                    "color": "#10b981"
+                }
+            ]
+        },
+        "pricing": {
+            "enabled": true,
+            "title": "Simple & Transparent Pricing",
+            "subtitle": "Start with our free plan, upgrade as you grow. No hidden fees, ever.",
+            "currency": "USD",
+            "billing_period": "monthly",
+            "show_annual_discount": true,
+            "annual_discount_percentage": 20,
+            "plans": [
+                {
+                    "name": "Free",
+                    "price": 0,
+                    "period": "month",
+                    "description": "Perfect for getting started",
+                    "features": [
+                        "1 Website",
+                        "Free Subdomain",
+                        "Basic AI Assistance",
+                        "Community Support"
+                    ],
+                    "cta_text": "Get Started Free",
+                    "cta_url": "/signup",
+                    "popular": false,
+                    "color": "#6366f1"
+                },
+                {
+                    "name": "Pro",
+                    "price": 19,
+                    "period": "month",
+                    "description": "For growing businesses",
+                    "features": [
+                        "Unlimited Websites",
+                        "Custom Domains",
+                        "Advanced AI Assistance",
+                        "Priority Support"
+                    ],
+                    "cta_text": "Go Pro",
+                    "cta_url": "/signup?plan=pro",
+                    "popular": true,
+                    "color": "#f59e0b"
+                },
+                {
+                    "name": "Enterprise",
+                    "price": null,
+                    "period": "custom",
+                    "description": "Custom solutions for large teams",
+                    "features": [
+                        "All Pro Features",
+                        "Dedicated Account Manager",
+                        "Custom Integrations",
+                        "24/7 VIP Support"
+                    ],
+                    "cta_text": "Contact Sales",
+                    "cta_url": "/contact",
+                    "popular": false,
+                    "color": "#8b5cf6"
+                }
+            ]
+        },
+        "testimonials": {
+            "enabled": true,
+            "title": "What Our Users Say",
+            "subtitle": "Join thousands of satisfied customers",
+            "layout": "grid",
+            "columns": 3,
+            "show_avatars": true,
+            "show_ratings": true,
+            "items": [
+                {
+                    "name": "Sarah Johnson",
+                    "role": "Small Business Owner",
+                    "avatar": "",
+                    "rating": 5,
+                    "text": "This AI website builder saved me weeks of work. I had a professional website up and running in just a few hours!",
+                    "company": "Johnson Consulting"
+                },
+                {
+                    "name": "Mike Chen",
+                    "role": "Marketing Manager",
+                    "avatar": "",
+                    "rating": 5,
+                    "text": "The AI suggestions are incredibly smart. It understood exactly what I wanted and delivered beyond my expectations.",
+                    "company": "TechStart Inc"
+                },
+                {
+                    "name": "Emily Rodriguez",
+                    "role": "Freelance Designer",
+                    "avatar": "",
+                    "rating": 5,
+                    "text": "As a designer, I'm impressed by the quality of the AI-generated designs. It's like having a design assistant that never sleeps.",
+                    "company": "Creative Studio"
+                }
+            ]
+        },
+        "blog": {
+            "enabled": true,
+            "title": "Latest Articles",
+            "subtitle": "Tips, tricks, and insights for better web design",
+            "layout": "grid",
+            "columns": 3,
+            "show_excerpts": true,
+            "show_dates": true,
+            "show_authors": true,
+            "show_categories": true,
+            "posts_per_page": 6,
+            "show_read_more": true
+        },
+        "contact": {
+            "enabled": true,
+            "title": "Get in Touch",
+            "subtitle": "Have questions? We'd love to hear from you.",
+            "show_contact_form": true,
+            "show_contact_info": true,
+            "show_map": false,
+            "contact_info": {
+                "email": "support@ai-web.site",
+                "phone": "+1 (555) 123-4567",
+                "address": "123 AI Street, Tech City, TC 12345",
+                "hours": "Mon-Fri 9AM-6PM"
+            },
+            "social_links": {
+                "twitter": "https://twitter.com/aiwebsitebuilder",
+                "facebook": "https://facebook.com/aiwebsitebuilder",
+                "linkedin": "https://linkedin.com/company/aiwebsitebuilder",
+                "instagram": "https://instagram.com/aiwebsitebuilder"
+            }
+        }
+    },
+    "analytics": {
+        "google_analytics": {
+            "enabled": false,
+            "tracking_id": "",
+            "gtag_id": ""
+        },
+        "facebook_pixel": {
+            "enabled": false,
+            "pixel_id": ""
+        },
+        "hotjar": {
+            "enabled": false,
+            "site_id": ""
+        }
+    },
+    "integrations": {
+        "email_marketing": {
+            "mailchimp": {
+                "enabled": false,
+                "api_key": "",
+                "list_id": ""
+            },
+            "convertkit": {
+                "enabled": false,
+                "api_key": "",
+                "form_id": ""
+            }
+        },
+        "payment": {
+            "stripe": {
+                "enabled": false,
+                "public_key": "",
+                "secret_key": ""
+            },
+            "paypal": {
+                "enabled": false,
+                "client_id": "",
+                "client_secret": ""
+            }
+        },
+        "crm": {
+            "hubspot": {
+                "enabled": false,
+                "api_key": ""
+            },
+            "salesforce": {
+                "enabled": false,
+                "api_key": ""
+            }
+        }
+    },
+    "security": {
+        "ssl_enabled": true,
+        "firewall_enabled": true,
+        "backup_enabled": true,
+        "backup_frequency": "daily",
+        "two_factor_auth": false,
+        "password_policy": {
+            "min_length": 8,
+            "require_uppercase": true,
+            "require_lowercase": true,
+            "require_numbers": true,
+            "require_symbols": true
+        }
+    },
+    "performance": {
+        "caching_enabled": true,
+        "cdn_enabled": false,
+        "image_optimization": true,
+        "minification": true,
+        "lazy_loading": true,
+        "preloading": false,
+        "compression": "gzip"
+    },
+    "accessibility": {
+        "alt_text_required": true,
+        "keyboard_navigation": true,
+        "screen_reader_support": true,
+        "high_contrast_mode": false,
+        "font_size_options": true,
+        "color_blind_friendly": true
+    },
+    "localization": {
+        "default_language": "en",
+        "supported_languages": ["en", "es", "fr", "de", "it", "pt", "ro"],
+        "auto_translate": false,
+        "rtl_support": false,
+        "date_format": "MM/DD/YYYY",
+        "time_format": "12h",
+        "currency_format": "USD"
+    },
+    "maintenance": {
+        "maintenance_mode": false,
+        "maintenance_message": "We're currently performing maintenance. Please check back soon.",
+        "scheduled_downtime": [],
+        "update_notifications": true,
+        "backup_notifications": true
+    },
+    "api": {
+        "rate_limiting": {
+            "enabled": true,
+            "requests_per_minute": 60,
+            "burst_limit": 100
+        },
+        "authentication": {
+            "required": false,
+            "api_key_required": false,
+            "jwt_enabled": false
+        },
+        "cors": {
+            "enabled": true,
+            "allowed_origins": ["*"],
+            "allowed_methods": ["GET", "POST", "PUT", "DELETE"],
+            "allowed_headers": ["Content-Type", "Authorization"]
+        }
+    },
+    "isEditable": true,
+    "version": "1.0.0",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+}

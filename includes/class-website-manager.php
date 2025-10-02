@@ -273,31 +273,39 @@ class AI_Web_Site_Website_Manager
                 ), 200);
             }
 
-            // Creează o configurație default simplă în loc să caute fișierul
-            $config_data = array(
-                'site' => array(
-                    'title' => 'AI Website Builder',
-                    'description' => 'Create stunning websites with AI',
-                    'logo' => '',
-                    'favicon' => ''
-                ),
-                'seo' => array(
-                    'title' => 'AI Website Builder - Create Stunning Websites',
-                    'description' => 'Build professional websites in minutes with our AI-powered website builder',
-                    'keywords' => 'AI, website builder, web design, create website'
-                ),
-                'theme' => array(
-                    'primary_color' => '#6366f1',
-                    'secondary_color' => '#f59e0b',
-                    'font_family' => 'Inter, sans-serif'
-                ),
-                'isEditable' => true,
-                'version' => '1.0.0',
-                'created_at' => date('c'),
-                'updated_at' => date('c')
-            );
+            // Încarcă configurația din fișierul default-config.json din plugin
+            $config_file = AI_WEB_SITE_PLUGIN_DIR . 'assets/default-config.json';
+            
+            if (!file_exists($config_file)) {
+                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Default config file not found', array(
+                    'config_file' => $config_file
+                ));
+                return new WP_REST_Response(array(
+                    'error' => 'Default config file not found',
+                    'message' => 'Could not locate default-config.json file in plugin assets',
+                    'config_file' => $config_file,
+                    'timestamp' => date('c')
+                ), 404);
+            }
 
-            $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Using default configuration template');
+            $config_content = file_get_contents($config_file);
+            $config_data = json_decode($config_content, true);
+
+            if (!$config_data) {
+                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Failed to parse default config file', array(
+                    'config_file' => $config_file
+                ));
+                return new WP_REST_Response(array(
+                    'error' => 'Invalid default config file',
+                    'message' => 'Could not parse default-config.json file',
+                    'timestamp' => date('c')
+                ), 400);
+            }
+
+            $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Loaded default configuration from file', array(
+                'config_file' => $config_file,
+                'config_size' => strlen($config_content)
+            ));
 
             // Salvează configurația pentru editor.ai-web.site
             $save_data = array(
@@ -310,14 +318,16 @@ class AI_Web_Site_Website_Manager
 
             $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Default editor configuration created successfully', array(
                 'website_id' => $result['website_id'],
-                'config_type' => 'default_template'
+                'config_type' => 'original_site_config',
+                'config_file' => $config_file
             ));
 
             return new WP_REST_Response(array(
                 'status' => 'success',
                 'message' => 'Default configuration created for editor.ai-web.site',
                 'website_id' => $result['website_id'],
-                'config_type' => 'default_template',
+                'config_type' => 'original_site_config',
+                'config_file' => $config_file,
                 'timestamp' => date('c')
             ), 200);
 
