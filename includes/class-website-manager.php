@@ -257,14 +257,14 @@ class AI_Web_Site_Website_Manager
     public function rest_create_default_config($request)
     {
         $this->set_cors_headers();
-        
+
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Creating default editor configuration via REST API');
 
         try {
             // Verifică dacă configurația pentru editor.ai-web.site există deja
             $existing_config = $this->get_website_config_by_domain('editor.ai-web.site');
-            
+
             if ($existing_config !== null) {
                 return new WP_REST_Response(array(
                     'status' => 'exists',
@@ -273,47 +273,31 @@ class AI_Web_Site_Website_Manager
                 ), 200);
             }
 
-            // Încearcă să găsească fișierul site-config.json
-            $possible_paths = array(
-                AI_WEB_SITE_PLUGIN_DIR . '../frontend/public/site-config.json',
-                AI_WEB_SITE_PLUGIN_DIR . '../../frontend/public/site-config.json',
-                ABSPATH . '../frontend/public/site-config.json',
-                ABSPATH . 'frontend/public/site-config.json'
+            // Creează o configurație default simplă în loc să caute fișierul
+            $config_data = array(
+                'site' => array(
+                    'title' => 'AI Website Builder',
+                    'description' => 'Create stunning websites with AI',
+                    'logo' => '',
+                    'favicon' => ''
+                ),
+                'seo' => array(
+                    'title' => 'AI Website Builder - Create Stunning Websites',
+                    'description' => 'Build professional websites in minutes with our AI-powered website builder',
+                    'keywords' => 'AI, website builder, web design, create website'
+                ),
+                'theme' => array(
+                    'primary_color' => '#6366f1',
+                    'secondary_color' => '#f59e0b',
+                    'font_family' => 'Inter, sans-serif'
+                ),
+                'isEditable' => true,
+                'version' => '1.0.0',
+                'created_at' => date('c'),
+                'updated_at' => date('c')
             );
-            
-            $config_file = null;
-            foreach ($possible_paths as $path) {
-                if (file_exists($path)) {
-                    $config_file = $path;
-                    break;
-                }
-            }
 
-            if (!$config_file) {
-                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Config file not found', array(
-                    'possible_paths' => $possible_paths
-                ));
-                return new WP_REST_Response(array(
-                    'error' => 'Config file not found',
-                    'message' => 'Could not locate site-config.json file',
-                    'possible_paths' => $possible_paths,
-                    'timestamp' => date('c')
-                ), 404);
-            }
-
-            $config_content = file_get_contents($config_file);
-            $config_data = json_decode($config_content, true);
-
-            if (!$config_data) {
-                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Failed to parse config file', array(
-                    'config_file' => $config_file
-                ));
-                return new WP_REST_Response(array(
-                    'error' => 'Invalid config file',
-                    'message' => 'Could not parse site-config.json file',
-                    'timestamp' => date('c')
-                ), 400);
-            }
+            $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Using default configuration template');
 
             // Salvează configurația pentru editor.ai-web.site
             $save_data = array(
@@ -326,14 +310,14 @@ class AI_Web_Site_Website_Manager
 
             $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Default editor configuration created successfully', array(
                 'website_id' => $result['website_id'],
-                'config_file' => $config_file
+                'config_type' => 'default_template'
             ));
 
             return new WP_REST_Response(array(
                 'status' => 'success',
                 'message' => 'Default configuration created for editor.ai-web.site',
                 'website_id' => $result['website_id'],
-                'config_file' => $config_file,
+                'config_type' => 'default_template',
                 'timestamp' => date('c')
             ), 200);
 
