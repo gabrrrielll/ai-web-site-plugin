@@ -28,6 +28,7 @@ require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-cpanel-api.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-database.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ump-integration.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-home-page-shortcode.php';
+require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-website-manager.php'; // NEW
 require_once AI_WEB_SITE_PLUGIN_DIR . 'admin/class-admin.php';
 
 /**
@@ -89,6 +90,9 @@ class AI_Web_Site_Plugin
         // Initialize home page shortcode
         AI_Web_Site_Home_Page_Shortcode::get_instance();
 
+        // Initialize website manager
+        AI_Web_Site_Website_Manager::get_instance();
+
         AI_Web_Site_Admin::get_instance();
 
         // Load text domain for translations
@@ -102,10 +106,14 @@ class AI_Web_Site_Plugin
     {
         // Create database tables
         AI_Web_Site_Database::create_tables();
-
+        
         // Create logs table
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->create_table();
+
+        // Create website manager table
+        $website_manager = AI_Web_Site_Website_Manager::get_instance();
+        $website_manager->create_table();
 
         // Set default options
         $default_options = array(

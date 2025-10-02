@@ -542,15 +542,15 @@
 
 /* Hero Section with Stripe-like Dynamic Gradient */
 .awb-hero-section {
-    background: linear-gradient(135deg, 
-        #ff6b6b 0%, 
-        #ee5a24 15%, 
-        #feca57 30%, 
-        #48dbfb 45%, 
-        #0abde3 60%, 
-        #006ba6 75%, 
-        #8e44ad 90%, 
-        #6c5ce7 100%) !important;
+    background: linear-gradient(135deg,
+            #ff6b6b 0%,
+            #ee5a24 15%,
+            #feca57 30%,
+            #48dbfb 45%,
+            #0abde3 60%,
+            #006ba6 75%,
+            #8e44ad 90%,
+            #6c5ce7 100%) !important;
     background-size: 400% 400%;
     animation: gradientShift 15s ease infinite;
     position: relative;
@@ -567,7 +567,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
+    background:
         radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
         radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 55%),
         radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
@@ -583,7 +583,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
+    background:
         radial-gradient(circle at 60% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 65%),
         radial-gradient(circle at 90% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 55%),
         radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
@@ -618,27 +618,34 @@
     0% {
         background-position: 0% 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
+
     100% {
         background-position: 0% 50%;
     }
 }
 
 @keyframes waveFloat {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translate(0, 0) rotate(0deg) scale(1);
         opacity: 0.8;
     }
+
     25% {
         transform: translate(-20px, -15px) rotate(2deg) scale(1.1);
         opacity: 0.6;
     }
+
     50% {
         transform: translate(15px, -10px) rotate(-1.5deg) scale(0.9);
         opacity: 0.7;
     }
+
     75% {
         transform: translate(-10px, 20px) rotate(1deg) scale(1.05);
         opacity: 0.5;
@@ -671,7 +678,7 @@
     font-size: 1.125rem !important;
     font-weight: 600 !important;
     border-radius: 12px !important;
-    box-shadow: 
+    box-shadow:
         0 20px 25px -5px rgba(0, 0, 0, 0.1),
         0 10px 10px -5px rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
@@ -696,7 +703,7 @@
 
 .awb-cta-button:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 
+    box-shadow:
         0 32px 64px -12px rgba(0, 0, 0, 0.15),
         0 20px 32px -8px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
@@ -884,7 +891,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
+    background:
         radial-gradient(circle at 15% 25%, rgba(99, 102, 241, 0.04) 0%, transparent 60%),
         radial-gradient(circle at 85% 75%, rgba(245, 158, 11, 0.03) 0%, transparent 55%),
         radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.02) 0%, transparent 70%);
@@ -893,16 +900,19 @@
     animation: subtleFloat 30s ease-in-out infinite;
 }
 
-.ai-website-builder-home section.bg-white > * {
+.ai-website-builder-home section.bg-white>* {
     position: relative;
     z-index: 1;
 }
 
 @keyframes subtleFloat {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
         transform: scale(1);
     }
+
     50% {
         opacity: 0.8;
         transform: scale(1.02);
