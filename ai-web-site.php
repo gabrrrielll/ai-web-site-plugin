@@ -106,7 +106,7 @@ class AI_Web_Site_Plugin
     {
         // Create database tables
         AI_Web_Site_Database::create_tables();
-        
+
         // Create logs table
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->create_table();

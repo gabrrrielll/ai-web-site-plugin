@@ -53,7 +53,7 @@ class AI_Web_Site_Website_Manager
         add_action('wp_ajax_get_website_config', array($this, 'ajax_get_website_config'));
         add_action('wp_ajax_nopriv_get_website_config', array($this, 'ajax_get_website_config'));
         add_action('wp_ajax_delete_website', array($this, 'ajax_delete_website'));
-        
+
         // REST API endpoints
         add_action('rest_api_init', array($this, 'register_rest_routes'));
     }
@@ -97,6 +97,10 @@ class AI_Web_Site_Website_Manager
      */
     public function register_rest_routes()
     {
+        // Log REST API registration
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'REST_API', 'Registering REST API routes');
+
         register_rest_route('ai-web-site/v1', '/website-config', array(
             'methods' => 'GET',
             'callback' => array($this, 'rest_get_website_config'),
@@ -114,6 +118,15 @@ class AI_Web_Site_Website_Manager
             'callback' => array($this, 'rest_get_website_config_by_subdomain'),
             'permission_callback' => '__return_true',
         ));
+
+        // Test endpoint to verify REST API is working
+        register_rest_route('ai-web-site/v1', '/test', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'rest_test_endpoint'),
+            'permission_callback' => '__return_true',
+        ));
+
+        $logger->info('WEBSITE_MANAGER', 'REST_API', 'REST API routes registered successfully');
     }
 
     /**
@@ -127,10 +140,17 @@ class AI_Web_Site_Website_Manager
         $params = $request->get_params();
         $domain = $params['domain'] ?? null;
 
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'REST_GET', 'REST API GET request received', array(
+            'domain' => $domain,
+            'params' => $params
+        ));
+
         try {
             $config = $this->get_website_config($domain);
             
             if ($config === null) {
+                $logger->info('WEBSITE_MANAGER', 'REST_GET', 'No configuration found', array('domain' => $domain));
                 return new WP_REST_Response(array(
                     'error' => 'Configuration not found',
                     'message' => 'No configuration found for the specified domain',
@@ -138,9 +158,18 @@ class AI_Web_Site_Website_Manager
                 ), 404);
             }
 
+            $logger->info('WEBSITE_MANAGER', 'REST_GET', 'Configuration found and returned', array(
+                'domain' => $domain,
+                'config_size' => strlen(json_encode($config))
+            ));
+
             return new WP_REST_Response($config, 200);
 
         } catch (Exception $e) {
+            $logger->error('WEBSITE_MANAGER', 'REST_GET', 'Exception in REST GET', array(
+                'domain' => $domain,
+                'error' => $e->getMessage()
+            ));
             return new WP_REST_Response(array(
                 'error' => 'Internal server error',
                 'message' => 'An unexpected error occurred',
@@ -169,7 +198,7 @@ class AI_Web_Site_Website_Manager
 
         try {
             $result = $this->save_website_config($body);
-            
+
             if ($result['success']) {
                 return new WP_REST_Response(array(
                     'success' => true,
@@ -195,18 +224,36 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
+     * REST API: Test endpoint
+     */
+    public function rest_test_endpoint($request)
+    {
+        $this->set_cors_headers();
+        
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'REST_TEST', 'Test endpoint accessed');
+
+        return new WP_REST_Response(array(
+            'success' => true,
+            'message' => 'AI Web Site Plugin REST API is working',
+            'timestamp' => date('c'),
+            'plugin_version' => AI_WEB_SITE_PLUGIN_VERSION ?? 'unknown'
+        ), 200);
+    }
+
+    /**
      * REST API: Get website config by subdomain
      */
     public function rest_get_website_config_by_subdomain($request)
     {
         $this->set_cors_headers();
-        
+
         $subdomain = $request['subdomain'];
         $domain = $request['domain'] ?? 'ai-web.site';
 
         try {
             $config = $this->get_website_config_by_subdomain($subdomain, $domain);
-            
+
             if ($config === null) {
                 return new WP_REST_Response(array(
                     'error' => 'Configuration not found',
@@ -257,7 +304,7 @@ class AI_Web_Site_Website_Manager
     public function ajax_get_website_config()
     {
         $domain = $_GET['domain'] ?? null;
-        
+
         try {
             $config = $this->get_website_config($domain);
             wp_send_json_success($config);
@@ -281,7 +328,7 @@ class AI_Web_Site_Website_Manager
         }
 
         $website_id = intval($_POST['website_id']);
-        
+
         try {
             $result = $this->delete_website($website_id);
             wp_send_json_success($result);
@@ -298,7 +345,7 @@ class AI_Web_Site_Website_Manager
         global $wpdb;
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        
+
         // Validate required fields
         if (!isset($data['config'])) {
             throw new Exception('Configuration data is required');
@@ -315,7 +362,7 @@ class AI_Web_Site_Website_Manager
         // Extract domain and subdomain
         $domain = $data['domain'] ?? 'ai-web.site';
         $subdomain = $data['subdomain'] ?? 'my-site';
-        
+
         // Validate subdomain format
         if (!preg_match('/^[a-zA-Z0-9-]+$/', $subdomain)) {
             throw new Exception('Invalid subdomain format');
@@ -323,7 +370,7 @@ class AI_Web_Site_Website_Manager
 
         // Prepare config data
         $config_json = json_encode($data['config'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception('Invalid configuration JSON: ' . json_last_error_msg());
         }
@@ -491,7 +538,7 @@ class AI_Web_Site_Website_Manager
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin');
         header('Access-Control-Allow-Credentials: true');
-        
+
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(200);
             exit();

@@ -146,7 +146,7 @@ try {
             try {
                 // Salvează configurația în baza de date
                 $result = $website_manager->save_website_config($inputData);
-                
+
                 if ($result['success']) {
                     logRequest('SUCCESS: Configuration saved to database', [
                         'domain' => $inputData['domain'] ?? 'unknown',
