@@ -101,6 +101,8 @@ class AI_Web_Site_Website_Manager
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('WEBSITE_MANAGER', 'REST_API', 'Registering REST API routes');
 
+        // TODO: Remove old endpoints - kept for compatibility
+        /*
         register_rest_route('ai-web-site/v1', '/website-config', array(
             'methods' => 'GET',
             'callback' => array($this, 'rest_get_website_config'),
@@ -112,10 +114,11 @@ class AI_Web_Site_Website_Manager
             'callback' => array($this, 'rest_save_website_config'),
             'permission_callback' => '__return_true', // Allow public access for editor
         ));
+        */
 
-        register_rest_route('ai-web-site/v1', '/website-config/(?P<subdomain>[a-zA-Z0-9-]+)', array(
+        register_rest_route('ai-web-site/v1', '/website-config/(?P<domain>[a-zA-Z0-9.-]+)', array(
             'methods' => 'GET',
-            'callback' => array($this, 'rest_get_website_config_by_subdomain'),
+            'callback' => array($this, 'rest_get_website_config_by_domain'),
             'permission_callback' => '__return_true',
         ));
 
@@ -148,7 +151,7 @@ class AI_Web_Site_Website_Manager
 
         try {
             $config = $this->get_website_config($domain);
-            
+
             if ($config === null) {
                 $logger->info('WEBSITE_MANAGER', 'REST_GET', 'No configuration found', array('domain' => $domain));
                 return new WP_REST_Response(array(
@@ -229,7 +232,7 @@ class AI_Web_Site_Website_Manager
     public function rest_test_endpoint($request)
     {
         $this->set_cors_headers();
-        
+
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('WEBSITE_MANAGER', 'REST_TEST', 'Test endpoint accessed');
 
@@ -242,29 +245,44 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
-     * REST API: Get website config by subdomain
+     * REST API: Get website config by domain
      */
-    public function rest_get_website_config_by_subdomain($request)
+    public function rest_get_website_config_by_domain($request)
     {
         $this->set_cors_headers();
+        
+        $domain = $request['domain'];
 
-        $subdomain = $request['subdomain'];
-        $domain = $request['domain'] ?? 'ai-web.site';
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'REST API GET request for domain', array(
+            'domain' => $domain
+        ));
 
         try {
-            $config = $this->get_website_config_by_subdomain($subdomain, $domain);
-
+            // Încearcă să găsească configurația pentru domeniul complet
+            $config = $this->get_website_config_by_domain($domain);
+            
             if ($config === null) {
+                $logger->info('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'No configuration found', array('domain' => $domain));
                 return new WP_REST_Response(array(
                     'error' => 'Configuration not found',
-                    'message' => "No configuration found for {$subdomain}.{$domain}",
+                    'message' => "No configuration found for {$domain}",
                     'timestamp' => date('c')
                 ), 404);
             }
 
+            $logger->info('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'Configuration found and returned', array(
+                'domain' => $domain,
+                'config_size' => strlen(json_encode($config))
+            ));
+
             return new WP_REST_Response($config, 200);
 
         } catch (Exception $e) {
+            $logger->error('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'Exception in REST GET', array(
+                'domain' => $domain,
+                'error' => $e->getMessage()
+            ));
             return new WP_REST_Response(array(
                 'error' => 'Internal server error',
                 'message' => 'An unexpected error occurred',
@@ -478,6 +496,42 @@ class AI_Web_Site_Website_Manager
             $subdomain,
             $domain
         ));
+
+        if (!$config) {
+            return null;
+        }
+
+        $config_data = json_decode($config->config, true);
+        return $config_data ?: null;
+    }
+
+    /**
+     * Get website configuration by full domain
+     */
+    public function get_website_config_by_domain($full_domain)
+    {
+        global $wpdb;
+
+        // Încearcă să găsească configurația pentru domeniul complet
+        $config = $wpdb->get_row($wpdb->prepare(
+            "SELECT config FROM {$this->table_name} WHERE domain = %s ORDER BY updated_at DESC LIMIT 1",
+            $full_domain
+        ));
+
+        if (!$config) {
+            // Dacă nu găsește pentru domeniul complet, încearcă să parseze subdomain
+            $parts = explode('.', $full_domain);
+            if (count($parts) >= 2) {
+                $subdomain = $parts[0];
+                $base_domain = implode('.', array_slice($parts, 1));
+                
+                $config = $wpdb->get_row($wpdb->prepare(
+                    "SELECT config FROM {$this->table_name} WHERE subdomain = %s AND domain = %s ORDER BY updated_at DESC LIMIT 1",
+                    $subdomain,
+                    $base_domain
+                ));
+            }
+        }
 
         if (!$config) {
             return null;

@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * TODO: Remove this file - kept for compatibility
  * Standalone API for website configuration management
  * Compatible with existing editor frontend
  * This file should be placed in the WordPress root directory
