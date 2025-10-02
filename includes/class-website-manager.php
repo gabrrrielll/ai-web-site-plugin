@@ -136,6 +136,13 @@ class AI_Web_Site_Website_Manager
             'permission_callback' => '__return_true',
         ));
 
+        // Debug endpoint to update existing editor config with original content
+        register_rest_route('ai-web-site/v1', '/update-editor-config', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'rest_update_editor_config'),
+            'permission_callback' => '__return_true',
+        ));
+
         $logger->info('WEBSITE_MANAGER', 'REST_API', 'REST API routes registered successfully');
     }
 
@@ -333,6 +340,87 @@ class AI_Web_Site_Website_Manager
 
         } catch (Exception $e) {
             $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Exception in create default config', array(
+                'error' => $e->getMessage()
+            ));
+            return new WP_REST_Response(array(
+                'error' => 'Internal server error',
+                'message' => $e->getMessage(),
+                'timestamp' => date('c')
+            ), 500);
+        }
+    }
+
+    /**
+     * REST API: Update existing editor configuration with original content
+     */
+    public function rest_update_editor_config($request)
+    {
+        $this->set_cors_headers();
+        
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'UPDATE_EDITOR_CONFIG', 'Updating existing editor configuration with original content');
+
+        try {
+            // Încarcă configurația din fișierul default-config.json din plugin
+            $config_file = AI_WEB_SITE_PLUGIN_DIR . 'assets/default-config.json';
+            
+            if (!file_exists($config_file)) {
+                $logger->error('WEBSITE_MANAGER', 'UPDATE_EDITOR_CONFIG', 'Default config file not found', array(
+                    'config_file' => $config_file
+                ));
+                return new WP_REST_Response(array(
+                    'error' => 'Default config file not found',
+                    'message' => 'Could not locate default-config.json file in plugin assets',
+                    'config_file' => $config_file,
+                    'timestamp' => date('c')
+                ), 404);
+            }
+
+            $config_content = file_get_contents($config_file);
+            $config_data = json_decode($config_content, true);
+
+            if (!$config_data) {
+                $logger->error('WEBSITE_MANAGER', 'UPDATE_EDITOR_CONFIG', 'Failed to parse default config file', array(
+                    'config_file' => $config_file
+                ));
+                return new WP_REST_Response(array(
+                    'error' => 'Invalid default config file',
+                    'message' => 'Could not parse default-config.json file',
+                    'timestamp' => date('c')
+                ), 400);
+            }
+
+            // Actualizează configurația existentă pentru editor.ai-web.site
+            $result = $this->update_website_config_by_domain('editor.ai-web.site', $config_data);
+
+            if (!$result) {
+                $logger->error('WEBSITE_MANAGER', 'UPDATE_EDITOR_CONFIG', 'Failed to update configuration', array(
+                    'domain' => 'editor.ai-web.site'
+                ));
+                return new WP_REST_Response(array(
+                    'error' => 'Update failed',
+                    'message' => 'Could not update configuration for editor.ai-web.site',
+                    'timestamp' => date('c')
+                ), 500);
+            }
+
+            $logger->info('WEBSITE_MANAGER', 'UPDATE_EDITOR_CONFIG', 'Editor configuration updated successfully', array(
+                'domain' => 'editor.ai-web.site',
+                'config_type' => 'original_site_config',
+                'config_file' => $config_file
+            ));
+
+            return new WP_REST_Response(array(
+                'status' => 'success',
+                'message' => 'Editor configuration updated with original content',
+                'domain' => 'editor.ai-web.site',
+                'config_type' => 'original_site_config',
+                'config_file' => $config_file,
+                'timestamp' => date('c')
+            ), 200);
+
+        } catch (Exception $e) {
+            $logger->error('WEBSITE_MANAGER', 'UPDATE_EDITOR_CONFIG', 'Exception in update editor config', array(
                 'error' => $e->getMessage()
             ));
             return new WP_REST_Response(array(
@@ -581,6 +669,51 @@ class AI_Web_Site_Website_Manager
 
         $config_data = json_decode($config->config, true);
         return $config_data ?: null;
+    }
+
+    /**
+     * Update website configuration by domain
+     */
+    public function update_website_config_by_domain($full_domain, $config_data)
+    {
+        global $wpdb;
+
+        // Actualizează configurația pentru domeniul complet
+        $result = $wpdb->update(
+            $this->table_name,
+            array(
+                'config' => json_encode($config_data),
+                'updated_at' => current_time('mysql')
+            ),
+            array('domain' => $full_domain),
+            array('%s', '%s'),
+            array('%s')
+        );
+
+        if ($result === false) {
+            // Dacă nu găsește pentru domeniul complet, încearcă să parseze subdomain
+            $parts = explode('.', $full_domain);
+            if (count($parts) >= 2) {
+                $subdomain = $parts[0];
+                $base_domain = implode('.', array_slice($parts, 1));
+                
+                $result = $wpdb->update(
+                    $this->table_name,
+                    array(
+                        'config' => json_encode($config_data),
+                        'updated_at' => current_time('mysql')
+                    ),
+                    array(
+                        'subdomain' => $subdomain,
+                        'domain' => $base_domain
+                    ),
+                    array('%s', '%s'),
+                    array('%s', '%s')
+                );
+            }
+        }
+
+        return $result !== false;
     }
 
     /**
