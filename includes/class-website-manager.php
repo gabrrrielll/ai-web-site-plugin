@@ -129,6 +129,13 @@ class AI_Web_Site_Website_Manager
             'permission_callback' => '__return_true',
         ));
 
+        // Debug endpoint to create default editor config
+        register_rest_route('ai-web-site/v1', '/create-default-config', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'rest_create_default_config'),
+            'permission_callback' => '__return_true',
+        ));
+
         $logger->info('WEBSITE_MANAGER', 'REST_API', 'REST API routes registered successfully');
     }
 
@@ -242,6 +249,104 @@ class AI_Web_Site_Website_Manager
             'timestamp' => date('c'),
             'plugin_version' => AI_WEB_SITE_PLUGIN_VERSION ?? 'unknown'
         ), 200);
+    }
+
+    /**
+     * REST API: Create default editor configuration
+     */
+    public function rest_create_default_config($request)
+    {
+        $this->set_cors_headers();
+        
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Creating default editor configuration via REST API');
+
+        try {
+            // Verifică dacă configurația pentru editor.ai-web.site există deja
+            $existing_config = $this->get_website_config_by_domain('editor.ai-web.site');
+            
+            if ($existing_config !== null) {
+                return new WP_REST_Response(array(
+                    'status' => 'exists',
+                    'message' => 'Default configuration already exists for editor.ai-web.site',
+                    'timestamp' => date('c')
+                ), 200);
+            }
+
+            // Încearcă să găsească fișierul site-config.json
+            $possible_paths = array(
+                AI_WEB_SITE_PLUGIN_DIR . '../frontend/public/site-config.json',
+                AI_WEB_SITE_PLUGIN_DIR . '../../frontend/public/site-config.json',
+                ABSPATH . '../frontend/public/site-config.json',
+                ABSPATH . 'frontend/public/site-config.json'
+            );
+            
+            $config_file = null;
+            foreach ($possible_paths as $path) {
+                if (file_exists($path)) {
+                    $config_file = $path;
+                    break;
+                }
+            }
+
+            if (!$config_file) {
+                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Config file not found', array(
+                    'possible_paths' => $possible_paths
+                ));
+                return new WP_REST_Response(array(
+                    'error' => 'Config file not found',
+                    'message' => 'Could not locate site-config.json file',
+                    'possible_paths' => $possible_paths,
+                    'timestamp' => date('c')
+                ), 404);
+            }
+
+            $config_content = file_get_contents($config_file);
+            $config_data = json_decode($config_content, true);
+
+            if (!$config_data) {
+                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Failed to parse config file', array(
+                    'config_file' => $config_file
+                ));
+                return new WP_REST_Response(array(
+                    'error' => 'Invalid config file',
+                    'message' => 'Could not parse site-config.json file',
+                    'timestamp' => date('c')
+                ), 400);
+            }
+
+            // Salvează configurația pentru editor.ai-web.site
+            $save_data = array(
+                'config' => $config_data,
+                'domain' => 'editor.ai-web.site',
+                'subdomain' => 'editor'
+            );
+
+            $result = $this->save_website_config($save_data);
+
+            $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Default editor configuration created successfully', array(
+                'website_id' => $result['website_id'],
+                'config_file' => $config_file
+            ));
+
+            return new WP_REST_Response(array(
+                'status' => 'success',
+                'message' => 'Default configuration created for editor.ai-web.site',
+                'website_id' => $result['website_id'],
+                'config_file' => $config_file,
+                'timestamp' => date('c')
+            ), 200);
+
+        } catch (Exception $e) {
+            $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Exception in create default config', array(
+                'error' => $e->getMessage()
+            ));
+            return new WP_REST_Response(array(
+                'error' => 'Internal server error',
+                'message' => $e->getMessage(),
+                'timestamp' => date('c')
+            ), 500);
+        }
     }
 
     /**
