@@ -158,14 +158,24 @@ class AI_Web_Site_Website_Manager
      */
     public function check_save_permissions($request)
     {
+        // LOG DETALIAT PENTRU DEBUGGING
+        error_log('=== AI-WEB-SITE: check_save_permissions() CALLED ===');
+        error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
+        error_log('AI-WEB-SITE: Request URI: ' . $request->get_uri());
+        error_log('AI-WEB-SITE: User logged in: ' . (is_user_logged_in() ? 'YES' : 'NO'));
+        error_log('AI-WEB-SITE: User ID: ' . get_current_user_id());
+        
         // 1. Verificare utilizator logat (pentru localhost, sărim această verificare)
         $headers = getallheaders();
+        error_log('AI-WEB-SITE: All headers: ' . print_r($headers, true));
+        
         $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
+        error_log('AI-WEB-SITE: Nonce received: ' . $nonce);
         
         // Pentru localhost/testare cu nonce de testare, sărim verificarea de autentificare
         if ($nonce === 'test-nonce-12345') {
             // Log pentru debugging
-            error_log('AI-WEB-SITE: Skipping user authentication for localhost development');
+            error_log('AI-WEB-SITE: ✅ TEST NONCE ACCEPTED - Skipping authentication');
             return true;
         }
 
@@ -174,11 +184,19 @@ class AI_Web_Site_Website_Manager
         }
 
         // 2. Verificare nonce pentru protecție CSRF (doar dacă nu folosim nonce de testare)
-
+        error_log('AI-WEB-SITE: Verifying nonce with action: save_site_config');
+        
         if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
+            error_log('AI-WEB-SITE: ❌ NONCE VERIFICATION FAILED');
+            error_log('AI-WEB-SITE: Nonce empty: ' . (empty($nonce) ? 'YES' : 'NO'));
+            if (!empty($nonce)) {
+                error_log('AI-WEB-SITE: wp_verify_nonce result: ' . (wp_verify_nonce($nonce, 'save_site_config') ? 'SUCCESS' : 'FAILED'));
+            }
             return new WP_Error('invalid_nonce', 'Invalid security token', array('status' => 403));
         }
 
+        error_log('AI-WEB-SITE: ✅ NONCE VERIFICATION SUCCESS');
+        error_log('AI-WEB-SITE: ✅ PERMISSION CHECK PASSED');
         return true;
     }
 
@@ -187,6 +205,8 @@ class AI_Web_Site_Website_Manager
      */
     public function rest_save_website_config($request)
     {
+        error_log('=== AI-WEB-SITE: rest_save_website_config() CALLED ===');
+        
         $this->set_cors_headers();
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
@@ -197,6 +217,7 @@ class AI_Web_Site_Website_Manager
 
         try {
             $input_data = $request->get_json_params();
+            error_log('AI-WEB-SITE: Input data received: ' . print_r($input_data, true));
 
             if (!$input_data || !isset($input_data['config'])) {
                 $logger->error('WEBSITE_MANAGER', 'REST_SAVE', 'Missing config data');
