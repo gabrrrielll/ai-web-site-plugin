@@ -217,7 +217,7 @@ class AI_Web_Site_Website_Manager
     public function rest_save_website_config($request)
     {
         error_log('=== AI-WEB-SITE: rest_save_website_config() CALLED ===');
-        
+
         $this->set_cors_headers();
 
         // VERIFICARE MANUALĂ DE SECURITATE
