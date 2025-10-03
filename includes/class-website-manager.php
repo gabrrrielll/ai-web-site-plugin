@@ -162,13 +162,16 @@ class AI_Web_Site_Website_Manager
         error_log('=== AI-WEB-SITE: check_save_permissions() CALLED ===');
         error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
         error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
-        
+
         // Pentru requesturi OPTIONS (preflight CORS), returnează true direct
         if ($request->get_method() === 'OPTIONS') {
             error_log('AI-WEB-SITE: OPTIONS request - allowing CORS preflight');
             return true;
         }
         
+        // Log pentru toate requesturile non-OPTIONS
+        error_log('AI-WEB-SITE: NON-OPTIONS request - method: ' . $request->get_method());
+
         error_log('AI-WEB-SITE: User logged in: ' . (is_user_logged_in() ? 'YES' : 'NO'));
         error_log('AI-WEB-SITE: User ID: ' . get_current_user_id());
 
