@@ -59,6 +59,9 @@ class AI_Web_Site_Website_Manager
 
         // Bypass WordPress global nonce verification for our test nonce
         add_filter('rest_authentication_errors', array($this, 'bypass_nonce_for_test'));
+        
+        // Debug filter pentru a vedea toate requesturile REST
+        add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request'));
     }
 
     /**
@@ -119,6 +122,21 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
+     * Debug filter pentru a vedea toate requesturile REST
+     */
+    public function debug_rest_request($response, $handler, $request)
+    {
+        if (strpos($request->get_route(), '/ai-web-site/v1/website-config') !== false) {
+            error_log('=== AI-WEB-SITE: debug_rest_request() CALLED ===');
+            error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
+            error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
+            error_log('AI-WEB-SITE: Handler: ' . print_r($handler, true));
+        }
+        
+        return $response;
+    }
+
+    /**
      * Debug permission callback pentru a vedea dacă este apelat
      */
     public function debug_permission_callback($request)
@@ -126,15 +144,15 @@ class AI_Web_Site_Website_Manager
         error_log('=== AI-WEB-SITE: debug_permission_callback() CALLED ===');
         error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
         error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
-        
+
         // Apelează funcția originală de verificare
         $result = $this->check_save_permissions($request);
-        
+
         error_log('AI-WEB-SITE: Permission check result: ' . ($result === true ? 'TRUE' : 'FALSE'));
         if ($result !== true) {
             error_log('AI-WEB-SITE: Permission error: ' . print_r($result, true));
         }
-        
+
         return $result;
     }
 
