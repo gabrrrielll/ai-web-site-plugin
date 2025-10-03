@@ -56,7 +56,7 @@ class AI_Web_Site_Website_Manager
 
         // REST API endpoints
         add_action('rest_api_init', array($this, 'register_rest_routes'));
-        
+
         // Bypass WordPress global nonce verification for our test nonce
         add_filter('rest_authentication_errors', array($this, 'bypass_nonce_for_test'));
     }
@@ -73,14 +73,14 @@ class AI_Web_Site_Website_Manager
                 // Verifică header-ele pentru nonce-ul nostru de test
                 $headers = getallheaders();
                 $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
-                
+
                 if ($nonce === 'test-nonce-12345') {
                     error_log('AI-WEB-SITE: ✅ BYPASSING WordPress global nonce verification for test nonce');
                     return null; // Nu returnează eroare = permite requestul
                 }
             }
         }
-        
+
         return $errors; // Returnează erorile normale pentru alte requesturi
     }
 
@@ -119,6 +119,26 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
+     * Debug permission callback pentru a vedea dacă este apelat
+     */
+    public function debug_permission_callback($request)
+    {
+        error_log('=== AI-WEB-SITE: debug_permission_callback() CALLED ===');
+        error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
+        error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
+        
+        // Apelează funcția originală de verificare
+        $result = $this->check_save_permissions($request);
+        
+        error_log('AI-WEB-SITE: Permission check result: ' . ($result === true ? 'TRUE' : 'FALSE'));
+        if ($result !== true) {
+            error_log('AI-WEB-SITE: Permission error: ' . print_r($result, true));
+        }
+        
+        return $result;
+    }
+
+    /**
      * Register REST API routes
      */
     public function register_rest_routes()
@@ -152,7 +172,7 @@ class AI_Web_Site_Website_Manager
         register_rest_route('ai-web-site/v1', '/website-config', array(
             'methods' => 'POST',
             'callback' => array($this, 'rest_save_website_config'),
-            'permission_callback' => '__return_true', // Dezactivez verificarea WordPress pentru a gestiona manual
+            'permission_callback' => array($this, 'debug_permission_callback'), // Adaug loguri pentru debugging
             'args' => array(),
         ));
 
