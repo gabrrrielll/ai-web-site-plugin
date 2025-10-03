@@ -117,6 +117,42 @@ try {
             break;
 
         case 'POST':
+            // ETAPA 1: Verificări de securitate
+            // 1. Verificare utilizator logat
+            if (!is_user_logged_in()) {
+                logRequest('ERROR: Unauthenticated POST request');
+                http_response_code(401);
+                echo json_encode([
+                    'error' => 'Authentication required',
+                    'message' => 'User must be logged in to save configuration',
+                    'timestamp' => date('c')
+                ]);
+                exit();
+            }
+
+            // 2. Verificare nonce pentru protecție CSRF
+            $headers = getallheaders();
+            $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
+
+            if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
+                logRequest('ERROR: Invalid or missing nonce', [
+                    'user_id' => get_current_user_id(),
+                    'nonce_received' => !empty($nonce) ? 'yes' : 'no'
+                ]);
+                http_response_code(403);
+                echo json_encode([
+                    'error' => 'Invalid security token',
+                    'message' => 'Security verification failed. Please refresh the page and try again.',
+                    'timestamp' => date('c')
+                ]);
+                exit();
+            }
+
+            logRequest('SUCCESS: Security checks passed', [
+                'user_id' => get_current_user_id(),
+                'user_login' => wp_get_current_user()->user_login
+            ]);
+
             // Salvează configurația
             $input = file_get_contents('php://input');
             $inputData = json_decode($input, true);

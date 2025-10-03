@@ -122,6 +122,13 @@ class AI_Web_Site_Website_Manager
             'permission_callback' => '__return_true',
         ));
 
+        // POST endpoint pentru salvarea configurației cu verificări de securitate
+        register_rest_route('ai-web-site/v1', '/website-config', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'rest_save_website_config'),
+            'permission_callback' => array($this, 'check_save_permissions'),
+        ));
+
         // Test endpoint to verify REST API is working
         register_rest_route('ai-web-site/v1', '/test', array(
             'methods' => 'GET',
@@ -144,6 +151,93 @@ class AI_Web_Site_Website_Manager
         ));
 
         $logger->info('WEBSITE_MANAGER', 'REST_API', 'REST API routes registered successfully');
+    }
+
+    /**
+     * Check permissions for saving website config (ETAPA 1)
+     */
+    public function check_save_permissions($request)
+    {
+        // 1. Verificare utilizator logat
+        if (!is_user_logged_in()) {
+            return new WP_Error('not_logged_in', 'Authentication required', array('status' => 401));
+        }
+
+        // 2. Verificare nonce pentru protecție CSRF
+        $headers = getallheaders();
+        $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
+
+        if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
+            return new WP_Error('invalid_nonce', 'Invalid security token', array('status' => 403));
+        }
+
+        return true;
+    }
+
+    /**
+     * REST API: Save website config (ETAPA 1 - cu verificări de securitate)
+     */
+    public function rest_save_website_config($request)
+    {
+        $this->set_cors_headers();
+
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'REST API POST request received', array(
+            'user_id' => get_current_user_id(),
+            'user_login' => wp_get_current_user()->user_login
+        ));
+
+        try {
+            $input_data = $request->get_json_params();
+
+            if (!$input_data || !isset($input_data['config'])) {
+                $logger->error('WEBSITE_MANAGER', 'REST_SAVE', 'Missing config data');
+                return new WP_REST_Response(array(
+                    'error' => 'Missing configuration data',
+                    'message' => 'Expected "config" field in request body',
+                    'timestamp' => date('c')
+                ), 400);
+            }
+
+            // Salvează configurația în baza de date
+            $result = $this->save_website_config($input_data);
+
+            if ($result['success']) {
+                $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Configuration saved successfully', array(
+                    'user_id' => get_current_user_id(),
+                    'website_id' => $result['website_id'],
+                    'domain' => $input_data['domain'] ?? 'unknown'
+                ));
+
+                return new WP_REST_Response(array(
+                    'success' => true,
+                    'message' => 'Configuration saved successfully',
+                    'website_id' => $result['website_id'],
+                    'timestamp' => date('c')
+                ), 200);
+            } else {
+                $logger->error('WEBSITE_MANAGER', 'REST_SAVE', 'Failed to save configuration', array(
+                    'error' => $result['error']
+                ));
+
+                return new WP_REST_Response(array(
+                    'error' => $result['error'],
+                    'message' => $result['message'],
+                    'timestamp' => date('c')
+                ), 400);
+            }
+
+        } catch (Exception $e) {
+            $logger->error('WEBSITE_MANAGER', 'REST_SAVE', 'Exception during save', array(
+                'error' => $e->getMessage()
+            ));
+
+            return new WP_REST_Response(array(
+                'error' => 'Failed to save configuration',
+                'message' => $e->getMessage(),
+                'timestamp' => date('c')
+            ), 500);
+        }
     }
 
     /**
@@ -195,50 +289,6 @@ class AI_Web_Site_Website_Manager
         }
     }
 
-    /**
-     * REST API: Save website config
-     */
-    public function rest_save_website_config($request)
-    {
-        // Enable CORS
-        $this->set_cors_headers();
-
-        $body = $request->get_json_params();
-
-        if (!$body || !isset($body['config'])) {
-            return new WP_REST_Response(array(
-                'error' => 'Missing configuration data',
-                'message' => 'Expected "config" field in request body',
-                'timestamp' => date('c')
-            ), 400);
-        }
-
-        try {
-            $result = $this->save_website_config($body);
-
-            if ($result['success']) {
-                return new WP_REST_Response(array(
-                    'success' => true,
-                    'message' => 'Configuration saved successfully',
-                    'website_id' => $result['website_id'],
-                    'timestamp' => date('c')
-                ), 200);
-            } else {
-                return new WP_REST_Response(array(
-                    'error' => $result['error'],
-                    'message' => $result['message'],
-                    'timestamp' => date('c')
-                ), 400);
-            }
-
-        } catch (Exception $e) {
-            return new WP_REST_Response(array(
-                'error' => 'Internal server error',
-                'message' => 'An unexpected error occurred',
-                'timestamp' => date('c')
-            ), 500);
-        }
-    }
 
     /**
      * REST API: Test endpoint
