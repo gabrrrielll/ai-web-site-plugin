@@ -59,7 +59,7 @@ class AI_Web_Site_Website_Manager
 
         // Bypass WordPress global nonce verification for our test nonce
         add_filter('rest_authentication_errors', array($this, 'bypass_nonce_for_test'));
-        
+
         // Debug filter pentru a vedea toate requesturile REST
         add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request'));
     }
@@ -124,13 +124,16 @@ class AI_Web_Site_Website_Manager
     /**
      * Debug filter pentru a vedea toate requesturile REST
      */
-    public function debug_rest_request($response, $handler, $request)
+    public function debug_rest_request($response, $handler = null, $request = null)
     {
-        if (strpos($request->get_route(), '/ai-web-site/v1/website-config') !== false) {
+        // Verifică dacă avem request-ul disponibil
+        if ($request && strpos($request->get_route(), '/ai-web-site/v1/website-config') !== false) {
             error_log('=== AI-WEB-SITE: debug_rest_request() CALLED ===');
             error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
             error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
-            error_log('AI-WEB-SITE: Handler: ' . print_r($handler, true));
+            if ($handler) {
+                error_log('AI-WEB-SITE: Handler: ' . print_r($handler, true));
+            }
         }
         
         return $response;
