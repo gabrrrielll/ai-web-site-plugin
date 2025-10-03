@@ -126,7 +126,8 @@ class AI_Web_Site_Website_Manager
         register_rest_route('ai-web-site/v1', '/website-config', array(
             'methods' => 'POST',
             'callback' => array($this, 'rest_save_website_config'),
-            'permission_callback' => array($this, 'check_save_permissions'),
+            'permission_callback' => '__return_true', // Dezactivez verificarea WordPress pentru a gestiona manual
+            'args' => array(),
         ));
 
         // Test endpoint to verify REST API is working
@@ -168,7 +169,7 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: OPTIONS request - allowing CORS preflight');
             return true;
         }
-        
+
         // Log pentru toate requesturile non-OPTIONS
         error_log('AI-WEB-SITE: NON-OPTIONS request - method: ' . $request->get_method());
 
@@ -216,8 +217,16 @@ class AI_Web_Site_Website_Manager
     public function rest_save_website_config($request)
     {
         error_log('=== AI-WEB-SITE: rest_save_website_config() CALLED ===');
-
+        
         $this->set_cors_headers();
+
+        // VERIFICARE MANUALĂ DE SECURITATE
+        $security_check = $this->check_save_permissions($request);
+        if ($security_check !== true) {
+            error_log('AI-WEB-SITE: ❌ SECURITY CHECK FAILED');
+            return $security_check;
+        }
+        error_log('AI-WEB-SITE: ✅ SECURITY CHECK PASSED');
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'REST API POST request received', array(
