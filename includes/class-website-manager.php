@@ -161,17 +161,24 @@ class AI_Web_Site_Website_Manager
         // LOG DETALIAT PENTRU DEBUGGING
         error_log('=== AI-WEB-SITE: check_save_permissions() CALLED ===');
         error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
-        error_log('AI-WEB-SITE: Request URI: ' . $request->get_uri());
+        error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
+        
+        // Pentru requesturi OPTIONS (preflight CORS), returnează true direct
+        if ($request->get_method() === 'OPTIONS') {
+            error_log('AI-WEB-SITE: OPTIONS request - allowing CORS preflight');
+            return true;
+        }
+        
         error_log('AI-WEB-SITE: User logged in: ' . (is_user_logged_in() ? 'YES' : 'NO'));
         error_log('AI-WEB-SITE: User ID: ' . get_current_user_id());
-        
+
         // 1. Verificare utilizator logat (pentru localhost, sărim această verificare)
         $headers = getallheaders();
         error_log('AI-WEB-SITE: All headers: ' . print_r($headers, true));
-        
+
         $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
         error_log('AI-WEB-SITE: Nonce received: ' . $nonce);
-        
+
         // Pentru localhost/testare cu nonce de testare, sărim verificarea de autentificare
         if ($nonce === 'test-nonce-12345') {
             // Log pentru debugging
@@ -185,7 +192,7 @@ class AI_Web_Site_Website_Manager
 
         // 2. Verificare nonce pentru protecție CSRF (doar dacă nu folosim nonce de testare)
         error_log('AI-WEB-SITE: Verifying nonce with action: save_site_config');
-        
+
         if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
             error_log('AI-WEB-SITE: ❌ NONCE VERIFICATION FAILED');
             error_log('AI-WEB-SITE: Nonce empty: ' . (empty($nonce) ? 'YES' : 'NO'));
@@ -206,7 +213,7 @@ class AI_Web_Site_Website_Manager
     public function rest_save_website_config($request)
     {
         error_log('=== AI-WEB-SITE: rest_save_website_config() CALLED ===');
-        
+
         $this->set_cors_headers();
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
