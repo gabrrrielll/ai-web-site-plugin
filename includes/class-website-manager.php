@@ -325,7 +325,10 @@ class AI_Web_Site_Website_Manager
      */
     public function rest_save_website_config($request)
     {
+        error_log('==========================================================');
         error_log('=== AI-WEB-SITE: rest_save_website_config() CALLED ===');
+        error_log('=== POST REQUEST REACHED THE CALLBACK SUCCESSFULLY! ===');
+        error_log('==========================================================');
 
         $this->set_cors_headers();
 
