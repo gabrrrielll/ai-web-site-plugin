@@ -818,8 +818,24 @@ class AI_Web_Site_Website_Manager
         }
 
         // Extract domain and subdomain
-        $domain = $data['domain'] ?? 'ai-web.site';
-        $subdomain = $data['subdomain'] ?? 'my-site';
+        // Dacă primim un domeniu complet (ex: editor.ai-web.site), parsăm subdomain-ul
+        $full_domain = $data['domain'] ?? 'ai-web.site';
+        $provided_subdomain = $data['subdomain'] ?? null;
+        
+        // Parsează domeniul pentru a extrage subdomain și domain de bază
+        $domain_parts = explode('.', $full_domain);
+        
+        if (count($domain_parts) >= 3) {
+            // ex: "editor.ai-web.site" -> subdomain: "editor", domain: "ai-web.site"
+            $subdomain = $domain_parts[0];
+            $domain = implode('.', array_slice($domain_parts, 1));
+            error_log("AI-WEB-SITE: Parsed full domain - subdomain: {$subdomain}, domain: {$domain}");
+        } else {
+            // ex: "ai-web.site" -> folosește subdomain-ul provided sau "my-site"
+            $subdomain = $provided_subdomain ?? 'my-site';
+            $domain = $full_domain;
+            error_log("AI-WEB-SITE: Using provided - subdomain: {$subdomain}, domain: {$domain}");
+        }
 
         // Validate subdomain format
         if (!preg_match('/^[a-zA-Z0-9-]+$/', $subdomain)) {
