@@ -70,25 +70,15 @@ class AI_Web_Site_Debug_Logger
 
     /**
      * Log a message
+     * NOTE: Database logging disabled - only error_log for performance
      */
     public function log($level, $component, $action, $message, $data = null)
     {
-        global $wpdb;
-
-        $insert_data = array(
-            'level' => sanitize_text_field($level),
-            'component' => sanitize_text_field($component),
-            'action' => sanitize_text_field($action),
-            'message' => sanitize_text_field($message),
-            'data' => $data ? json_encode($data) : null
-        );
-
-        $wpdb->insert($this->table_name, $insert_data);
-
-        // Also log to WordPress debug log if WP_DEBUG_LOG is enabled
-        if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
-            error_log("AI-Web-Site [{$level}] {$component}::{$action} - {$message}" . ($data ? ' | Data: ' . json_encode($data) : ''));
-        }
+        // Database logging DISABLED for performance
+        // Only use error_log for debugging
+        
+        // Log to WordPress error_log
+        error_log("AI-Web-Site [{$level}] {$component}::{$action} - {$message}" . ($data ? ' | Data: ' . json_encode($data) : ''));
     }
 
     /**

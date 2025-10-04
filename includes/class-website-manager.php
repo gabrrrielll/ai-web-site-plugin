@@ -821,10 +821,10 @@ class AI_Web_Site_Website_Manager
         // Dacă primim un domeniu complet (ex: editor.ai-web.site), parsăm subdomain-ul
         $full_domain = $data['domain'] ?? 'ai-web.site';
         $provided_subdomain = $data['subdomain'] ?? null;
-        
+
         // Parsează domeniul pentru a extrage subdomain și domain de bază
         $domain_parts = explode('.', $full_domain);
-        
+
         if (count($domain_parts) >= 3) {
             // ex: "editor.ai-web.site" -> subdomain: "editor", domain: "ai-web.site"
             $subdomain = $domain_parts[0];
