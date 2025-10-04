@@ -231,16 +231,23 @@ class AI_Web_Site_Database
     {
         global $wpdb;
 
-        // Use the websites table from website-manager
-        $table_name = $wpdb->prefix . 'ai_web_site_websites';
+        // Use the correct subdomains table
+        $table_name = $wpdb->prefix . 'ai_web_sites';
 
         $results = $wpdb->get_results(
-            "SELECT s.id, s.user_id, s.subdomain, s.domain, s.status, s.created_at, s.updated_at,
-                    u.user_login, u.display_name 
+            "SELECT s.*, u.user_login, u.display_name 
              FROM {$table_name} s 
              LEFT JOIN {$wpdb->users} u ON s.user_id = u.ID 
-             ORDER BY s.updated_at DESC"
+             WHERE s.status = 'active' 
+             ORDER BY s.created_at DESC"
         );
+
+        // Decode JSON for each result
+        foreach ($results as $result) {
+            if (isset($result->site_config)) {
+                $result->site_config = json_decode($result->site_config, true);
+            }
+        }
 
         return $results;
     }

@@ -62,6 +62,11 @@ class AI_Web_Site_Admin
      */
     public function enqueue_admin_scripts($hook)
     {
+        // Only load on our plugin page
+        if ($hook !== 'settings_page_ai-web-site-plugin') {
+            return;
+        }
+
         // Load CSS inline
         $css_path = AI_WEB_SITE_PLUGIN_DIR . 'assets/admin.css';
         if (file_exists($css_path)) {
@@ -78,13 +83,13 @@ class AI_Web_Site_Admin
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('ai_web_site_nonce'),
                 'options' => get_option('ai_web_site_options', array()), // Add plugin options
-                       'strings' => array(
-                           'confirmDelete' => __('Are you sure you want to delete this subdomain?', 'ai-web-site-plugin'),
-                           'creating' => __('Creating...', 'ai-web-site-plugin'),
-                           'deleting' => __('Deleting...', 'ai-web-site-plugin'),
-                           'testing' => __('Testing...', 'ai-web-site-plugin'),
-                           'activating' => __('Activating...', 'ai-web-site-plugin')
-                       )
+                'strings' => array(
+                    'confirmDelete' => __('Are you sure you want to delete this subdomain?', 'ai-web-site-plugin'),
+                    'creating' => __('Creating...', 'ai-web-site-plugin'),
+                    'deleting' => __('Deleting...', 'ai-web-site-plugin'),
+                    'testing' => __('Testing...', 'ai-web-site-plugin'),
+                    'activating' => __('Activating...', 'ai-web-site-plugin')
+                )
             )) . ';';
             echo file_get_contents($js_path);
             echo '</script>';
