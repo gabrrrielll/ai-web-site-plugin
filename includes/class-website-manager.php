@@ -331,7 +331,7 @@ class AI_Web_Site_Website_Manager
 
         if (!$can_save['allowed']) {
             error_log('AI-WEB-SITE: ❌ User does NOT have active subscription');
-            
+
             return new WP_Error(
                 'subscription_required',
                 $can_save['message'],

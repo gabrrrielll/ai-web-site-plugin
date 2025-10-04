@@ -99,6 +99,12 @@ class AI_Web_Site_Subscription_Manager
             // FALLBACK: Dacă IHC nu este activ, verificăm rolul de admin
             $user = get_userdata($user_id);
             if ($user && in_array('administrator', $user->roles)) {
+                error_log('AI-WEB-SITE: ✅ USER IS ADMINISTRATOR (IHC not active)');
+                error_log('AI-WEB-SITE: User ID: ' . $user_id);
+                error_log('AI-WEB-SITE: Username: ' . $user->user_login);
+                error_log('AI-WEB-SITE: User roles: ' . implode(', ', $user->roles));
+                error_log('AI-WEB-SITE: Subscription check bypassed for admin');
+                
                 $this->logger->info('SUBSCRIPTION_MANAGER', 'CHECK_SUBSCRIPTION', 'User is admin - allowed without IHC');
                 return array(
                     'has_subscription' => true,
@@ -118,6 +124,16 @@ class AI_Web_Site_Subscription_Manager
         $subscription_data = $this->get_ihc_subscription_data($user_id);
 
         if ($subscription_data['has_active_subscription']) {
+            // Log detaliat pentru abonamentele active
+            $active_levels_names = array_map(function($level) {
+                return $level['name'] . ' (ID: ' . $level['id'] . ')';
+            }, $subscription_data['active_levels']);
+            
+            error_log('AI-WEB-SITE: ✅ USER HAS ACTIVE SUBSCRIPTION');
+            error_log('AI-WEB-SITE: User ID: ' . $user_id);
+            error_log('AI-WEB-SITE: Active subscription levels: ' . implode(', ', $active_levels_names));
+            error_log('AI-WEB-SITE: Total active levels: ' . count($subscription_data['active_levels']));
+            
             $this->logger->info('SUBSCRIPTION_MANAGER', 'CHECK_SUBSCRIPTION', 'User has active subscription', array(
                 'user_id' => $user_id,
                 'subscription_levels' => $subscription_data['active_levels']
@@ -131,6 +147,18 @@ class AI_Web_Site_Subscription_Manager
                 'details' => $subscription_data
             );
         } else {
+            // Log pentru lipsa abonamentelor
+            error_log('AI-WEB-SITE: ❌ USER HAS NO ACTIVE SUBSCRIPTION');
+            error_log('AI-WEB-SITE: User ID: ' . $user_id);
+            if (!empty($subscription_data['expired_levels'])) {
+                $expired_names = array_map(function($level) {
+                    return $level['name'] . ' (ID: ' . $level['id'] . ')';
+                }, $subscription_data['expired_levels']);
+                error_log('AI-WEB-SITE: Expired levels: ' . implode(', ', $expired_names));
+            } else {
+                error_log('AI-WEB-SITE: No subscription levels found (never subscribed)');
+            }
+            
             $this->logger->warning('SUBSCRIPTION_MANAGER', 'CHECK_SUBSCRIPTION', 'User has NO active subscription', array(
                 'user_id' => $user_id
             ));
