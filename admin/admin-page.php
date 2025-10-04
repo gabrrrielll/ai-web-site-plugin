@@ -201,7 +201,9 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                                 <th><?php _e('Subdomain', 'ai-web-site-plugin'); ?></th>
                                 <th><?php _e('Domain', 'ai-web-site-plugin'); ?></th>
                                 <th><?php _e('User', 'ai-web-site-plugin'); ?></th>
+                                <th><?php _e('Status', 'ai-web-site-plugin'); ?></th>
                                 <th><?php _e('Created', 'ai-web-site-plugin'); ?></th>
+                                <th><?php _e('Updated', 'ai-web-site-plugin'); ?></th>
                                 <th><?php _e('Actions', 'ai-web-site-plugin'); ?></th>
                             </tr>
                         </thead>
@@ -215,10 +217,26 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                                         <?php echo esc_html($subdomain->domain); ?>
                                     </td>
                                     <td>
-                                        <?php echo esc_html($subdomain->display_name ?: $subdomain->user_login); ?>
+                                        <?php 
+                                        if ($subdomain->user_id == 0) {
+                                            echo '<em>' . __('Guest', 'ai-web-site-plugin') . '</em>';
+                                        } else {
+                                            echo esc_html($subdomain->display_name ?: $subdomain->user_login ?: 'Unknown');
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        $status = $subdomain->status ?? 'unknown';
+                                        $status_class = $status === 'active' ? 'green' : 'gray';
+                                        echo '<span style="color: ' . $status_class . '; font-weight: bold;">' . esc_html(ucfirst($status)) . '</span>';
+                                        ?>
                                     </td>
                                     <td>
                                         <?php echo esc_html(date_i18n(get_option('date_format'), strtotime($subdomain->created_at))); ?>
+                                    </td>
+                                    <td>
+                                        <?php echo esc_html(date_i18n(get_option('date_format') . ' H:i', strtotime($subdomain->updated_at))); ?>
                                     </td>
                                     <td>
                                         <a href="http://<?php echo esc_attr($subdomain->subdomain . '.' . $subdomain->domain); ?>" 

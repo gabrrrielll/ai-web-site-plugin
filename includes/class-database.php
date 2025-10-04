@@ -238,8 +238,7 @@ class AI_Web_Site_Database
             "SELECT s.*, u.user_login, u.display_name 
              FROM {$table_name} s 
              LEFT JOIN {$wpdb->users} u ON s.user_id = u.ID 
-             WHERE s.status = 'active' 
-             ORDER BY s.created_at DESC"
+             ORDER BY s.updated_at DESC"
         );
 
         // Decode JSON for each result
