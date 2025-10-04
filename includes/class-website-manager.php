@@ -302,7 +302,7 @@ class AI_Web_Site_Website_Manager
         // Pentru localhost/testare: acceptăm requesturi fără nonce din localhost
         $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
         error_log('AI-WEB-SITE: Request origin: ' . $origin);
-        
+
         if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
             error_log('AI-WEB-SITE: ✅ LOCALHOST REQUEST - Skipping authentication');
             return true;
