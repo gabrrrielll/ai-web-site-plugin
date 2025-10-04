@@ -299,25 +299,57 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: Nonce received from body: ' . $nonce);
         }
 
-        // Pentru localhost/testare: acceptăm requesturi fără nonce din localhost
+        // SECURITATE: Verificare Origin pentru test-nonce
         $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
         error_log('AI-WEB-SITE: Request origin: ' . $origin);
 
-        if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
-            error_log('AI-WEB-SITE: ✅ LOCALHOST REQUEST - Skipping authentication');
-            return true;
-        }
-
-        // Pentru localhost/testare cu nonce de testare, sărim verificarea de autentificare
+        // Pentru localhost cu test-nonce - DOAR pentru development
         if ($nonce === 'test-nonce-12345') {
-            // Log pentru debugging
-            error_log('AI-WEB-SITE: ✅ TEST NONCE ACCEPTED - Skipping authentication');
-            return true;
+            error_log('AI-WEB-SITE: Test nonce detected - checking Origin: ' . $origin);
+            
+            // ✅ Acceptă test-nonce DOAR dacă vine din localhost
+            if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
+                error_log('AI-WEB-SITE: ✅ LOCALHOST REQUEST - Test nonce accepted for development');
+                return true;
+            } else {
+                // ❌ În production, test-nonce este INVALID
+                error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from non-localhost origin rejected!');
+                error_log('AI-WEB-SITE: ❌ Suspicious origin: ' . $origin);
+                return new WP_Error('invalid_nonce', 'Invalid security token - development nonce not allowed in production', array('status' => 403));
+            }
         }
 
+        // ETAPA 2: Verificare utilizator logat
         if (!is_user_logged_in()) {
-            return new WP_Error('not_logged_in', 'Authentication required', array('status' => 401));
+            error_log('AI-WEB-SITE: ❌ User NOT logged in');
+            return new WP_Error('not_logged_in', 'Trebuie să fii autentificat pentru a salva configurații', array('status' => 401));
         }
+
+        $user_id = get_current_user_id();
+        error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
+
+        // ETAPA 3: Verificare abonament activ
+        $subscription_manager = AI_Web_Site_Subscription_Manager::get_instance();
+        $can_save = $subscription_manager->can_save_configuration($user_id);
+
+        error_log('AI-WEB-SITE: Subscription check result: ' . print_r($can_save, true));
+
+        if (!$can_save['allowed']) {
+            error_log('AI-WEB-SITE: ❌ User does NOT have active subscription');
+            
+            return new WP_Error(
+                'subscription_required',
+                $can_save['message'],
+                array(
+                    'status' => 403,
+                    'reason' => $can_save['reason'],
+                    'action_required' => isset($can_save['action_required']) ? $can_save['action_required'] : null,
+                    'subscribe_url' => isset($can_save['subscribe_url']) ? $can_save['subscribe_url'] : null
+                )
+            );
+        }
+
+        error_log('AI-WEB-SITE: ✅ User has active subscription - Save allowed');
 
         // 2. Verificare nonce pentru protecție CSRF (doar dacă nu folosim nonce de testare)
         error_log('AI-WEB-SITE: Verifying nonce with action: save_site_config');
