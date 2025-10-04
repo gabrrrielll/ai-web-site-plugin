@@ -121,8 +121,13 @@ class AI_Web_Site_CPanel_API
     public function delete_subdomain($subdomain, $domain)
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
+        
+        // cPanel converts subdomains to lowercase, so we need to do the same
+        $subdomain_lower = strtolower($subdomain);
+        
         $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_START', 'Starting subdomain deletion', array(
             'subdomain' => $subdomain,
+            'subdomain_lower' => $subdomain_lower,
             'domain' => $domain
         ));
 
@@ -137,12 +142,12 @@ class AI_Web_Site_CPanel_API
         // Prepare API URL for cPanel API 2 (JSON API)
         $api_url = "https://{$this->config['host']}:2083/json-api/cpanel";
 
-        // Prepare parameters for cPanel API 2
+        // Prepare parameters for cPanel API 2 (use lowercase subdomain)
         $params = array(
             'cpanel_jsonapi_apiversion' => 2,
             'cpanel_jsonapi_module' => 'SubDomain',
             'cpanel_jsonapi_func' => 'delsubdomain',
-            'domain' => "{$subdomain}.{$domain}"
+            'domain' => "{$subdomain_lower}.{$domain}"
         );
 
         // Make API request
@@ -168,14 +173,14 @@ class AI_Web_Site_CPanel_API
         // cPanel API 2 JSON API responses are structured differently. Check if result is 1.
         $is_success = isset($result['cpanelresult']['data'][0]['result']) && $result['cpanelresult']['data'][0]['result'] === 1;
         if ($is_success) {
-            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_SUCCESS', 'Subdomain deleted successfully', array('subdomain' => $subdomain, 'domain' => $domain));
+            $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_SUCCESS', 'Subdomain deleted successfully', array('subdomain' => $subdomain, 'subdomain_lower' => $subdomain_lower, 'domain' => $domain));
             return array(
                 'success' => true,
                 'message' => $result['cpanelresult']['data'][0]['reason'] ?? 'Subdomain deleted successfully'
             );
         } else {
             $error_message = isset($result['cpanelresult']['errors']) && is_array($result['cpanelresult']['errors']) ? implode(', ', $result['cpanelresult']['errors']) : ($result['cpanelresult']['data'][0]['reason'] ?? 'Unknown error');
-            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_API_ERROR', 'cPanel API returned error during deletion', array('subdomain' => $subdomain, 'domain' => $domain, 'message' => $error_message, 'result' => $result));
+            $logger->error('CPANEL_API', 'DELETE_SUBDOMAIN_API_ERROR', 'cPanel API returned error during deletion', array('subdomain' => $subdomain, 'subdomain_lower' => $subdomain_lower, 'domain' => $domain, 'message' => $error_message, 'result' => $result));
             return array('success' => false, 'message' => $error_message);
         }
     }
