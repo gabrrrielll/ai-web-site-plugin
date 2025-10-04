@@ -162,9 +162,7 @@ class AI_Web_Site_Website_Manager
             error_log('=== AI-WEB-SITE: debug_rest_request() CALLED ===');
             error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
             error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
-            if ($handler) {
-                error_log('AI-WEB-SITE: Handler: ' . print_r($handler, true));
-            }
+            // Handler info removed to reduce log size
         }
 
         return $response;
@@ -194,8 +192,8 @@ class AI_Web_Site_Website_Manager
         $result = $this->check_save_permissions($request);
 
         error_log('AI-WEB-SITE: Permission check result: ' . ($result === true ? 'TRUE' : 'FALSE'));
-        if ($result !== true) {
-            error_log('AI-WEB-SITE: Permission error: ' . print_r($result, true));
+        if ($result !== true && is_wp_error($result)) {
+            error_log('AI-WEB-SITE: Permission error - code: ' . $result->get_error_code() . ', message: ' . $result->get_error_message());
         }
 
         return $result;
@@ -287,7 +285,7 @@ class AI_Web_Site_Website_Manager
 
         // 1. Verificare utilizator logat (pentru localhost, sărim această verificare)
         $headers = getallheaders();
-        error_log('AI-WEB-SITE: All headers: ' . print_r($headers, true));
+        error_log('AI-WEB-SITE: Headers count: ' . count($headers));
 
         $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
         error_log('AI-WEB-SITE: Nonce received from headers: ' . $nonce);
@@ -299,24 +297,21 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: Nonce received from body: ' . $nonce);
         }
 
-        // SECURITATE: Verificare Origin pentru test-nonce
+        // SECURITATE: Verificare Origin pentru localhost DEVELOPMENT
         $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
         error_log('AI-WEB-SITE: Request origin: ' . $origin);
 
-        // Pentru localhost cu test-nonce - DOAR pentru development
+        // ✅ LOCALHOST BYPASS - Pentru development, acceptăm requesturi din localhost
+        if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
+            error_log('AI-WEB-SITE: ✅ LOCALHOST REQUEST - Bypassing all security checks for development');
+            return true;
+        }
+
+        // ❌ SECURITY: Test-nonce BLOCAT în production
         if ($nonce === 'test-nonce-12345') {
-            error_log('AI-WEB-SITE: Test nonce detected - checking Origin: ' . $origin);
-            
-            // ✅ Acceptă test-nonce DOAR dacă vine din localhost
-            if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
-                error_log('AI-WEB-SITE: ✅ LOCALHOST REQUEST - Test nonce accepted for development');
-                return true;
-            } else {
-                // ❌ În production, test-nonce este INVALID
-                error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from non-localhost origin rejected!');
-                error_log('AI-WEB-SITE: ❌ Suspicious origin: ' . $origin);
-                return new WP_Error('invalid_nonce', 'Invalid security token - development nonce not allowed in production', array('status' => 403));
-            }
+            error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from non-localhost origin REJECTED!');
+            error_log('AI-WEB-SITE: ❌ Suspicious origin: ' . $origin);
+            return new WP_Error('invalid_nonce', 'Invalid security token - development nonce not allowed in production', array('status' => 403));
         }
 
         // ETAPA 2: Verificare utilizator logat
@@ -332,7 +327,7 @@ class AI_Web_Site_Website_Manager
         $subscription_manager = AI_Web_Site_Subscription_Manager::get_instance();
         $can_save = $subscription_manager->can_save_configuration($user_id);
 
-        error_log('AI-WEB-SITE: Subscription check result: ' . print_r($can_save, true));
+        error_log('AI-WEB-SITE: Subscription check - allowed: ' . ($can_save['allowed'] ? 'YES' : 'NO') . ', reason: ' . $can_save['reason']);
 
         if (!$can_save['allowed']) {
             error_log('AI-WEB-SITE: ❌ User does NOT have active subscription');
@@ -396,7 +391,7 @@ class AI_Web_Site_Website_Manager
 
         try {
             $input_data = $request->get_json_params();
-            error_log('AI-WEB-SITE: Input data received: ' . print_r($input_data, true));
+            error_log('AI-WEB-SITE: Input data received - domain: ' . ($input_data['domain'] ?? 'N/A') . ', config size: ' . strlen(json_encode($input_data['config'] ?? [])) . ' bytes');
 
             if (!$input_data || !isset($input_data['config'])) {
                 $logger->error('WEBSITE_MANAGER', 'REST_SAVE', 'Missing config data');
