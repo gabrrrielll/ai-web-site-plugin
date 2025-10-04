@@ -184,14 +184,13 @@ class AI_Web_Site_Database
 
         $table_name = $wpdb->prefix . 'ai_web_sites';
 
-        $result = $wpdb->update(
+        // DELETE real from database (not just marking as inactive)
+        $result = $wpdb->delete(
             $table_name,
-            array('status' => 'inactive'),
             array(
                 'subdomain' => $subdomain,
                 'domain' => $domain
             ),
-            array('%s'),
             array('%s', '%s')
         );
 

@@ -1,37 +1,37 @@
 /* AI Web Site Plugin Admin Styles */
 
-.ai-web-site-admin {
+.ai-web-site-plugin-admin {
     max-width: 1200px;
 }
 
-.ai-web-site-admin .tab-content {
+.ai-web-site-plugin-admin .tab-content {
     display: none;
 }
 
-.ai-web-site-admin .tab-content.active {
+.ai-web-site-plugin-admin .tab-content.active {
     display: block;
 }
 
-.ai-web-site-admin .form-table th {
+.ai-web-site-plugin-admin .form-table th {
     width: 200px;
 }
 
-.ai-web-site-admin .form-table td {
+.ai-web-site-plugin-admin .form-table td {
     padding: 15px 10px;
 }
 
-.ai-web-site-admin input[type="text"],
-.ai-web-site-admin input[type="password"] {
+.ai-web-site-plugin-admin input[type="text"],
+.ai-web-site-plugin-admin input[type="password"] {
     width: 300px;
 }
 
-.ai-web-site-admin .description {
+.ai-web-site-plugin-admin .description {
     color: #666;
     font-style: italic;
     margin-top: 5px;
 }
 
-.ai-web-site-admin .button-primary {
+.ai-web-site-plugin-admin .button-primary {
     background: #0073aa;
     border-color: #0073aa;
     color: #fff;
@@ -42,66 +42,66 @@
     margin-top: 10px;
 }
 
-.ai-web-site-admin .button-primary:hover {
+.ai-web-site-plugin-admin .button-primary:hover {
     background: #005a87;
     border-color: #005a87;
 }
 
-.ai-web-site-admin .subdomain-table {
+.ai-web-site-plugin-admin .subdomain-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
 }
 
-.ai-web-site-admin .subdomain-table th,
-.ai-web-site-admin .subdomain-table td {
+.ai-web-site-plugin-admin .subdomain-table th,
+.ai-web-site-plugin-admin .subdomain-table td {
     padding: 10px;
     border: 1px solid #ddd;
     text-align: left;
 }
 
-.ai-web-site-admin .subdomain-table th {
+.ai-web-site-plugin-admin .subdomain-table th {
     background: #f9f9f9;
     font-weight: bold;
 }
 
-.ai-web-site-admin .delete-subdomain {
+.ai-web-site-plugin-admin .delete-subdomain {
     color: #a00;
     text-decoration: none;
 }
 
-.ai-web-site-admin .delete-subdomain:hover {
+.ai-web-site-plugin-admin .delete-subdomain:hover {
     color: #dc3232;
 }
 
-.ai-web-site-admin .notice {
+.ai-web-site-plugin-admin .notice {
     margin: 15px 0;
     padding: 12px;
     border-left: 4px solid;
 }
 
-.ai-web-site-admin .notice-success {
+.ai-web-site-plugin-admin .notice-success {
     background: #f0f8ff;
     border-left-color: #00a32a;
     color: #00a32a;
 }
 
-.ai-web-site-admin .notice-error {
+.ai-web-site-plugin-admin .notice-error {
     background: #fef7f7;
     border-left-color: #d63638;
     color: #d63638;
 }
 
-.ai-web-site-admin .domain-suffix {
+.ai-web-site-plugin-admin .domain-suffix {
     color: #666;
     font-weight: normal;
 }
 
-.ai-web-site-admin .error {
+.ai-web-site-plugin-admin .error {
     border-color: #dc3232 !important;
 }
 
-.ai-web-site-admin .loading {
+.ai-web-site-plugin-admin .loading {
     opacity: 0.6;
     pointer-events: none;
 }
