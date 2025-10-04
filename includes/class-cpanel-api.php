@@ -121,10 +121,10 @@ class AI_Web_Site_CPanel_API
     public function delete_subdomain($subdomain, $domain)
     {
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        
+
         // cPanel converts subdomains to lowercase, so we need to do the same
         $subdomain_lower = strtolower($subdomain);
-        
+
         $logger->info('CPANEL_API', 'DELETE_SUBDOMAIN_START', 'Starting subdomain deletion', array(
             'subdomain' => $subdomain,
             'subdomain_lower' => $subdomain_lower,

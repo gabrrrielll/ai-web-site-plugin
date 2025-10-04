@@ -288,27 +288,60 @@ document.addEventListener('DOMContentLoaded', function () {
     var tabLinks = document.querySelectorAll('.nav-tab');
     var tabContents = document.querySelectorAll('.tab-content');
 
+    // Function to activate a specific tab
+    function activateTab(targetTab) {
+        // Remove active class from all tabs and contents
+        tabLinks.forEach(function (link) {
+            link.classList.remove('nav-tab-active');
+        });
+        tabContents.forEach(function (content) {
+            content.classList.remove('active');
+        });
+
+        // Add active class to target tab and corresponding content
+        var targetLink = document.querySelector('.nav-tab[data-tab="' + targetTab + '"]');
+        var targetContent = document.getElementById(targetTab);
+        
+        if (targetLink && targetContent) {
+            targetLink.classList.add('nav-tab-active');
+            targetContent.classList.add('active');
+        }
+    }
+
+    // Handle tab clicks
     tabLinks.forEach(function (tabLink) {
         tabLink.addEventListener('click', function (e) {
             e.preventDefault();
 
             var targetTab = this.getAttribute('data-tab');
-
-            // Remove active class from all tabs and contents
-            tabLinks.forEach(function (link) {
-                link.classList.remove('nav-tab-active');
-            });
-            tabContents.forEach(function (content) {
-                content.classList.remove('active');
-            });
-
-            // Add active class to clicked tab and corresponding content
-            this.classList.add('nav-tab-active');
-            var targetContent = document.getElementById(targetTab);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
+            
+            // Update URL hash
+            window.location.hash = targetTab;
+            
+            // Activate the tab
+            activateTab(targetTab);
         });
+    });
+
+    // On page load, check URL hash and activate corresponding tab
+    function initializeTabFromHash() {
+        var hash = window.location.hash.substring(1); // Remove the # character
+        
+        if (hash) {
+            // Check if the hash corresponds to a valid tab
+            var targetContent = document.getElementById(hash);
+            if (targetContent && targetContent.classList.contains('tab-content')) {
+                activateTab(hash);
+            }
+        }
+    }
+
+    // Initialize tab from URL hash on page load
+    initializeTabFromHash();
+
+    // Handle browser back/forward buttons
+    window.addEventListener('hashchange', function() {
+        initializeTabFromHash();
     });
 
     // Copy shortcode functionality
