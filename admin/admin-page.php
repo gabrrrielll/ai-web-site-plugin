@@ -148,6 +148,79 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                        </td>
                    </tr>
                </table>
+
+               <h2 style="margin-top: 40px;"><?php _e('Security Settings', 'ai-web-site-plugin'); ?></h2>
+               <table class="form-table">
+                   <tr>
+                       <th scope="row">
+                           <label for="rate_limit_requests"><?php _e('Rate Limit - Max Requests', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="number" id="rate_limit_requests" name="rate_limit_requests" 
+                                  value="<?php echo esc_attr($options['rate_limit_requests'] ?? 100); ?>" 
+                                  class="small-text" min="1" max="10000" required>
+                           <span><?php _e('requests per', 'ai-web-site-plugin'); ?></span>
+                           <select id="rate_limit_period" name="rate_limit_period" class="small-text">
+                               <option value="60" <?php selected(($options['rate_limit_period'] ?? 3600), 60); ?>>
+                                   <?php _e('minute', 'ai-web-site-plugin'); ?>
+                               </option>
+                               <option value="300" <?php selected(($options['rate_limit_period'] ?? 3600), 300); ?>>
+                                   <?php _e('5 minutes', 'ai-web-site-plugin'); ?>
+                               </option>
+                               <option value="600" <?php selected(($options['rate_limit_period'] ?? 3600), 600); ?>>
+                                   <?php _e('10 minutes', 'ai-web-site-plugin'); ?>
+                               </option>
+                               <option value="1800" <?php selected(($options['rate_limit_period'] ?? 3600), 1800); ?>>
+                                   <?php _e('30 minutes', 'ai-web-site-plugin'); ?>
+                               </option>
+                               <option value="3600" <?php selected(($options['rate_limit_period'] ?? 3600), 3600); ?>>
+                                   <?php _e('hour', 'ai-web-site-plugin'); ?>
+                               </option>
+                               <option value="86400" <?php selected(($options['rate_limit_period'] ?? 3600), 86400); ?>>
+                                   <?php _e('day', 'ai-web-site-plugin'); ?>
+                               </option>
+                           </select>
+                           <p class="description"><?php _e('Maximum number of configuration save requests per user within the specified time period. Protects against spam and abuse.', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+
+                   <tr>
+                       <th scope="row">
+                           <label for="max_config_size"><?php _e('Max Configuration Size', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="number" id="max_config_size" name="max_config_size" 
+                                  value="<?php echo esc_attr($options['max_config_size'] ?? 5); ?>" 
+                                  class="small-text" min="1" max="50" step="0.5" required>
+                           <span><?php _e('MB', 'ai-web-site-plugin'); ?></span>
+                           <p class="description"><?php _e('Maximum size for site configuration JSON. Prevents memory exhaustion and database bloat. Recommended: 5MB', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+
+                   <tr>
+                       <th scope="row">
+                           <label for="enable_input_sanitization"><?php _e('Enable Input Sanitization', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="checkbox" id="enable_input_sanitization" name="enable_input_sanitization" value="1" 
+                                  <?php checked(($options['enable_input_sanitization'] ?? 1), 1); ?>>
+                           <label for="enable_input_sanitization"><?php _e('Sanitize HTML/JavaScript in configuration data', 'ai-web-site-plugin'); ?></label>
+                           <p class="description"><?php _e('Protects against XSS attacks by sanitizing user input. Highly recommended to keep enabled.', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+
+                   <tr>
+                       <th scope="row">
+                           <label for="enable_security_logging"><?php _e('Enable Security Logging', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="checkbox" id="enable_security_logging" name="enable_security_logging" value="1" 
+                                  <?php checked(($options['enable_security_logging'] ?? 0), 1); ?>>
+                           <label for="enable_security_logging"><?php _e('Log security events (failed auth, rate limits, etc.)', 'ai-web-site-plugin'); ?></label>
+                           <p class="description"><?php _e('Enables detailed logging of security events for audit purposes. May increase log file size.', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+               </table>
                 
                 <p class="submit">
                     <button type="submit" class="button-primary" name="action" value="save_ai_web_site_options">

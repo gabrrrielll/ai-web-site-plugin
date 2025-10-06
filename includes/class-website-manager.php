@@ -384,9 +384,32 @@ class AI_Web_Site_Website_Manager
         error_log('AI-WEB-SITE: ✅ SECURITY CHECK PASSED');
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $security_manager = AI_Web_Site_Security_Manager::get_instance();
+        $user_id = get_current_user_id();
+
+        // ETAPA 4: Verificare Rate Limit
+        $rate_limit_check = $security_manager->check_rate_limit($user_id);
+        if (!$rate_limit_check['allowed']) {
+            error_log('AI-WEB-SITE: ❌ RATE LIMIT EXCEEDED');
+            $security_manager->log_security_event('RATE_LIMIT_EXCEEDED', array(
+                'user_id' => $user_id,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+            ));
+            
+            return new WP_REST_Response(array(
+                'error' => 'rate_limit_exceeded',
+                'message' => $rate_limit_check['message'],
+                'remaining' => $rate_limit_check['remaining'],
+                'timestamp' => date('c')
+            ), 429);
+        }
+        
+        error_log('AI-WEB-SITE: ✅ RATE LIMIT CHECK PASSED - Remaining: ' . $rate_limit_check['remaining']);
+
         $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'REST API POST request received', array(
-            'user_id' => get_current_user_id(),
-            'user_login' => wp_get_current_user()->user_login
+            'user_id' => $user_id,
+            'user_login' => wp_get_current_user()->user_login,
+            'rate_limit_remaining' => $rate_limit_check['remaining']
         ));
 
         try {
@@ -401,6 +424,10 @@ class AI_Web_Site_Website_Manager
                     'timestamp' => date('c')
                 ), 400);
             }
+            
+            // ETAPA 5: Sanitizare input data
+            $input_data['config'] = $security_manager->sanitize_config_data($input_data['config']);
+            error_log('AI-WEB-SITE: ✅ INPUT SANITIZATION COMPLETED');
 
             // Salvează configurația în baza de date
             $result = $this->save_website_config($input_data);
@@ -848,6 +875,21 @@ class AI_Web_Site_Website_Manager
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception('Invalid configuration JSON: ' . json_last_error_msg());
         }
+        
+        // ETAPA 6: Verificare dimensiune configurație
+        $security_manager = AI_Web_Site_Security_Manager::get_instance();
+        $size_check = $security_manager->validate_config_size($config_json);
+        
+        if (!$size_check['valid']) {
+            error_log('AI-WEB-SITE: ❌ CONFIG SIZE LIMIT EXCEEDED');
+            $security_manager->log_security_event('CONFIG_SIZE_EXCEEDED', array(
+                'user_id' => $user_id,
+                'size_mb' => $size_check['size_mb'] ?? 'unknown'
+            ));
+            throw new Exception($size_check['message']);
+        }
+        
+        error_log('AI-WEB-SITE: ✅ CONFIG SIZE CHECK PASSED - Size: ' . $size_check['size_mb'] . 'MB');
 
         // Check if website already exists
         $existing = $wpdb->get_row($wpdb->prepare(

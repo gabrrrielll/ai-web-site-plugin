@@ -153,6 +153,13 @@ class AI_Web_Site_Admin
         $options['required_ump_level_id'] = (int)sanitize_text_field($_POST['required_ump_level_id']);
         $options['ump_domain_override'] = sanitize_text_field($_POST['ump_domain_override']);
         $options['disable_ump_tracking'] = isset($_POST['disable_ump_tracking']) ? 1 : 0;
+        
+        // Security settings
+        $options['rate_limit_requests'] = max(1, min(10000, (int)sanitize_text_field($_POST['rate_limit_requests'] ?? 100)));
+        $options['rate_limit_period'] = (int)sanitize_text_field($_POST['rate_limit_period'] ?? 3600);
+        $options['max_config_size'] = max(1, min(50, (float)sanitize_text_field($_POST['max_config_size'] ?? 5)));
+        $options['enable_input_sanitization'] = isset($_POST['enable_input_sanitization']) ? 1 : 0;
+        $options['enable_security_logging'] = isset($_POST['enable_security_logging']) ? 1 : 0;
 
         // Save options
         $result = update_option('ai_web_site_options', $options);

@@ -29,6 +29,7 @@ require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-database.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ump-integration.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-home-page-shortcode.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-subscription-manager.php'; // NEW: Subscription management
+require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-security-manager.php'; // NEW: Security management
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-website-manager.php'; // NEW: Website management
 require_once AI_WEB_SITE_PLUGIN_DIR . 'admin/class-admin.php';
 
