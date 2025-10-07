@@ -873,16 +873,12 @@ class AI_Web_Site_Website_Manager
                 'json_length' => strlen($json_test)
             ));
 
-            // Test: returnează un obiect mic pentru a verifica dacă problema este dimensiunea
-            $test_data = array(
-                'test' => 'success',
-                'domain' => $domain,
-                'config_size' => strlen(json_encode($config_data)),
-                'timestamp' => date('c')
-            );
-
-            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Returning test data instead of full config');
-            return new WP_REST_Response($test_data, 200);
+            // Returnează configurația reală
+            $response = new WP_REST_Response($config_data, 200);
+            $response->header('Content-Type', 'application/json; charset=utf-8');
+            
+            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Returning actual configuration data');
+            return $response;
         } else {
             $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'No configuration found for domain: ' . $domain);
             return new WP_REST_Response(array('error' => 'Website not found for this domain'), 404);

@@ -138,7 +138,7 @@ class AI_Web_Site_Plugin
 
         // Create default configuration for editor.ai-web.site
         $this->create_default_editor_config();
-        
+
         // Forțează recrearea configurației default (pentru a repara înregistrările corupte)
         $this->force_recreate_default_config();
 
@@ -168,13 +168,13 @@ class AI_Web_Site_Plugin
         if ($existing_config === null) {
             // Încarcă configurația din URL-ul pe server
             $config_url = 'https://ai-web.site/wp-content/uploads/site-config.json';
-            
+
             $logger = AI_Web_Site_Debug_Logger::get_instance();
             $logger->info('PLUGIN', 'DEFAULT_CONFIG', 'Loading default config from URL: ' . $config_url);
-            
+
             // Încarcă configurația din URL
             $config_content = wp_remote_get($config_url);
-            
+
             if (is_wp_error($config_content)) {
                 $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Failed to load config from URL', array(
                     'error' => $config_content->get_error_message(),
@@ -182,42 +182,42 @@ class AI_Web_Site_Plugin
                 ));
                 return;
             }
-            
+
             $config_body = wp_remote_retrieve_body($config_content);
             $config_data = json_decode($config_body, true);
 
-                if ($config_data) {
-                    // Salvează configurația pentru editor.ai-web.site
-                    $save_data = array(
-                        'config' => $config_data,
-                        'domain' => 'editor.ai-web.site',
-                        'subdomain' => 'editor'
-                    );
+            if ($config_data) {
+                // Salvează configurația pentru editor.ai-web.site
+                $save_data = array(
+                    'config' => $config_data,
+                    'domain' => 'editor.ai-web.site',
+                    'subdomain' => 'editor'
+                );
 
-                    try {
-                        $result = $website_manager->save_website_config($save_data);
+                try {
+                    $result = $website_manager->save_website_config($save_data);
 
-                        $logger = AI_Web_Site_Debug_Logger::get_instance();
-                        $logger->info('PLUGIN', 'DEFAULT_CONFIG', 'Default editor configuration created from URL', array(
-                            'website_id' => $result['website_id'],
-                            'config_url' => $config_url,
-                            'config_size' => strlen($config_body)
-                        ));
-
-                    } catch (Exception $e) {
-                        $logger = AI_Web_Site_Debug_Logger::get_instance();
-                        $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Failed to create default editor configuration', array(
-                            'error' => $e->getMessage(),
-                            'config_url' => $config_url
-                        ));
-                    }
-                } else {
                     $logger = AI_Web_Site_Debug_Logger::get_instance();
-                    $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Failed to parse config from URL', array(
+                    $logger->info('PLUGIN', 'DEFAULT_CONFIG', 'Default editor configuration created from URL', array(
+                        'website_id' => $result['website_id'],
                         'config_url' => $config_url,
-                        'response_code' => wp_remote_retrieve_response_code($config_content)
+                        'config_size' => strlen($config_body)
+                    ));
+
+                } catch (Exception $e) {
+                    $logger = AI_Web_Site_Debug_Logger::get_instance();
+                    $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Failed to create default editor configuration', array(
+                        'error' => $e->getMessage(),
+                        'config_url' => $config_url
                     ));
                 }
+            } else {
+                $logger = AI_Web_Site_Debug_Logger::get_instance();
+                $logger->error('PLUGIN', 'DEFAULT_CONFIG', 'Failed to parse config from URL', array(
+                    'config_url' => $config_url,
+                    'response_code' => wp_remote_retrieve_response_code($config_content)
+                ));
+            }
         }
     }
 
@@ -228,15 +228,15 @@ class AI_Web_Site_Plugin
     {
         $website_manager = AI_Web_Site_Website_Manager::get_instance();
         $logger = AI_Web_Site_Debug_Logger::get_instance();
-        
+
         // URL-ul configurației default
         $config_url = 'https://ai-web.site/wp-content/uploads/site-config.json';
-        
+
         $logger->info('PLUGIN', 'FORCE_RECREATE', 'Force recreating default config from URL: ' . $config_url);
-        
+
         // Încarcă configurația din URL
         $config_content = wp_remote_get($config_url);
-        
+
         if (is_wp_error($config_content)) {
             $logger->error('PLUGIN', 'FORCE_RECREATE', 'Failed to load config from URL', array(
                 'error' => $config_content->get_error_message(),
@@ -244,27 +244,27 @@ class AI_Web_Site_Plugin
             ));
             return;
         }
-        
+
         $config_body = wp_remote_retrieve_body($config_content);
         $config_data = json_decode($config_body, true);
-        
+
         if ($config_data) {
             // Șterge configurația existentă pentru editor.ai-web.site (dacă există)
             global $wpdb;
             $table_name = $wpdb->prefix . 'ai_web_site_websites';
-            
+
             $deleted = $wpdb->delete(
                 $table_name,
                 array('domain' => 'editor.ai-web.site'),
                 array('%s')
             );
-            
+
             if ($deleted > 0) {
                 $logger->info('PLUGIN', 'FORCE_RECREATE', 'Deleted existing corrupted config', array(
                     'deleted_count' => $deleted
                 ));
             }
-            
+
             // Salvează configurația nouă pentru editor.ai-web.site
             $save_data = array(
                 'config' => $config_data,
@@ -274,13 +274,13 @@ class AI_Web_Site_Plugin
 
             try {
                 $result = $website_manager->save_website_config($save_data);
-                
+
                 $logger->info('PLUGIN', 'FORCE_RECREATE', 'Default editor configuration force recreated', array(
                     'website_id' => $result['website_id'],
                     'config_url' => $config_url,
                     'config_size' => strlen($config_body)
                 ));
-                
+
             } catch (Exception $e) {
                 $logger->error('PLUGIN', 'FORCE_RECREATE', 'Failed to force recreate default editor configuration', array(
                     'error' => $e->getMessage(),
