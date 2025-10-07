@@ -409,13 +409,23 @@ class AI_Web_Site_Website_Manager
         $user_id = get_current_user_id();
 
         // ETAPA 1: Verificare autentificare user
-        if (!$user_id) {
-            $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Unauthorized access attempt - user not logged in.');
+        // Verifică dacă există cheia locală pentru dezvoltare
+        $local_api_key = $request->get_header('X-Local-API-Key');
+        $expected_local_key = 'dev-local-key-2024'; // Aceeași cheie ca în .env.local
+
+        if (!$user_id && $local_api_key !== $expected_local_key) {
+            $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Unauthorized access attempt - user not logged in and no valid local API key.');
             return new WP_REST_Response(array(
                 'error' => 'Unauthorized',
                 'message' => 'You must be logged in to save website configurations.',
                 'timestamp' => date('c')
             ), 401);
+        }
+
+        if ($local_api_key === $expected_local_key) {
+            $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Valid local API key detected - skipping user authentication for development.');
+            // Setează un user_id temporar pentru dezvoltare
+            $user_id = 1; // Folosește ID-ul admin-ului WordPress
         }
 
         // ETAPA 2: Verificare abonament activ (IHC)
@@ -427,7 +437,8 @@ class AI_Web_Site_Website_Manager
         $required_ump_level_id = $ump_integration->get_required_ump_level_id();
 
         // Dacă există un nivel UMP necesar și utilizatorul nu are un abonament activ
-        if ($required_ump_level_id > 0 && !$ump_integration->user_has_active_ump_level($user_id, $required_ump_level_id)) {
+        // Sări peste verificarea UMP dacă folosim cheia locală pentru dezvoltare
+        if ($required_ump_level_id > 0 && $local_api_key !== $expected_local_key && !$ump_integration->user_has_active_ump_level($user_id, $required_ump_level_id)) {
             $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Access denied - user does not have active UMP subscription.', array('user_id' => $user_id));
             return new WP_REST_Response(array(
                 'error' => 'Subscription Required',
@@ -439,28 +450,32 @@ class AI_Web_Site_Website_Manager
 
 
         // ETAPA 3: Rate Limiting Check
-        $rate_limit_check = $security_manager->check_rate_limit($user_id);
-        if (!$rate_limit_check['allowed']) {
-            error_log('AI-WEB-SITE: ❌ RATE LIMIT EXCEEDED');
-            $security_manager->log_security_event('RATE_LIMIT_EXCEEDED', array(
-                'user_id' => $user_id,
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-            ));
+        // Sări peste verificarea rate limiting dacă folosim cheia locală pentru dezvoltare
+        if ($local_api_key !== $expected_local_key) {
+            $rate_limit_check = $security_manager->check_rate_limit($user_id);
+            if (!$rate_limit_check['allowed']) {
+                error_log('AI-WEB-SITE: ❌ RATE LIMIT EXCEEDED');
+                $security_manager->log_security_event('RATE_LIMIT_EXCEEDED', array(
+                    'user_id' => $user_id,
+                    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                ));
 
-            return new WP_REST_Response(array(
-                'error' => 'rate_limit_exceeded',
-                'message' => $rate_limit_check['message'],
-                'remaining' => $rate_limit_check['remaining'],
-                'timestamp' => date('c')
-            ), 429);
+                return new WP_REST_Response(array(
+                    'error' => 'rate_limit_exceeded',
+                    'message' => $rate_limit_check['message'],
+                    'remaining' => $rate_limit_check['remaining'],
+                    'timestamp' => date('c')
+                ), 429);
+            }
+            error_log('AI-WEB-SITE: ✅ RATE LIMIT CHECK PASSED - Remaining: ' . $rate_limit_check['remaining']);
+        } else {
+            error_log('AI-WEB-SITE: ✅ LOCAL API KEY - Rate limiting skipped for development');
         }
-
-        error_log('AI-WEB-SITE: ✅ RATE LIMIT CHECK PASSED - Remaining: ' . $rate_limit_check['remaining']);
 
         $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'REST API POST request received', array(
             'user_id' => $user_id,
             'user_login' => wp_get_current_user()->user_login,
-            'rate_limit_remaining' => $rate_limit_check['remaining']
+            'rate_limit_remaining' => $local_api_key === $expected_local_key ? 'unlimited (local dev)' : ($rate_limit_check['remaining'] ?? 'unknown')
         ));
 
         try {
