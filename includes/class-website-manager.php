@@ -781,9 +781,9 @@ class AI_Web_Site_Website_Manager
         $config_data = $this->get_website_config_by_domain($domain); // Utilize existing method
 
         if ($config_data) {
-            return new WP_REST_Response(array('success' => true, 'config' => $config_data), 200);
+            return new WP_REST_Response($config_data, 200);
         } else {
-            return new WP_REST_Response(array('success' => false, 'message' => 'Website not found for this domain'), 404);
+            return new WP_REST_Response(array('error' => 'Website not found for this domain'), 404);
         }
     }
 
@@ -803,9 +803,9 @@ class AI_Web_Site_Website_Manager
         $config_data = $this->get_website_config_by_id($website_id);
 
         if ($config_data) {
-            return new WP_REST_Response(array('success' => true, 'config' => $config_data), 200);
+            return new WP_REST_Response($config_data, 200);
         } else {
-            return new WP_REST_Response(array('success' => false, 'message' => 'Website not found'), 404);
+            return new WP_REST_Response(array('error' => 'Website not found'), 404);
         }
     }
 
