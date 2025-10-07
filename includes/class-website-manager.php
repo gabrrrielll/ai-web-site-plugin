@@ -876,7 +876,7 @@ class AI_Web_Site_Website_Manager
             // Returnează configurația reală
             $response = new WP_REST_Response($config_data, 200);
             $response->header('Content-Type', 'application/json; charset=utf-8');
-            
+
             $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Returning actual configuration data');
             return $response;
         } else {
