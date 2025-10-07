@@ -795,17 +795,50 @@ class AI_Web_Site_Website_Manager
      */
     public function rest_get_website_config_by_domain(WP_REST_Request $request)
     {
+        // Enable CORS
+        $this->set_cors_headers();
+
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'REST API GET by domain request received');
+
         $domain = $request['domain'];
+        $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Domain parameter:', array('domain' => $domain));
 
         if (empty($domain)) {
+            $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Missing domain parameter');
             return new WP_REST_Response(array('success' => false, 'message' => 'Missing domain parameter'), 400);
         }
 
+        // Test direct în baza de date pentru debugging
+        global $wpdb;
+        $direct_query = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, domain, subdomain, updated_at FROM {$this->table_name} WHERE domain = %s ORDER BY updated_at DESC",
+            $domain
+        ));
+        $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Direct DB query result:', array(
+            'found_records' => count($direct_query),
+            'records' => $direct_query
+        ));
+
+        $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Calling get_website_config_by_domain for domain: ' . $domain);
         $config_data = $this->get_website_config_by_domain($domain); // Utilize existing method
 
+        // Debug: verifică ce returnează funcția
+        $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Config data result:', array(
+            'is_null' => $config_data === null ? 'YES' : 'NO',
+            'is_array' => is_array($config_data) ? 'YES' : 'NO',
+            'type' => gettype($config_data),
+            'size' => $config_data ? strlen(json_encode($config_data)) : 0
+        ));
+
         if ($config_data) {
+            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Configuration found and returned successfully', array(
+                'domain' => $domain,
+                'config_size' => strlen(json_encode($config_data))
+            ));
             return new WP_REST_Response($config_data, 200);
         } else {
+            $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'No configuration found for domain: ' . $domain);
             return new WP_REST_Response(array('error' => 'Website not found for this domain'), 404);
         }
     }
