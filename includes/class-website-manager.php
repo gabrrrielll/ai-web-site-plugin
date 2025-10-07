@@ -231,9 +231,19 @@ class AI_Web_Site_Website_Manager
         ));
         */
 
+        // Debug: verifică dacă ruta se înregistrează corect
+        error_log('AI-WEB-SITE: Înregistrez ruta pentru website-config cu domain parameter');
+
         register_rest_route('ai-web-site/v1', '/website-config/(?P<domain>[a-zA-Z0-9.-]+)', array(
             'methods' => 'GET',
             'callback' => array($this, 'rest_get_website_config_by_domain'),
+            'permission_callback' => '__return_true',
+        ));
+
+        // Adaugă și o rută simplă pentru test
+        register_rest_route('ai-web-site/v1', '/test-config', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'rest_test_config'),
             'permission_callback' => '__return_true',
         ));
 
@@ -598,6 +608,23 @@ class AI_Web_Site_Website_Manager
 
 
     /**
+     * REST API: Test config endpoint
+     */
+    public function rest_test_config($request)
+    {
+        $this->set_cors_headers();
+
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'REST_TEST_CONFIG', 'Test config endpoint called');
+
+        return new WP_REST_Response(array(
+            'success' => true,
+            'message' => 'Test config endpoint working',
+            'timestamp' => date('c')
+        ), 200);
+    }
+
+    /**
      * REST API: Test endpoint
      */
     public function rest_test_endpoint($request)
@@ -799,6 +826,7 @@ class AI_Web_Site_Website_Manager
         $this->set_cors_headers();
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', '=== FUNCȚIA REST_GET_BY_DOMAIN A FOST APELATĂ ===');
         $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'REST API GET by domain request received');
 
         $domain = $request['domain'];
@@ -836,7 +864,25 @@ class AI_Web_Site_Website_Manager
                 'domain' => $domain,
                 'config_size' => strlen(json_encode($config_data))
             ));
-            return new WP_REST_Response($config_data, 200);
+
+            // Debug: verifică dacă config_data este serializabil
+            $json_test = json_encode($config_data);
+            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'JSON encoding test:', array(
+                'json_encode_success' => $json_test !== false ? 'YES' : 'NO',
+                'json_error' => $json_test === false ? json_last_error_msg() : 'none',
+                'json_length' => strlen($json_test)
+            ));
+
+            // Test: returnează un obiect mic pentru a verifica dacă problema este dimensiunea
+            $test_data = array(
+                'test' => 'success',
+                'domain' => $domain,
+                'config_size' => strlen(json_encode($config_data)),
+                'timestamp' => date('c')
+            );
+
+            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Returning test data instead of full config');
+            return new WP_REST_Response($test_data, 200);
         } else {
             $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'No configuration found for domain: ' . $domain);
             return new WP_REST_Response(array('error' => 'Website not found for this domain'), 404);
