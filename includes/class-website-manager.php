@@ -542,7 +542,7 @@ class AI_Web_Site_Website_Manager
         ));
 
         try {
-            $config = $this->get_website_config($domain);
+            $config = $this->get_website_config_by_domain($domain);
 
             if ($config === null) {
                 $logger->info('WEBSITE_MANAGER', 'REST_GET', 'No configuration found', array('domain' => $domain));
@@ -778,7 +778,7 @@ class AI_Web_Site_Website_Manager
             return new WP_REST_Response(array('success' => false, 'message' => 'Missing domain parameter'), 400);
         }
 
-        $config_data = $this->get_website_config($domain); // Utilize existing method
+        $config_data = $this->get_website_config_by_domain($domain); // Utilize existing method
 
         if ($config_data) {
             return new WP_REST_Response(array('success' => true, 'config' => $config_data), 200);

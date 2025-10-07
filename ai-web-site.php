@@ -104,6 +104,9 @@ class AI_Web_Site_Plugin
         // Enqueue frontend scripts and styles for shortcode
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
 
+        // Register REST API routes
+        add_action('rest_api_init', array($this, 'register_rest_routes'));
+
         // Load text domain for translations
         load_plugin_textdomain('ai-web-site-plugin', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
