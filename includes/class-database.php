@@ -128,6 +128,54 @@ class AI_Web_Site_Database
     }
 
     /**
+     * Update subdomain and domain for a given website ID
+     * @param int $website_id The ID of the website to update.
+     * @param string $subdomain The new subdomain.
+     * @param string $domain The new domain.
+     * @param string $status The new status.
+     * @return bool True on success, false on failure.
+     */
+    public function update_subdomain_for_website_id($website_id, $subdomain, $domain, $status = 'active')
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'ai_web_sites';
+
+        $result = $wpdb->update(
+            $table_name,
+            array(
+                'subdomain' => $subdomain,
+                'domain' => $domain,
+                'status' => $status,
+                'updated_at' => current_time('mysql')
+            ),
+            array('id' => $website_id),
+            array('%s', '%s', '%s', '%s'),
+            array('%d')
+        );
+
+        return $result !== false;
+    }
+
+    /**
+     * Delete a website by its ID.
+     * @param int $website_id The ID of the website to delete.
+     * @return bool True on success, false on failure.
+     */
+    public function delete_website($website_id)
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'ai_web_sites';
+
+        $result = $wpdb->delete(
+            $table_name,
+            array('id' => $website_id),
+            array('%d')
+        );
+
+        return $result !== false;
+    }
+
+    /**
      * Get subdomain configuration
      */
     public function get_subdomain($subdomain, $domain)

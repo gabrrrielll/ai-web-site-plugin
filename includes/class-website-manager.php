@@ -258,6 +258,27 @@ class AI_Web_Site_Website_Manager
             'permission_callback' => '__return_true',
         ));
 
+        // Get website config by ID
+        register_rest_route('ai-web-site/v1', '/website-config/(?P<id>\d+)', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'rest_get_website_config_by_id'),
+            'permission_callback' => '__return_true',
+        ));
+
+        // Add a subdomain for a user's website
+        register_rest_route('ai-web-site/v1', '/add-user-subdomain', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'rest_add_user_subdomain'),
+            'permission_callback' => '__return_true',
+        ));
+
+        // Delete a user's website
+        register_rest_route('ai-web-site/v1', '/delete-user-website', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'rest_delete_user_website'),
+            'permission_callback' => '__return_true',
+        ));
+
         $logger->info('WEBSITE_MANAGER', 'REST_API', 'REST API routes registered successfully');
     }
 
@@ -387,7 +408,37 @@ class AI_Web_Site_Website_Manager
         $security_manager = AI_Web_Site_Security_Manager::get_instance();
         $user_id = get_current_user_id();
 
-        // ETAPA 4: Verificare Rate Limit
+        // ETAPA 1: Verificare autentificare user
+        if (!$user_id) {
+            $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Unauthorized access attempt - user not logged in.');
+            return new WP_REST_Response(array(
+                'error' => 'Unauthorized',
+                'message' => 'You must be logged in to save website configurations.',
+                'timestamp' => date('c')
+            ), 401);
+        }
+
+        // ETAPA 2: Verificare abonament activ (IHC)
+        // Include clasa UMP Integration dacă nu a fost deja inclusă
+        if (!class_exists('AI_Web_Site_UMP_Integration')) {
+            require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ump-integration.php';
+        }
+        $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+        $required_ump_level_id = $ump_integration->get_required_ump_level_id();
+
+        // Dacă există un nivel UMP necesar și utilizatorul nu are un abonament activ
+        if ($required_ump_level_id > 0 && !$ump_integration->user_has_active_ump_level($user_id, $required_ump_level_id)) {
+            $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Access denied - user does not have active UMP subscription.', array('user_id' => $user_id));
+            return new WP_REST_Response(array(
+                'error' => 'Subscription Required',
+                'message' => 'You must have an active subscription to save website configurations.',
+                'timestamp' => date('c')
+            ), 403);
+        }
+        $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'User authenticated and has active subscription.', array('user_id' => $user_id));
+
+
+        // ETAPA 3: Rate Limiting Check
         $rate_limit_check = $security_manager->check_rate_limit($user_id);
         if (!$rate_limit_check['allowed']) {
             error_log('AI-WEB-SITE: ❌ RATE LIMIT EXCEEDED');
@@ -395,7 +446,7 @@ class AI_Web_Site_Website_Manager
                 'user_id' => $user_id,
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
             ));
-            
+
             return new WP_REST_Response(array(
                 'error' => 'rate_limit_exceeded',
                 'message' => $rate_limit_check['message'],
@@ -403,7 +454,7 @@ class AI_Web_Site_Website_Manager
                 'timestamp' => date('c')
             ), 429);
         }
-        
+
         error_log('AI-WEB-SITE: ✅ RATE LIMIT CHECK PASSED - Remaining: ' . $rate_limit_check['remaining']);
 
         $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'REST API POST request received', array(
@@ -424,10 +475,13 @@ class AI_Web_Site_Website_Manager
                     'timestamp' => date('c')
                 ), 400);
             }
-            
+
             // ETAPA 5: Sanitizare input data
             $input_data['config'] = $security_manager->sanitize_config_data($input_data['config']);
             error_log('AI-WEB-SITE: ✅ INPUT SANITIZATION COMPLETED');
+
+            // Set user_id in input_data for save_website_config
+            $input_data['user_id'] = $user_id;
 
             // Salvează configurația în baza de date
             $result = $this->save_website_config($input_data);
@@ -759,6 +813,123 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
+     * Get website configuration by ID (REST API Callback)
+     * @param WP_REST_Request $request The REST API request.
+     * @return WP_REST_Response The REST API response.
+     */
+    public function rest_get_website_config_by_id(WP_REST_Request $request)
+    {
+        $website_id = $request['id'];
+
+        if (!is_numeric($website_id)) {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Invalid website ID'), 400);
+        }
+
+        $config_data = $this->get_website_config_by_id($website_id);
+
+        if ($config_data) {
+            return new WP_REST_Response(array('success' => true, 'config' => $config_data), 200);
+        } else {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Website not found'), 404);
+        }
+    }
+
+    /**
+     * Add a subdomain for a user's website (REST API Callback)
+     * @param WP_REST_Request $request The REST API request.
+     * @return WP_REST_Response The REST API response.
+     */
+    public function rest_add_user_subdomain(WP_REST_Request $request)
+    {
+        // Check user permissions already done by permission_callback
+        $user_id = get_current_user_id();
+
+        $params = $request->get_json_params();
+        $website_id = isset($params['website_id']) ? intval($params['website_id']) : 0;
+        $subdomain_name = isset($params['subdomain_name']) ? sanitize_text_field($params['subdomain_name']) : '';
+        $main_domain = get_option('ai_web_site_options')['main_domain'] ?? 'ai-web.site';
+
+        if (!$website_id || empty($subdomain_name)) {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Missing website ID or subdomain name.'), 400);
+        }
+
+        // Check if subdomain already exists in DB
+        if ($this->database->subdomain_exists($subdomain_name, $main_domain)) {
+            return new WP_REST_Response(array('success' => false, 'message' => __('Subdomain already exists. Please choose another.', 'ai-web-site-plugin')), 409);
+        }
+
+        // Get website data to update
+        $website_data = $this->get_website_config_by_id($website_id);
+        if (!$website_data || $website_data['user_id'] != $user_id) {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Website not found or unauthorized access.'), 404);
+        }
+
+        // Create subdomain in cPanel
+        $cpanel_api = AI_Web_Site_CPanel_API::get_instance();
+        $cpanel_result = $cpanel_api->create_subdomain($subdomain_name, $main_domain);
+
+        if (!$cpanel_result['success']) {
+            return new WP_REST_Response(array('success' => false, 'message' => $cpanel_result['message'] ?? 'Failed to create subdomain in cPanel.'), 500);
+        }
+
+        // Update website in DB with new subdomain and active status
+        $update_result = $this->database->update_subdomain_for_website_id(
+            $website_id,
+            $subdomain_name,
+            $main_domain,
+            'active' // Set status to active when subdomain is assigned
+        );
+
+        if ($update_result) {
+            return new WP_REST_Response(array('success' => true, 'message' => 'Subdomain added and website updated successfully.'), 200);
+        } else {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Failed to update website with subdomain.'), 500);
+        }
+    }
+
+    /**
+     * Delete a user's website (REST API Callback)
+     * @param WP_REST_Request $request The REST API request.
+     * @return WP_REST_Response The REST API response.
+     */
+    public function rest_delete_user_website(WP_REST_Request $request)
+    {
+        // Check user permissions already done by permission_callback
+        $user_id = get_current_user_id();
+
+        $params = $request->get_json_params();
+        $website_id = isset($params['website_id']) ? intval($params['website_id']) : 0;
+
+        if (!$website_id) {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Missing website ID.'), 400);
+        }
+
+        // Verify ownership before deletion
+        $website_data = $this->get_website_config_by_id($website_id);
+        if (!$website_data || $website_data['user_id'] != $user_id) {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Website not found or unauthorized to delete.'), 404);
+        }
+
+        // Delete subdomain from cPanel if it exists
+        if (!empty($website_data['subdomain']) && $website_data['subdomain'] !== 'my-site') {
+            $cpanel_api = AI_Web_Site_CPanel_API::get_instance();
+            $main_domain = get_option('ai_web_site_options')['main_domain'] ?? 'ai-web.site';
+            $cpanel_api->delete_subdomain($website_data['subdomain'], $main_domain);
+            // Log cPanel deletion attempt, but don't fail if it fails. Main goal is DB record.
+        }
+
+        // Delete from DB
+        $delete_result = $this->database->delete_website($website_id);
+
+        if ($delete_result) {
+            return new WP_REST_Response(array('success' => true, 'message' => 'Website and associated subdomain deleted successfully.'), 200);
+        } else {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Failed to delete website.'), 500);
+        }
+    }
+
+
+    /**
      * AJAX: Save website config
      */
     public function ajax_save_website_config()
@@ -837,7 +1008,7 @@ class AI_Web_Site_Website_Manager
         }
 
         // Get user ID (for logged in users) or create anonymous user
-        $user_id = get_current_user_id();
+        $user_id = $data['user_id'] ?? get_current_user_id(); // Use provided user_id or current user
         if ($user_id === 0) {
             // For anonymous users, we'll use a special approach
             // You might want to implement session-based tracking or require authentication
@@ -875,11 +1046,11 @@ class AI_Web_Site_Website_Manager
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception('Invalid configuration JSON: ' . json_last_error_msg());
         }
-        
+
         // ETAPA 6: Verificare dimensiune configurație
         $security_manager = AI_Web_Site_Security_Manager::get_instance();
         $size_check = $security_manager->validate_config_size($config_json);
-        
+
         if (!$size_check['valid']) {
             error_log('AI-WEB-SITE: ❌ CONFIG SIZE LIMIT EXCEEDED');
             $security_manager->log_security_event('CONFIG_SIZE_EXCEEDED', array(
@@ -888,7 +1059,7 @@ class AI_Web_Site_Website_Manager
             ));
             throw new Exception($size_check['message']);
         }
-        
+
         error_log('AI-WEB-SITE: ✅ CONFIG SIZE CHECK PASSED - Size: ' . $size_check['size_mb'] . 'MB');
 
         // Check if website already exists
@@ -913,6 +1084,7 @@ class AI_Web_Site_Website_Manager
             );
 
             if ($result === false) {
+                $logger->error('WEBSITE_MANAGER', 'SAVE_CONFIG', 'Failed to update website configuration for user', array('user_id' => $user_id, 'website_id' => $existing->id, 'error_db' => $wpdb->last_error));
                 throw new Exception('Failed to update website configuration');
             }
 
@@ -938,6 +1110,7 @@ class AI_Web_Site_Website_Manager
             );
 
             if ($result === false) {
+                $logger->error('WEBSITE_MANAGER', 'SAVE_CONFIG', 'Failed to create new website configuration for user', array('user_id' => $user_id, 'error_db' => $wpdb->last_error));
                 throw new Exception('Failed to save website configuration');
             }
 

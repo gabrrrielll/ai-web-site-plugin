@@ -31,6 +31,7 @@ require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-home-page-shortcode.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-subscription-manager.php'; // NEW: Subscription management
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-security-manager.php'; // NEW: Security management
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-website-manager.php'; // NEW: Website management
+require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-user-site-shortcode.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'admin/class-admin.php';
 
 /**
@@ -95,7 +96,13 @@ class AI_Web_Site_Plugin
         // Initialize website manager
         AI_Web_Site_Website_Manager::get_instance();
 
+        // Initialize user site shortcode
+        AI_Web_Site_User_Site_Shortcode::get_instance();
+
         AI_Web_Site_Admin::get_instance();
+
+        // Enqueue frontend scripts and styles for shortcode
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
 
         // Load text domain for translations
         load_plugin_textdomain('ai-web-site-plugin', false, dirname(plugin_basename(__FILE__)) . '/languages');
@@ -160,7 +167,7 @@ class AI_Web_Site_Plugin
                 AI_WEB_SITE_PLUGIN_DIR . '../../frontend/public/site-config.json',
                 ABSPATH . '../frontend/public/site-config.json'
             );
-            
+
             $config_file = null;
             foreach ($possible_paths as $path) {
                 if (file_exists($path)) {
@@ -210,6 +217,116 @@ class AI_Web_Site_Plugin
                 ));
             }
         }
+    }
+
+    /**
+     * Enqueue admin scripts and styles
+     */
+    public function enqueue_admin_assets()
+    {
+        // Enqueue styles for the admin
+        wp_register_style('ai-web-site-admin-style', plugins_url('assets/admin.css', __FILE__), array(), AI_WEB_SITE_PLUGIN_VERSION, 'all');
+        wp_enqueue_style('ai-web-site-admin-style');
+
+        // Enqueue scripts for the admin
+        wp_register_script('ai-web-site-admin-script', plugins_url('assets/admin.js', __FILE__), array('jquery'), AI_WEB_SITE_PLUGIN_VERSION, true);
+        wp_enqueue_script('ai-web-site-admin-script');
+    }
+
+    /**
+     * Enqueue frontend scripts and styles for shortcode
+     */
+    public function enqueue_frontend_assets()
+    {
+        // Enqueue styles for the user site shortcode
+        wp_register_style('ai-web-site-user-sites-style', plugins_url('assets/user-sites.css', __FILE__), array(), AI_WEB_SITE_PLUGIN_VERSION, 'all');
+        wp_enqueue_style('ai-web-site-user-sites-style');
+
+        // Enqueue scripts for the user site shortcode
+        wp_register_script('ai-web-site-user-sites-script', plugins_url('assets/user-sites.js', __FILE__), array('jquery'), AI_WEB_SITE_PLUGIN_VERSION, true);
+        wp_enqueue_script('ai-web-site-user-sites-script');
+        wp_localize_script('ai-web-site-user-sites-script', 'aiUserSitesAjax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('ai-user-sites-nonce'),
+            'base_domain' => preg_replace('#^https?://#', '', get_option('siteurl')),
+            'editor_url' => 'https://editor.ai-web.site/',
+            'add_subdomain_success' => __('Subdomain added successfully. Refreshing...', 'ai-web-site-plugin'),
+            'add_subdomain_error' => __('Error adding subdomain.', 'ai-web-site-plugin'),
+            'subdomain_exists_error' => __('Subdomain already exists. Please choose another.', 'ai-web-site-plugin'),
+            'delete_site_confirm' => __('Are you sure you want to delete this website? This action cannot be undone.', 'ai-web-site-plugin'),
+            'delete_site_success' => __('Website deleted successfully. Refreshing...', 'ai-web-site-plugin'),
+            'delete_site_error' => __('Error deleting website.', 'ai-web-site-plugin'),
+        ));
+    }
+
+    /**
+     * Register REST API routes
+     */
+    public function register_rest_routes()
+    {
+        // Ensure the website manager is initialized
+        $website_manager = AI_Web_Site_Website_Manager::get_instance();
+
+        // Register a REST API route for getting a single website config by ID
+        register_rest_route('ai-web-site/v1', '/website/(?P<id>\d+)', array(
+            'methods' => 'GET',
+            'callback' => array($website_manager, 'rest_get_website_config_by_id'),
+            'permission_callback' => '__return_true',
+        ));
+
+        // Register a REST API route for adding a subdomain (user initiated from shortcode)
+        register_rest_route('ai-web-site/v1', '/user-site/add-subdomain', array(
+            'methods' => 'POST',
+            'callback' => array($website_manager, 'rest_add_user_subdomain'),
+            'permission_callback' => array($this, 'check_user_permissions'),
+        ));
+
+        // Register a REST API route for deleting a website (user initiated from shortcode)
+        register_rest_route('ai-web-site/v1', '/user-site/delete', array(
+            'methods' => 'POST',
+            'callback' => array($website_manager, 'rest_delete_user_website'),
+            'permission_callback' => array($this, 'check_user_permissions'),
+        ));
+    }
+
+    /**
+     * Check user permissions for REST API routes (logged in and active subscription)
+     */
+    public function check_user_permissions()
+    {
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            return false;
+        }
+
+        if (!class_exists('AI_Web_Site_UMP_Integration')) {
+            require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ump-integration.php';
+        }
+        $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+        $required_ump_level_id = $ump_integration->get_required_ump_level_id();
+
+        // Allow if no UMP level is required, or if user has an active level
+        return ($required_ump_level_id === 0 || $ump_integration->user_has_active_ump_level($user_id, $required_ump_level_id));
+    }
+
+    /**
+     * Callback for adding a subdomain
+     */
+    public function add_subdomain_callback($request)
+    {
+        // This method is now handled by AI_Web_Site_Website_Manager::rest_add_user_subdomain
+        // This placeholder method is kept for backwards compatibility or if called by old hooks
+        return new WP_REST_Response(array('success' => false, 'message' => 'Deprecated: Use /user-site/add-subdomain endpoint.'), 400);
+    }
+
+    /**
+     * Callback for deleting a website
+     */
+    public function delete_website_callback($request)
+    {
+        // This method is now handled by AI_Web_Site_Website_Manager::rest_delete_user_website
+        // This placeholder method is kept for backwards compatibility or if called by old hooks
+        return new WP_REST_Response(array('success' => false, 'message' => 'Deprecated: Use /user-site/delete endpoint.'), 400);
     }
 }
 
