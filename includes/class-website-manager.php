@@ -1226,10 +1226,18 @@ class AI_Web_Site_Website_Manager
     {
         global $wpdb;
 
+        $logger = AI_Web_Site_Debug_Logger::get_instance();
+        $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Căutare configurație pentru domeniul: {$full_domain}");
+
         // Încearcă să găsească configurația pentru domeniul complet
         $config = $wpdb->get_row($wpdb->prepare(
             "SELECT config FROM {$this->table_name} WHERE domain = %s ORDER BY updated_at DESC LIMIT 1",
             $full_domain
+        ));
+
+        $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Căutare pentru domeniul complet rezultat:", array(
+            'found' => $config ? 'YES' : 'NO',
+            'domain' => $full_domain
         ));
 
         if (!$config) {
@@ -1239,19 +1247,39 @@ class AI_Web_Site_Website_Manager
                 $subdomain = $parts[0];
                 $base_domain = implode('.', array_slice($parts, 1));
 
+                $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Încercare căutare prin subdomain:", array(
+                    'subdomain' => $subdomain,
+                    'base_domain' => $base_domain
+                ));
+
                 $config = $wpdb->get_row($wpdb->prepare(
                     "SELECT config FROM {$this->table_name} WHERE subdomain = %s AND domain = %s ORDER BY updated_at DESC LIMIT 1",
                     $subdomain,
                     $base_domain
                 ));
+
+                $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Căutare prin subdomain rezultat:", array(
+                    'found' => $config ? 'YES' : 'NO',
+                    'subdomain' => $subdomain,
+                    'base_domain' => $base_domain
+                ));
             }
         }
 
         if (!$config) {
+            $logger->warning('WEBSITE_MANAGER', 'GET_CONFIG', "Nu s-a găsit configurația pentru domeniul: {$full_domain}");
             return null;
         }
 
         $config_data = json_decode($config->config, true);
+        $config_size = strlen($config->config);
+
+        $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Configurație găsită și returnată:", array(
+            'domain' => $full_domain,
+            'config_size' => $config_size,
+            'json_valid' => $config_data ? 'YES' : 'NO'
+        ));
+
         return $config_data ?: null;
     }
 
