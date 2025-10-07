@@ -274,6 +274,13 @@ class AI_Web_Site_Plugin
             'permission_callback' => '__return_true',
         ));
 
+        // Register a REST API route for getting a single website config by domain
+        register_rest_route('ai-web-site/v1', '/website/(?P<domain>[a-zA-Z0-9.-]+)', array(
+            'methods' => 'GET',
+            'callback' => array($website_manager, 'rest_get_website_config_by_domain'),
+            'permission_callback' => '__return_true',
+        ));
+
         // Register a REST API route for adding a subdomain (user initiated from shortcode)
         register_rest_route('ai-web-site/v1', '/user-site/add-subdomain', array(
             'methods' => 'POST',

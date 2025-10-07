@@ -766,49 +766,24 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
-     * REST API: Get website config by domain
+     * REST API: Get website config by domain (REST API Callback)
+     * @param WP_REST_Request $request The REST API request.
+     * @return WP_REST_Response The REST API response.
      */
-    public function rest_get_website_config_by_domain($request)
+    public function rest_get_website_config_by_domain(WP_REST_Request $request)
     {
-        $this->set_cors_headers();
-
         $domain = $request['domain'];
 
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'REST API GET request for domain', array(
-            'domain' => $domain
-        ));
+        if (empty($domain)) {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Missing domain parameter'), 400);
+        }
 
-        try {
-            // Încearcă să găsească configurația pentru domeniul complet
-            $config = $this->get_website_config_by_domain($domain);
+        $config_data = $this->get_website_config($domain); // Utilize existing method
 
-            if ($config === null) {
-                $logger->info('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'No configuration found', array('domain' => $domain));
-                return new WP_REST_Response(array(
-                    'error' => 'Configuration not found',
-                    'message' => "No configuration found for {$domain}",
-                    'timestamp' => date('c')
-                ), 404);
-            }
-
-            $logger->info('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'Configuration found and returned', array(
-                'domain' => $domain,
-                'config_size' => strlen(json_encode($config))
-            ));
-
-            return new WP_REST_Response($config, 200);
-
-        } catch (Exception $e) {
-            $logger->error('WEBSITE_MANAGER', 'REST_GET_DOMAIN', 'Exception in REST GET', array(
-                'domain' => $domain,
-                'error' => $e->getMessage()
-            ));
-            return new WP_REST_Response(array(
-                'error' => 'Internal server error',
-                'message' => 'An unexpected error occurred',
-                'timestamp' => date('c')
-            ), 500);
+        if ($config_data) {
+            return new WP_REST_Response(array('success' => true, 'config' => $config_data), 200);
+        } else {
+            return new WP_REST_Response(array('success' => false, 'message' => 'Website not found for this domain'), 404);
         }
     }
 
