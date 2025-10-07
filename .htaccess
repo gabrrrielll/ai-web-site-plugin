@@ -1,0 +1,18 @@
+# AI Web Site Plugin - CORS Headers
+# Forțează header-ele CORS pentru endpoint-urile REST API
+
+<IfModule mod_headers.c>
+    # Pentru cereri OPTIONS (preflight)
+    RewriteEngine On
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteCond %{REQUEST_URI} ^/wp-json/ai-web-site/
+    RewriteRule ^(.*)$ $1 [R=200,L]
+    
+    # Setează header-ele CORS pentru toate cererile către plugin-ul nostru
+    <If "%{REQUEST_URI} =~ m#^/wp-json/ai-web-site/#">
+        Header always set Access-Control-Allow-Origin "*"
+        Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        Header always set Access-Control-Allow-Headers "Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce"
+        Header always set Access-Control-Allow-Credentials "true"
+    </If>
+</IfModule>

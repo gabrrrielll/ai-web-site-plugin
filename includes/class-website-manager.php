@@ -57,6 +57,14 @@ class AI_Web_Site_Website_Manager
         // REST API endpoints
         add_action('rest_api_init', array($this, 'register_rest_routes'));
 
+        // Setează header-ele CORS foarte devreme pentru cereri REST API
+        add_action('init', array($this, 'set_cors_headers_early'), 1);
+        add_action('wp_loaded', array($this, 'set_cors_headers_early'), 1);
+        add_action('template_redirect', array($this, 'set_cors_headers_early'), 1);
+
+        // Forțează header-ele CORS prin filtrele WordPress
+        add_filter('rest_pre_serve_request', array($this, 'force_cors_headers'), 10, 1);
+
         // Bypass WordPress global nonce verification for our test nonce
         add_filter('rest_authentication_errors', array($this, 'bypass_nonce_for_test'));
 
@@ -1294,15 +1302,58 @@ class AI_Web_Site_Website_Manager
      */
     private function set_cors_headers()
     {
+        // Setează header-ele CORS înainte de orice altceva
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
         header('Access-Control-Allow-Credentials: true');
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(200);
             exit();
         }
+    }
+
+    /**
+     * Set CORS headers early for REST API
+     */
+    public function set_cors_headers_early()
+    {
+        // Pentru cereri REST API, setează header-ele CORS foarte devreme
+        if (strpos($_SERVER['REQUEST_URI'], '/wp-json/ai-web-site/') !== false) {
+            // Încearcă să seteze header-ele prin funcții WordPress
+            if (!headers_sent()) {
+                header('Access-Control-Allow-Origin: *');
+                header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+                header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
+                header('Access-Control-Allow-Credentials: true');
+
+                // Log pentru debugging
+                error_log('AI-WEB-SITE: CORS headers set early for REST API');
+            }
+
+            if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+                http_response_code(200);
+                exit();
+            }
+        }
+    }
+
+    /**
+     * Force CORS headers through WordPress filters
+     */
+    public function force_cors_headers($headers)
+    {
+        if (strpos($_SERVER['REQUEST_URI'], '/wp-json/ai-web-site/') !== false) {
+            $headers['Access-Control-Allow-Origin'] = '*';
+            $headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
+            $headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce';
+            $headers['Access-Control-Allow-Credentials'] = 'true';
+
+            error_log('AI-WEB-SITE: CORS headers forced through WordPress filters');
+        }
+
+        return $headers;
     }
 
     /**
