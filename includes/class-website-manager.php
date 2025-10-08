@@ -218,13 +218,13 @@ class AI_Web_Site_Website_Manager
                                 header('Content-Type: application/json; charset=utf-8');
                                 header('Content-Length: ' . strlen($json_output));
                                 // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-        $origin = get_http_origin();
-        if ($origin) {
-            header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-        } else {
-            // Fallback for non-browser requests or if origin is not set
-            header('Access-Control-Allow-Origin: *');
-        }
+                                $origin = get_http_origin();
+                                if ($origin) {
+                                    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+                                } else {
+                                    // Fallback for non-browser requests or if origin is not set
+                                    header('Access-Control-Allow-Origin: *');
+                                }
                                 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
                                 header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
                                 header('Access-Control-Allow-Credentials: true');
@@ -289,13 +289,13 @@ class AI_Web_Site_Website_Manager
                 header('Content-Type: application/json; charset=utf-8');
                 header('Content-Length: ' . strlen($json_output));
                 // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-        $origin = get_http_origin();
-        if ($origin) {
-            header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-        } else {
-            // Fallback for non-browser requests or if origin is not set
-            header('Access-Control-Allow-Origin: *');
-        }
+                $origin = get_http_origin();
+                if ($origin) {
+                    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+                } else {
+                    // Fallback for non-browser requests or if origin is not set
+                    header('Access-Control-Allow-Origin: *');
+                }
                 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
                 header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
 
@@ -885,13 +885,13 @@ class AI_Web_Site_Website_Manager
                     header('Content-Type: application/json; charset=utf-8');
                     header('Content-Length: ' . strlen($json_output));
                     // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-        $origin = get_http_origin();
-        if ($origin) {
-            header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-        } else {
-            // Fallback for non-browser requests or if origin is not set
-            header('Access-Control-Allow-Origin: *');
-        }
+                    $origin = get_http_origin();
+                    if ($origin) {
+                        header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+                    } else {
+                        // Fallback for non-browser requests or if origin is not set
+                        header('Access-Control-Allow-Origin: *');
+                    }
                     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
                     header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
 
@@ -1259,13 +1259,13 @@ class AI_Web_Site_Website_Manager
                 header('Content-Type: application/json; charset=utf-8');
                 header('Content-Length: ' . strlen($json_output));
                 // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-        $origin = get_http_origin();
-        if ($origin) {
-            header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-        } else {
-            // Fallback for non-browser requests or if origin is not set
-            header('Access-Control-Allow-Origin: *');
-        }
+                $origin = get_http_origin();
+                if ($origin) {
+                    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+                } else {
+                    // Fallback for non-browser requests or if origin is not set
+                    header('Access-Control-Allow-Origin: *');
+                }
                 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
                 header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
 
@@ -1836,13 +1836,13 @@ class AI_Web_Site_Website_Manager
             // Încearcă să seteze header-ele prin funcții WordPress
             if (!headers_sent()) {
                 // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-        $origin = get_http_origin();
-        if ($origin) {
-            header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-        } else {
-            // Fallback for non-browser requests or if origin is not set
-            header('Access-Control-Allow-Origin: *');
-        }
+                $origin = get_http_origin();
+                if ($origin) {
+                    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+                } else {
+                    // Fallback for non-browser requests or if origin is not set
+                    header('Access-Control-Allow-Origin: *');
+                }
                 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
                 header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
                 header('Access-Control-Allow-Credentials: true');
