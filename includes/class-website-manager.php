@@ -865,40 +865,44 @@ class AI_Web_Site_Website_Manager
                 'config_size' => strlen(json_encode($config_data))
             ));
 
-            // Debug: verifică dacă config_data este serializabil
-            $json_test = json_encode($config_data);
-            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'JSON encoding test:', array(
-                'json_encode_success' => $json_test !== false ? 'YES' : 'NO',
-                'json_error' => $json_test === false ? json_last_error_msg() : 'none',
-                'json_length' => strlen($json_test)
-            ));
-
-            // Dezactivează output buffering pentru răspunsuri mari
-            // IMPORTANT: output_buffering = 4096 pe server cauzează probleme!
-
-            // Golește și dezactivează toate buffer-ele active
+            // SOLUȚIE ALTERNATIVĂ: Bypass WordPress REST API și trimite direct JSON
+            // output_buffering = 4096 nu poate fi dezactivat, deci ocolim WordPress complet
+            
+            // Golește toate buffer-ele WordPress
             while (ob_get_level()) {
                 ob_end_clean();
             }
-
-            // Dezactivează output buffering complet
-            if (function_exists('apache_setenv')) {
-                @apache_setenv('no-gzip', '1');
+            
+            // Creează JSON-ul
+            $json_output = json_encode($config_data);
+            
+            if ($json_output === false) {
+                $logger->error('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'JSON encoding failed: ' . json_last_error_msg());
+                return new WP_REST_Response(array('error' => 'JSON encoding failed'), 500);
             }
-            @ini_set('zlib.output_compression', '0');
-            @ini_set('output_buffering', '0');  // Forțează 0 (nu 'off')
-            @ini_set('implicit_flush', '1');
-
-            // Crește memory limit temporar
-            @ini_set('memory_limit', '512M');
-
-            // Returnează configurația reală
+            
+            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Bypassing WordPress REST API - sending direct output', array(
+                'json_length' => strlen($json_output)
+            ));
+            
+            // Setează header-ele manual și trimite JSON direct
+            if (!headers_sent()) {
+                header('Content-Type: application/json; charset=utf-8');
+                header('Content-Length: ' . strlen($json_output));
+                header('Access-Control-Allow-Origin: *');
+                header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+                header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
+                
+                // Trimite JSON-ul direct, fără WordPress REST API
+                echo $json_output;
+                
+                // Oprește execuția pentru a evita alte output-uri
+                exit;
+            }
+            
+            // Fallback: dacă header-ele au fost deja trimise, folosește WordPress REST API
+            $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Headers already sent, using WordPress REST API fallback');
             $response = new WP_REST_Response($config_data, 200);
-            $response->header('Content-Type', 'application/json; charset=utf-8');
-            $response->header('Content-Length', strlen($json_test));
-            $response->header('X-Content-Type-Options', 'nosniff');
-
-            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Returning actual configuration data');
             return $response;
         } else {
             $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'No configuration found for domain: ' . $domain);
