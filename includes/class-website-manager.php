@@ -874,11 +874,19 @@ class AI_Web_Site_Website_Manager
             ));
 
             // Dezactivează output buffering pentru răspunsuri mari
+            // IMPORTANT: output_buffering = 4096 pe server cauzează probleme!
+            
+            // Golește și dezactivează toate buffer-ele active
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            // Dezactivează output buffering complet
             if (function_exists('apache_setenv')) {
                 @apache_setenv('no-gzip', '1');
             }
             @ini_set('zlib.output_compression', '0');
-            @ini_set('output_buffering', 'off');
+            @ini_set('output_buffering', '0');  // Forțează 0 (nu 'off')
             @ini_set('implicit_flush', '1');
 
             // Crește memory limit temporar

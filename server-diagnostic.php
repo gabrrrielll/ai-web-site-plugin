@@ -2,7 +2,7 @@
 /**
  * AI Web Site - Server Diagnostic Tool
  * Verifică configurația PHP și limitele serverului
- * 
+ *
  * Accesează: https://ai-web.site/wp-content/plugins/ai-web-site-plugin/server-diagnostic.php
  */
 
@@ -127,16 +127,16 @@ header('Content-Type: text/html; charset=utf-8');
                     <div class="info-row">
                         <div class="info-label">Server API (SAPI)</div>
                         <div class="info-value">
-                            <?php 
+                            <?php
                             $sapi = php_sapi_name();
-                            $is_fpm = (strpos($sapi, 'fpm') !== false || strpos($sapi, 'cgi') !== false);
-                            echo $sapi;
-                            if ($is_fpm) {
-                                echo ' <span class="badge badge-warning">FPM/CGI - .htaccess NU funcționează</span>';
-                            } else {
-                                echo ' <span class="badge badge-success">mod_php - .htaccess funcționează</span>';
-                            }
-                            ?>
+$is_fpm = (strpos($sapi, 'fpm') !== false || strpos($sapi, 'cgi') !== false);
+echo $sapi;
+if ($is_fpm) {
+    echo ' <span class="badge badge-warning">FPM/CGI - .htaccess NU funcționează</span>';
+} else {
+    echo ' <span class="badge badge-success">mod_php - .htaccess funcționează</span>';
+}
+?>
                         </div>
                     </div>
                     <div class="info-row">
@@ -156,15 +156,15 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="section-content">
                     <?php
                     $memory_limit = ini_get('memory_limit');
-                    $memory_bytes = return_bytes($memory_limit);
-                    $memory_ok = $memory_bytes >= 512 * 1024 * 1024; // 512MB
-                    
-                    $max_execution = ini_get('max_execution_time');
-                    $execution_ok = $max_execution >= 300 || $max_execution == 0;
-                    
-                    $post_max = ini_get('post_max_size');
-                    $upload_max = ini_get('upload_max_filesize');
-                    ?>
+$memory_bytes = return_bytes($memory_limit);
+$memory_ok = $memory_bytes >= 512 * 1024 * 1024; // 512MB
+
+$max_execution = ini_get('max_execution_time');
+$execution_ok = $max_execution >= 300 || $max_execution == 0;
+
+$post_max = ini_get('post_max_size');
+$upload_max = ini_get('upload_max_filesize');
+?>
                     <div class="info-row">
                         <div class="info-label">memory_limit</div>
                         <div class="info-value">
@@ -209,12 +209,12 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="section-title">📤 Output Buffering & Compression</div>
                 <div class="section-content">
                     <?php
-                    $output_buffering = ini_get('output_buffering');
-                    $buffering_enabled = ($output_buffering && $output_buffering != 'Off' && $output_buffering != '0');
-                    
-                    $zlib_compression = ini_get('zlib.output_compression');
-                    $compression_enabled = ($zlib_compression && $zlib_compression != 'Off' && $zlib_compression != '0');
-                    ?>
+$output_buffering = ini_get('output_buffering');
+$buffering_enabled = ($output_buffering && $output_buffering != 'Off' && $output_buffering != '0');
+
+$zlib_compression = ini_get('zlib.output_compression');
+$compression_enabled = ($zlib_compression && $zlib_compression != 'Off' && $zlib_compression != '0');
+?>
                     <div class="info-row">
                         <div class="info-label">output_buffering</div>
                         <div class="info-value">
@@ -255,17 +255,17 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="section-title">🔒 Funcții Dezactivate</div>
                 <div class="section-content">
                     <?php
-                    $disabled = ini_get('disable_functions');
-                    $disabled_array = $disabled ? explode(',', $disabled) : [];
-                    $critical_disabled = [];
-                    $critical_functions = ['ini_set', 'apache_setenv', 'set_time_limit'];
-                    
-                    foreach ($critical_functions as $func) {
-                        if (in_array(trim($func), array_map('trim', $disabled_array))) {
-                            $critical_disabled[] = $func;
-                        }
-                    }
-                    ?>
+$disabled = ini_get('disable_functions');
+$disabled_array = $disabled ? explode(',', $disabled) : [];
+$critical_disabled = [];
+$critical_functions = ['ini_set', 'apache_setenv', 'set_time_limit'];
+
+foreach ($critical_functions as $func) {
+    if (in_array(trim($func), array_map('trim', $disabled_array))) {
+        $critical_disabled[] = $func;
+    }
+}
+?>
                     <div class="info-row">
                         <div class="info-label">disable_functions</div>
                         <div class="info-value">
@@ -305,9 +305,9 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="section-title">🔧 Module Apache</div>
                 <div class="section-content">
                     <?php
-                    $modules = apache_get_modules();
-                    $important_modules = ['mod_fcgid', 'mod_deflate', 'mod_gzip', 'mod_headers', 'mod_rewrite'];
-                    ?>
+$modules = apache_get_modules();
+                $important_modules = ['mod_fcgid', 'mod_deflate', 'mod_gzip', 'mod_headers', 'mod_rewrite'];
+                ?>
                     <?php foreach ($important_modules as $mod): ?>
                     <div class="info-row">
                         <div class="info-label"><?php echo $mod; ?></div>
@@ -329,34 +329,34 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="section-title">💡 Recomandări pentru Rezolvare</div>
                 <div class="section-content">
                     <?php
-                    $recommendations = [];
-                    
-                    if (!$memory_ok) {
-                        $recommendations[] = "Crește <code>memory_limit = 512M</code> în .user.ini sau php.ini";
-                    }
-                    
-                    if ($buffering_enabled) {
-                        $recommendations[] = "Dezactivează <code>output_buffering = Off</code> în .user.ini sau php.ini";
-                    }
-                    
-                    if (!empty($critical_disabled)) {
-                        $recommendations[] = "Contactează hosting-ul să deblocheze: " . implode(', ', $critical_disabled);
-                    }
-                    
-                    if ($is_fpm) {
-                        $recommendations[] = "Server folosește PHP-FPM/CGI - folosește .user.ini sau php.ini (NU .htaccess)";
-                    }
-                    
-                    if (empty($recommendations)) {
-                        echo '<div style="color: #10b981; font-weight: 600;">✅ Configurația pare OK! Dacă tot ai probleme, verifică Apache/Nginx logs.</div>';
-                    } else {
-                        echo '<ol style="padding-left: 20px;">';
-                        foreach ($recommendations as $rec) {
-                            echo '<li style="margin: 10px 0;">' . $rec . '</li>';
-                        }
-                        echo '</ol>';
-                    }
-                    ?>
+                $recommendations = [];
+
+if (!$memory_ok) {
+    $recommendations[] = "Crește <code>memory_limit = 512M</code> în .user.ini sau php.ini";
+}
+
+if ($buffering_enabled) {
+    $recommendations[] = "Dezactivează <code>output_buffering = Off</code> în .user.ini sau php.ini";
+}
+
+if (!empty($critical_disabled)) {
+    $recommendations[] = "Contactează hosting-ul să deblocheze: " . implode(', ', $critical_disabled);
+}
+
+if ($is_fpm) {
+    $recommendations[] = "Server folosește PHP-FPM/CGI - folosește .user.ini sau php.ini (NU .htaccess)";
+}
+
+if (empty($recommendations)) {
+    echo '<div style="color: #10b981; font-weight: 600;">✅ Configurația pare OK! Dacă tot ai probleme, verifică Apache/Nginx logs.</div>';
+} else {
+    echo '<ol style="padding-left: 20px;">';
+    foreach ($recommendations as $rec) {
+        echo '<li style="margin: 10px 0;">' . $rec . '</li>';
+    }
+    echo '</ol>';
+}
+?>
                 </div>
             </div>
 
@@ -365,27 +365,27 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="section-title">🧪 Test Simulat (5MB Array)</div>
                 <div class="section-content">
                     <?php
-                    // Test: creează un array mare și încearcă să-l returneze ca JSON
-                    $test_size = 5 * 1024 * 1024; // 5MB
-                    $test_array = array_fill(0, 100000, str_repeat('x', 50));
-                    $json_test = json_encode($test_array);
-                    $json_size = strlen($json_test);
-                    
-                    if ($json_test !== false) {
-                        echo '<div class="info-row">';
-                        echo '<div class="info-label">JSON Encoding (5MB array)</div>';
-                        echo '<div class="info-value"><span class="badge badge-success">SUCCES - ' . number_format($json_size / 1024 / 1024, 2) . ' MB</span></div>';
-                        echo '</div>';
-                    } else {
-                        echo '<div class="info-row">';
-                        echo '<div class="info-label">JSON Encoding (5MB array)</div>';
-                        echo '<div class="info-value"><span class="badge badge-danger">EȘUAT - ' . json_last_error_msg() . '</span></div>';
-                        echo '</div>';
-                    }
-                    
-                    // Curăță memoria
-                    unset($test_array, $json_test);
-                    ?>
+// Test: creează un array mare și încearcă să-l returneze ca JSON
+$test_size = 5 * 1024 * 1024; // 5MB
+$test_array = array_fill(0, 100000, str_repeat('x', 50));
+$json_test = json_encode($test_array);
+$json_size = strlen($json_test);
+
+if ($json_test !== false) {
+    echo '<div class="info-row">';
+    echo '<div class="info-label">JSON Encoding (5MB array)</div>';
+    echo '<div class="info-value"><span class="badge badge-success">SUCCES - ' . number_format($json_size / 1024 / 1024, 2) . ' MB</span></div>';
+    echo '</div>';
+} else {
+    echo '<div class="info-row">';
+    echo '<div class="info-label">JSON Encoding (5MB array)</div>';
+    echo '<div class="info-value"><span class="badge badge-danger">EȘUAT - ' . json_last_error_msg() . '</span></div>';
+    echo '</div>';
+}
+
+// Curăță memoria
+unset($test_array, $json_test);
+?>
                 </div>
             </div>
         </div>
@@ -402,17 +402,20 @@ header('Content-Type: text/html; charset=utf-8');
 /**
  * Helper function: Convert PHP ini values to bytes
  */
-function return_bytes($val) {
+function return_bytes($val)
+{
     $val = trim($val);
-    $last = strtolower($val[strlen($val)-1]);
+    $last = strtolower($val[strlen($val) - 1]);
     $val = (int)$val;
-    
-    switch($last) {
+
+    switch ($last) {
         case 'g': $val *= 1024;
+            // no break
         case 'm': $val *= 1024;
+            // no break
         case 'k': $val *= 1024;
     }
-    
+
     return $val;
 }
 ?>
