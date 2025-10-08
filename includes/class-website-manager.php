@@ -867,24 +867,24 @@ class AI_Web_Site_Website_Manager
 
             // SOLUȚIE ALTERNATIVĂ: Bypass WordPress REST API și trimite direct JSON
             // output_buffering = 4096 nu poate fi dezactivat, deci ocolim WordPress complet
-            
+
             // Golește toate buffer-ele WordPress
             while (ob_get_level()) {
                 ob_end_clean();
             }
-            
+
             // Creează JSON-ul
             $json_output = json_encode($config_data);
-            
+
             if ($json_output === false) {
                 $logger->error('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'JSON encoding failed: ' . json_last_error_msg());
                 return new WP_REST_Response(array('error' => 'JSON encoding failed'), 500);
             }
-            
+
             $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Bypassing WordPress REST API - sending direct output', array(
                 'json_length' => strlen($json_output)
             ));
-            
+
             // Setează header-ele manual și trimite JSON direct
             if (!headers_sent()) {
                 header('Content-Type: application/json; charset=utf-8');
@@ -892,14 +892,14 @@ class AI_Web_Site_Website_Manager
                 header('Access-Control-Allow-Origin: *');
                 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
                 header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
-                
+
                 // Trimite JSON-ul direct, fără WordPress REST API
                 echo $json_output;
-                
+
                 // Oprește execuția pentru a evita alte output-uri
                 exit;
             }
-            
+
             // Fallback: dacă header-ele au fost deja trimise, folosește WordPress REST API
             $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Headers already sent, using WordPress REST API fallback');
             $response = new WP_REST_Response($config_data, 200);
