@@ -102,7 +102,7 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: 🔍 DEBUG - WordPress Auth State:');
             error_log('AI-WEB-SITE: - is_user_logged_in(): ' . ($is_logged_in ? 'TRUE' : 'FALSE'));
             error_log('AI-WEB-SITE: - get_current_user_id(): ' . $user_id);
-            
+
             // DEBUG: Verifică configurația cookie-urilor WordPress
             error_log('AI-WEB-SITE: 🔍 DEBUG - WordPress Cookie Config:');
             error_log('AI-WEB-SITE: - COOKIE_DOMAIN: ' . (defined('COOKIE_DOMAIN') ? COOKIE_DOMAIN : 'NOT DEFINED'));
@@ -119,7 +119,7 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: 🔍 WordPress Cookies found: ' . count($wp_cookies));
             foreach ($wp_cookies as $cookie_name => $cookie_value) {
                 error_log('AI-WEB-SITE: - ' . $cookie_name . ': ' . substr($cookie_value, 0, 50) . '...');
-                
+
                 // DEBUG: Analizează cookie-ul de login WordPress
                 if (strpos($cookie_name, 'wordpress_logged_in_') === 0) {
                     error_log('AI-WEB-SITE: 🔍 DEBUG - Analyzing WordPress login cookie:');
@@ -128,12 +128,12 @@ class AI_Web_Site_Website_Manager
                         $username = $cookie_parts[0];
                         $expiration = $cookie_parts[1];
                         $token = substr($cookie_parts[2], 0, 20) . '...';
-                        
+
                         error_log('AI-WEB-SITE: - Username: ' . $username);
                         error_log('AI-WEB-SITE: - Expiration: ' . $expiration . ' (current time: ' . time() . ')');
                         error_log('AI-WEB-SITE: - Token: ' . $token);
                         error_log('AI-WEB-SITE: - Cookie expired: ' . ($expiration < time() ? 'YES' : 'NO'));
-                        
+
                         // Verifică dacă user-ul există
                         $user = get_user_by('login', $username);
                         if ($user) {
