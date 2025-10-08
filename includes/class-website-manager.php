@@ -76,6 +76,72 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
+     * REST API Permission Check - permite user-ii cu abonament activ
+     */
+    public function rest_permission_check($request)
+    {
+        error_log('=== AI-WEB-SITE: rest_permission_check() CALLED ===');
+        error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
+        error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
+        
+        // Pentru OPTIONS, permitem întotdeauna
+        if ($request->get_method() === 'OPTIONS') {
+            error_log('AI-WEB-SITE: OPTIONS request - allowing CORS preflight');
+            return true;
+        }
+        
+        // Verifică origin pentru localhost
+        $headers = getallheaders();
+        $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
+        error_log('AI-WEB-SITE: Request origin: ' . $origin);
+        
+        // ✅ LOCALHOST BYPASS - Pentru development
+        if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
+            error_log('AI-WEB-SITE: ✅ LOCALHOST REQUEST - Bypassing all checks for development');
+            return true;
+        }
+        
+        // Pentru editor.ai-web.site, verifică user-ul și abonamentul
+        if (strpos($origin, 'editor.ai-web.site') !== false) {
+            error_log('AI-WEB-SITE: ✅ EDITOR REQUEST - Checking user and subscription');
+            
+            // Verifică dacă user-ul este logat
+            if (!is_user_logged_in()) {
+                error_log('AI-WEB-SITE: ❌ User NOT logged in for editor request');
+                return new WP_Error('not_logged_in', 'Trebuie să fii autentificat', array('status' => 401));
+            }
+            
+            $user_id = get_current_user_id();
+            error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
+            
+            // Verifică abonamentul
+            $subscription_manager = AI_Web_Site_Subscription_Manager::get_instance();
+            $can_save = $subscription_manager->can_save_configuration($user_id);
+            
+            error_log('AI-WEB-SITE: Subscription check - allowed: ' . ($can_save['allowed'] ? 'YES' : 'NO') . ', reason: ' . $can_save['reason']);
+            
+            if (!$can_save['allowed']) {
+                error_log('AI-WEB-SITE: ❌ User does NOT have active subscription');
+                return new WP_Error(
+                    'subscription_required',
+                    $can_save['message'],
+                    array(
+                        'status' => 403,
+                        'reason' => $can_save['reason']
+                    )
+                );
+            }
+            
+            error_log('AI-WEB-SITE: ✅ User has active subscription - Permission granted');
+            return true;
+        }
+        
+        // Pentru alte origins, refuzăm
+        error_log('AI-WEB-SITE: ❌ Unknown origin - denying access: ' . $origin);
+        return new WP_Error('invalid_origin', 'Origin not allowed', array('status' => 403));
+    }
+
+    /**
      * Bypass WordPress global nonce verification for our test nonce
      */
     public function bypass_nonce_for_test($errors)
@@ -251,7 +317,7 @@ class AI_Web_Site_Website_Manager
         register_rest_route('ai-web-site/v1', '/website-config', array(
             'methods' => 'POST',
             'callback' => array($this, 'rest_save_website_config'),
-            'permission_callback' => '__return_true', // Dezactivez complet verificarea pentru test
+            'permission_callback' => array($this, 'rest_permission_check'), // Folosim funcția noastră
             'args' => array(),
         ));
 
