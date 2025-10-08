@@ -1,5 +1,22 @@
-# AI Web Site Plugin - CORS Headers
+# AI Web Site Plugin - CORS Headers & PHP Limits
 # Forțează header-ele CORS pentru endpoint-urile REST API
+
+# Crește limitele PHP pentru răspunsuri mari (configurații de 2-3MB)
+<IfModule mod_php7.c>
+    php_value memory_limit 512M
+    php_value max_execution_time 300
+    php_value output_buffering Off
+    php_value post_max_size 10M
+    php_value upload_max_filesize 10M
+</IfModule>
+
+<IfModule mod_php8.c>
+    php_value memory_limit 512M
+    php_value max_execution_time 300
+    php_value output_buffering Off
+    php_value post_max_size 10M
+    php_value upload_max_filesize 10M
+</IfModule>
 
 <IfModule mod_headers.c>
     # Pentru cereri OPTIONS (preflight)

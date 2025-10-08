@@ -873,9 +873,22 @@ class AI_Web_Site_Website_Manager
                 'json_length' => strlen($json_test)
             ));
 
+            // Dezactivează output buffering pentru răspunsuri mari
+            if (function_exists('apache_setenv')) {
+                @apache_setenv('no-gzip', '1');
+            }
+            @ini_set('zlib.output_compression', '0');
+            @ini_set('output_buffering', 'off');
+            @ini_set('implicit_flush', '1');
+
+            // Crește memory limit temporar
+            @ini_set('memory_limit', '512M');
+
             // Returnează configurația reală
             $response = new WP_REST_Response($config_data, 200);
             $response->header('Content-Type', 'application/json; charset=utf-8');
+            $response->header('Content-Length', strlen($json_test));
+            $response->header('X-Content-Type-Options', 'nosniff');
 
             $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Returning actual configuration data');
             return $response;
