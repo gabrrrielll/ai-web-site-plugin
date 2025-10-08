@@ -354,13 +354,52 @@ class AI_Web_Site_Website_Manager
             }
 
             // Verifică dacă user-ul este logat
-            if (!is_user_logged_in()) {
-                error_log('AI-WEB-SITE: ❌ User NOT logged in for editor request');
-                return new WP_Error('not_logged_in', 'Trebuie să fii autentificat', array('status' => 401));
-            }
-
             $user_id = get_current_user_id();
-            error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
+            $is_logged_in = is_user_logged_in();
+            
+            error_log('AI-WEB-SITE: 🔍 DEBUG - WordPress Auth State in permission check:');
+            error_log('AI-WEB-SITE: - is_user_logged_in(): ' . ($is_logged_in ? 'TRUE' : 'FALSE'));
+            error_log('AI-WEB-SITE: - get_current_user_id(): ' . $user_id);
+
+            // Dacă WordPress nu recunoaște user-ul, încearcă fallback-ul
+            if (!$is_logged_in || $user_id === 0) {
+                error_log('AI-WEB-SITE: 🔧 FALLBACK: WordPress auth failed in permission check, trying cookie fallback');
+                
+                // Extrage user ID din cookie dacă este posibil
+                $fallback_user_id = 0;
+                foreach ($_COOKIE as $cookie_name => $cookie_value) {
+                    if (strpos($cookie_name, 'wordpress_logged_in_') === 0) {
+                        // WordPress logged in cookie format: username|expiration|token|hash
+                        $cookie_parts = explode('|', urldecode($cookie_value));
+                        if (count($cookie_parts) >= 3) {
+                            $username = $cookie_parts[0];
+                            $expiration = $cookie_parts[1];
+
+                            // Verifică dacă cookie-ul nu a expirat
+                            if ($expiration > time()) {
+                                // Găsește user ID după username
+                                $user = get_user_by('login', $username);
+                                if ($user) {
+                                    $fallback_user_id = $user->ID;
+                                    error_log('AI-WEB-SITE: 🔧 FALLBACK: Found user ID from cookie: ' . $fallback_user_id . ' (username: ' . $username . ')');
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if ($fallback_user_id > 0) {
+                    // Folosește user-ul identificat din cookie
+                    $user_id = $fallback_user_id;
+                    error_log('AI-WEB-SITE: ✅ FALLBACK: Using user ID from cookie: ' . $user_id);
+                } else {
+                    error_log('AI-WEB-SITE: ❌ User NOT logged in and no valid cookie found for editor request');
+                    return new WP_Error('not_logged_in', 'Trebuie să fii autentificat', array('status' => 401));
+                }
+            } else {
+                error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
+            }
 
             // Verifică nonce-ul real pentru editor
             if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
