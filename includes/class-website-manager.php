@@ -414,6 +414,13 @@ class AI_Web_Site_Website_Manager
 
         $this->set_cors_headers();
 
+        // Handle OPTIONS request pentru CORS preflight
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            error_log('AI-WEB-SITE: OPTIONS preflight request handled in rest_save_website_config');
+            http_response_code(200);
+            exit;
+        }
+
         // VERIFICARE MANUALĂ DE SECURITATE
         $security_check = $this->check_save_permissions($request);
         if ($security_check !== true) {
@@ -1438,7 +1445,8 @@ class AI_Web_Site_Website_Manager
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(200);
-            // Nu folosim exit() pentru a nu interfera cu WordPress REST API
+            // Pentru OPTIONS, returnează direct răspunsul gol cu header-ele CORS
+            exit;
         }
     }
 
@@ -1462,7 +1470,8 @@ class AI_Web_Site_Website_Manager
 
             if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
                 http_response_code(200);
-                // Nu folosim exit() pentru a nu interfera cu WordPress REST API
+                // Pentru OPTIONS, returnează direct răspunsul gol cu header-ele CORS
+                exit;
             }
         }
     }
