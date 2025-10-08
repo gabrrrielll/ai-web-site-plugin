@@ -1917,11 +1917,16 @@ class AI_Web_Site_Website_Manager
         // Setează header-ele CORS înainte de orice altceva
         // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
         $origin = get_http_origin();
+        
+        error_log('AI-WEB-SITE: set_cors_headers() - Origin: ' . ($origin ?: 'NULL'));
+        
         if ($origin) {
             header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+            error_log('AI-WEB-SITE: set_cors_headers() - Set dynamic origin: ' . esc_url_raw($origin));
         } else {
             // Fallback for non-browser requests or if origin is not set
             header('Access-Control-Allow-Origin: *');
+            error_log('AI-WEB-SITE: set_cors_headers() - Set wildcard origin (fallback)');
         }
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
