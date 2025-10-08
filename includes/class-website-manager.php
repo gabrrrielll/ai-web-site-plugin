@@ -76,7 +76,7 @@ class AI_Web_Site_Website_Manager
 
         // Hook foarte devreme pentru a vedea toate cererile REST
         add_filter('rest_pre_dispatch', array($this, 'debug_pre_dispatch'), 10, 3);
-        
+
         // Hook ULTRA devreme pentru a vedea TOATE cererile REST (chiar și cele blocate)
         add_action('parse_request', array($this, 'debug_parse_request'));
     }
@@ -545,7 +545,7 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: Is REST request: ' . (defined('REST_REQUEST') ? 'YES' : 'NO'));
         }
     }
-    
+
     /**
      * Debug pre-dispatch pentru a vedea EXACT ce se întâmplă
      */
@@ -629,9 +629,9 @@ class AI_Web_Site_Website_Manager
         // Log REST API registration
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('WEBSITE_MANAGER', 'REST_API', 'Registering REST API routes');
-        
+
         // Debug: Afișează toate rutele înregistrate după ce sunt create
-        add_action('rest_api_init', function() {
+        add_action('rest_api_init', function () {
             global $wp_rest_server;
             if ($wp_rest_server) {
                 $routes = $wp_rest_server->get_routes();

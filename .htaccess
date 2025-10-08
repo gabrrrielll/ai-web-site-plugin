@@ -6,18 +6,34 @@
     php_value memory_limit 512M
     php_value max_execution_time 300
     php_value output_buffering Off
-    php_value post_max_size 10M
-    php_value upload_max_filesize 10M
+    php_value post_max_size 50M
+    php_value upload_max_filesize 50M
+    php_value max_input_vars 3000
+    php_value max_input_time 300
 </IfModule>
 
 <IfModule mod_php8.c>
     php_value memory_limit 512M
     php_value max_execution_time 300
     php_value output_buffering Off
-    php_value post_max_size 10M
-    php_value upload_max_filesize 10M
+    php_value post_max_size 50M
+    php_value upload_max_filesize 50M
+    php_value max_input_vars 3000
+    php_value max_input_time 300
 </IfModule>
 
+# LiteSpeed specific configuration
+<IfModule mod_lsapi.c>
+    php_value memory_limit 512M
+    php_value max_execution_time 300
+    php_value output_buffering Off
+    php_value post_max_size 50M
+    php_value upload_max_filesize 50M
+    php_value max_input_vars 3000
+    php_value max_input_time 300
+</IfModule>
+
+# CORS Headers pentru toate serverele
 <IfModule mod_headers.c>
     # Pentru cereri OPTIONS (preflight)
     RewriteEngine On
@@ -31,6 +47,19 @@
         Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
         Header always set Access-Control-Allow-Headers "Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce"
         Header always set Access-Control-Allow-Credentials "true"
+        Header always set X-Debug-Source ".htaccess"
     </If>
+</IfModule>
+
+# LiteSpeed specific CORS (în caz că mod_headers nu funcționează)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Debug header pentru a vedea dacă .htaccess este procesat
+    RewriteCond %{REQUEST_URI} ^/wp-json/ai-web-site/
+    RewriteRule ^(.*)$ $1 [E=AI_WEB_SITE_HTACCESS:processed]
+    
+    # Forțează CORS prin rewrite headers
+    Header always set X-AI-Web-Site-Htaccess "processed"
 </IfModule>
 
