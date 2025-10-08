@@ -73,9 +73,12 @@ class AI_Web_Site_Website_Manager
 
         // Debug filter pentru a vedea toate requesturile REST
         add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request'));
-        
+
         // Hook foarte devreme pentru a vedea toate cererile REST
         add_filter('rest_pre_dispatch', array($this, 'debug_pre_dispatch'), 10, 3);
+        
+        // Hook ULTRA devreme pentru a vedea TOATE cererile REST (chiar și cele blocate)
+        add_action('parse_request', array($this, 'debug_parse_request'));
     }
 
     /**
@@ -529,6 +532,21 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
+     * Debug parse_request pentru a vedea TOATE cererile (chiar și cele blocate)
+     */
+    public function debug_parse_request($wp)
+    {
+        // Verifică dacă este cerere REST API
+        if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/wp-json/ai-web-site/v1/website-config') !== false) {
+            error_log('=== AI-WEB-SITE: debug_parse_request() CALLED ===');
+            error_log('AI-WEB-SITE: REQUEST_URI: ' . $_SERVER['REQUEST_URI']);
+            error_log('AI-WEB-SITE: REQUEST_METHOD: ' . $_SERVER['REQUEST_METHOD']);
+            error_log('AI-WEB-SITE: Query vars: ' . json_encode($wp->query_vars));
+            error_log('AI-WEB-SITE: Is REST request: ' . (defined('REST_REQUEST') ? 'YES' : 'NO'));
+        }
+    }
+    
+    /**
      * Debug pre-dispatch pentru a vedea EXACT ce se întâmplă
      */
     public function debug_pre_dispatch($result, $server, $request)
@@ -539,14 +557,14 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
             error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
             error_log('AI-WEB-SITE: Result type: ' . gettype($result));
-            
+
             if (is_wp_error($result)) {
                 error_log('AI-WEB-SITE: ❌ WP_Error found: ' . $result->get_error_code());
                 error_log('AI-WEB-SITE: Error message: ' . $result->get_error_message());
                 error_log('AI-WEB-SITE: Error data: ' . json_encode($result->get_error_data()));
-            } else if ($result instanceof WP_REST_Response) {
+            } elseif ($result instanceof WP_REST_Response) {
                 error_log('AI-WEB-SITE: ✅ WP_REST_Response found with status: ' . $result->get_status());
-            } else if ($result === null) {
+            } elseif ($result === null) {
                 error_log('AI-WEB-SITE: ✅ Result is null - request will proceed normally');
             } else {
                 error_log('AI-WEB-SITE: ⚠️ Unknown result type: ' . json_encode($result));
@@ -555,7 +573,7 @@ class AI_Web_Site_Website_Manager
 
         return $result;
     }
-    
+
     /**
      * Debug filter pentru a vedea toate requesturile REST
      */
@@ -611,6 +629,21 @@ class AI_Web_Site_Website_Manager
         // Log REST API registration
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('WEBSITE_MANAGER', 'REST_API', 'Registering REST API routes');
+        
+        // Debug: Afișează toate rutele înregistrate după ce sunt create
+        add_action('rest_api_init', function() {
+            global $wp_rest_server;
+            if ($wp_rest_server) {
+                $routes = $wp_rest_server->get_routes();
+                if (isset($routes['/ai-web-site/v1/website-config'])) {
+                    error_log('AI-WEB-SITE: 🔍 Ruta /ai-web-site/v1/website-config EXISTĂ în server');
+                    error_log('AI-WEB-SITE: 🔍 Ruta detalii: ' . json_encode($routes['/ai-web-site/v1/website-config']));
+                } else {
+                    error_log('AI-WEB-SITE: ❌ Ruta /ai-web-site/v1/website-config NU EXISTĂ în server!');
+                    error_log('AI-WEB-SITE: 🔍 Rute disponibile: ' . implode(', ', array_keys($routes)));
+                }
+            }
+        }, 999); // Prioritate foarte mare pentru a rula după toate înregistrările
 
         // TODO: Remove old endpoints - kept for compatibility
         /*
@@ -644,12 +677,14 @@ class AI_Web_Site_Website_Manager
         ));
 
         // POST endpoint pentru salvarea configurației cu verificări de securitate
-        register_rest_route('ai-web-site/v1', '/website-config', array(
+        error_log('AI-WEB-SITE: 🔧 Înregistrez ruta POST /website-config');
+        $route_registered = register_rest_route('ai-web-site/v1', '/website-config', array(
             'methods' => 'POST',
             'callback' => array($this, 'rest_save_website_config'),
             'permission_callback' => '__return_true', // TEMPORAR: Bypass complet pentru testare
             'args' => array(),
         ));
+        error_log('AI-WEB-SITE: 🔧 Ruta POST înregistrată: ' . ($route_registered ? 'SUCCESS' : 'FAILED'));
 
         // Test endpoint to verify REST API is working
         register_rest_route('ai-web-site/v1', '/test', array(
