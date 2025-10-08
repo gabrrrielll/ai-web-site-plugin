@@ -81,16 +81,16 @@ class AI_Web_Site_Website_Manager
     public function rest_get_wp_nonce($request)
     {
         error_log('=== AI-WEB-SITE: rest_get_wp_nonce() CALLED ===');
-        
+
         $this->set_cors_headers();
-        
+
         // Handle OPTIONS request pentru CORS preflight
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             error_log('AI-WEB-SITE: OPTIONS preflight request handled in rest_get_wp_nonce');
             http_response_code(200);
             exit;
         }
-        
+
         try {
             // Verifică dacă user-ul este logat
             if (!is_user_logged_in()) {
@@ -101,29 +101,29 @@ class AI_Web_Site_Website_Manager
                     'nonce' => null
                 ), 401);
             }
-            
+
             $user_id = get_current_user_id();
             error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
-            
+
             // Generează nonce-ul pentru acțiunea de salvare
             $nonce = wp_create_nonce('save_site_config');
             error_log('AI-WEB-SITE: ✅ Nonce generated: ' . $nonce);
-            
+
             $response_data = array(
                 'success' => true,
                 'nonce' => $nonce,
                 'user_id' => $user_id,
                 'timestamp' => date('c')
             );
-            
+
             // Trimite răspuns direct pentru a evita output buffering
             $json_output = json_encode($response_data);
-            
+
             // Golește buffer-ele WordPress
             while (ob_get_level()) {
                 ob_end_clean();
             }
-            
+
             // Setează header-ele și trimite JSON direct
             if (!headers_sent()) {
                 header('Content-Type: application/json; charset=utf-8');
@@ -131,16 +131,16 @@ class AI_Web_Site_Website_Manager
                 header('Access-Control-Allow-Origin: *');
                 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
                 header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
-                
+
                 echo $json_output;
                 exit;
             }
-            
+
             return new WP_REST_Response($response_data, 200);
-            
+
         } catch (Exception $e) {
             error_log('AI-WEB-SITE: ❌ Error generating nonce: ' . $e->getMessage());
-            
+
             return new WP_REST_Response(array(
                 'success' => false,
                 'error' => $e->getMessage(),
