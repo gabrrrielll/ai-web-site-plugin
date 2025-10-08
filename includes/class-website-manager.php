@@ -848,6 +848,8 @@ class AI_Web_Site_Website_Manager
         error_log('==========================================================');
         error_log('=== AI-WEB-SITE: rest_save_website_config() CALLED ===');
         error_log('=== POST REQUEST REACHED THE CALLBACK SUCCESSFULLY! ===');
+        error_log('=== REQUEST SIZE: ' . $_SERVER['CONTENT_LENGTH'] . ' bytes ===');
+        error_log('=== REQUEST METHOD: ' . $_SERVER['REQUEST_METHOD'] . ' ===');
         error_log('==========================================================');
 
         $this->set_cors_headers();
@@ -1917,9 +1919,9 @@ class AI_Web_Site_Website_Manager
         // Setează header-ele CORS înainte de orice altceva
         // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
         $origin = get_http_origin();
-        
+
         error_log('AI-WEB-SITE: set_cors_headers() - Origin: ' . ($origin ?: 'NULL'));
-        
+
         if ($origin) {
             header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
             error_log('AI-WEB-SITE: set_cors_headers() - Set dynamic origin: ' . esc_url_raw($origin));
