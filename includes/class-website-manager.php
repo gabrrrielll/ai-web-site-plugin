@@ -104,38 +104,38 @@ class AI_Web_Site_Website_Manager
         // Pentru editor.ai-web.site, verifică user-ul și abonamentul
         if (strpos($origin, 'editor.ai-web.site') !== false) {
             error_log('AI-WEB-SITE: ✅ EDITOR REQUEST - Checking user and subscription');
-            
+
             // SECURITATE: Blochează test nonce-ul în production
             $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
             if ($nonce === 'test-nonce-12345') {
                 error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from editor.ai-web.site REJECTED!');
                 return new WP_Error('invalid_nonce', 'Test nonce not allowed in production', array('status' => 403));
             }
-            
+
             // Verifică dacă user-ul este logat
             if (!is_user_logged_in()) {
                 error_log('AI-WEB-SITE: ❌ User NOT logged in for editor request');
                 return new WP_Error('not_logged_in', 'Trebuie să fii autentificat', array('status' => 401));
             }
-            
+
             $user_id = get_current_user_id();
             error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
-            
+
             // Verifică nonce-ul real pentru editor
             if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
                 error_log('AI-WEB-SITE: ❌ NONCE VERIFICATION FAILED for editor request');
                 error_log('AI-WEB-SITE: Nonce received: ' . $nonce);
                 return new WP_Error('invalid_nonce', 'Invalid security token', array('status' => 403));
             }
-            
+
             error_log('AI-WEB-SITE: ✅ NONCE VERIFICATION SUCCESS for editor request');
-            
+
             // Verifică abonamentul
             $subscription_manager = AI_Web_Site_Subscription_Manager::get_instance();
             $can_save = $subscription_manager->can_save_configuration($user_id);
-            
+
             error_log('AI-WEB-SITE: Subscription check - allowed: ' . ($can_save['allowed'] ? 'YES' : 'NO') . ', reason: ' . $can_save['reason']);
-            
+
             if (!$can_save['allowed']) {
                 error_log('AI-WEB-SITE: ❌ User does NOT have active subscription');
                 return new WP_Error(
@@ -147,7 +147,7 @@ class AI_Web_Site_Website_Manager
                     )
                 );
             }
-            
+
             error_log('AI-WEB-SITE: ✅ User has active subscription - Permission granted');
             return true;
         }
