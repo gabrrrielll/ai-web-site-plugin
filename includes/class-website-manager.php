@@ -533,12 +533,37 @@ class AI_Web_Site_Website_Manager
                     'domain' => $input_data['domain'] ?? 'unknown'
                 ));
 
-                return new WP_REST_Response(array(
+                // SOLUȚIE: Bypass WordPress REST API și trimite JSON direct
+                // Evită problema cu output_buffering care face răspunsul gol
+                
+                $success_response = array(
                     'success' => true,
                     'message' => 'Configuration saved successfully',
                     'website_id' => $result['website_id'],
                     'timestamp' => date('c')
-                ), 200);
+                );
+                
+                $json_output = json_encode($success_response);
+                
+                // Golește buffer-ele WordPress
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+                
+                // Setează header-ele și trimite JSON direct
+                if (!headers_sent()) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    header('Content-Length: ' . strlen($json_output));
+                    header('Access-Control-Allow-Origin: *');
+                    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+                    header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
+                    
+                    echo $json_output;
+                    exit;
+                }
+                
+                // Fallback: WordPress REST API
+                return new WP_REST_Response($success_response, 200);
             } else {
                 $logger->error('WEBSITE_MANAGER', 'REST_SAVE', 'Failed to save configuration', array(
                     'error' => $result['error']
