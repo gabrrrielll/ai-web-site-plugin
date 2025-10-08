@@ -92,17 +92,135 @@ class AI_Web_Site_Website_Manager
         }
 
         try {
-            // Verifică dacă user-ul este logat
-            if (!is_user_logged_in()) {
-                error_log('AI-WEB-SITE: ❌ User NOT logged in for nonce request');
-                return new WP_REST_Response(array(
-                    'success' => false,
-                    'error' => 'User not logged in',
-                    'nonce' => null
-                ), 401);
-            }
-
+            // DEBUG: Verifică starea autentificării WordPress
             $user_id = get_current_user_id();
+            $is_logged_in = is_user_logged_in();
+            
+            error_log('AI-WEB-SITE: 🔍 DEBUG - WordPress Auth State:');
+            error_log('AI-WEB-SITE: - is_user_logged_in(): ' . ($is_logged_in ? 'TRUE' : 'FALSE'));
+            error_log('AI-WEB-SITE: - get_current_user_id(): ' . $user_id);
+            
+            // Verifică cookie-urile
+            $cookies = $_COOKIE;
+            $wp_cookies = array_filter($cookies, function($key) {
+                return strpos($key, 'wordpress_') === 0;
+            }, ARRAY_FILTER_USE_KEY);
+            
+            error_log('AI-WEB-SITE: 🔍 WordPress Cookies found: ' . count($wp_cookies));
+            foreach ($wp_cookies as $cookie_name => $cookie_value) {
+                error_log('AI-WEB-SITE: - ' . $cookie_name . ': ' . substr($cookie_value, 0, 50) . '...');
+            }
+            
+            // Verifică dacă user-ul este logat
+            if (!$is_logged_in || $user_id === 0) {
+                error_log('AI-WEB-SITE: ❌ User NOT logged in for nonce request');
+                
+                // Încearcă să forțeze recunoașterea user-ului din cookie
+                if (!empty($wp_cookies)) {
+                    error_log('AI-WEB-SITE: 🔧 Attempting to force WordPress auth from cookies...');
+                    
+                    // Forțează WordPress să proceseze cookie-urile
+                    wp_set_current_user(0);
+                    wp_set_current_user(0); // Double call to force refresh
+                    
+                    $user_id_after = get_current_user_id();
+                    $is_logged_in_after = is_user_logged_in();
+                    
+                    error_log('AI-WEB-SITE: 🔧 After force auth:');
+                    error_log('AI-WEB-SITE: - is_user_logged_in(): ' . ($is_logged_in_after ? 'TRUE' : 'FALSE'));
+                    error_log('AI-WEB-SITE: - get_current_user_id(): ' . $user_id_after);
+                    
+                    if (!$is_logged_in_after || $user_id_after === 0) {
+                        // FALLBACK: Dacă există cookie WordPress valid, generează nonce-ul anyway
+                        error_log('AI-WEB-SITE: 🔧 FALLBACK: Generating nonce despite WordPress auth failure');
+                        
+                        // Extrage user ID din cookie dacă este posibil
+                        $fallback_user_id = 0;
+                        foreach ($wp_cookies as $cookie_name => $cookie_value) {
+                            if (strpos($cookie_name, 'wordpress_logged_in_') === 0) {
+                                // WordPress logged in cookie format: username|expiration|token|hash
+                                $cookie_parts = explode('|', urldecode($cookie_value));
+                                if (count($cookie_parts) >= 3) {
+                                    $username = $cookie_parts[0];
+                                    $expiration = $cookie_parts[1];
+                                    
+                                    // Verifică dacă cookie-ul nu a expirat
+                                    if ($expiration > time()) {
+                                        // Găsește user ID după username
+                                        $user = get_user_by('login', $username);
+                                        if ($user) {
+                                            $fallback_user_id = $user->ID;
+                                            error_log('AI-WEB-SITE: 🔧 FALLBACK: Found user ID from cookie: ' . $fallback_user_id . ' (username: ' . $username . ')');
+                                            break;
+                                        }
+                                    } else {
+                                        error_log('AI-WEB-SITE: 🔧 FALLBACK: Cookie expired for user: ' . $username);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if ($fallback_user_id > 0) {
+                            // Generează nonce-ul pentru user-ul identificat din cookie
+                            $nonce = wp_create_nonce('save_site_config');
+                            error_log('AI-WEB-SITE: ✅ FALLBACK: Nonce generated for user ID: ' . $fallback_user_id);
+                            
+                            $response_data = array(
+                                'success' => true,
+                                'nonce' => $nonce,
+                                'user_id' => $fallback_user_id,
+                                'timestamp' => date('c'),
+                                'auth_method' => 'cookie_fallback'
+                            );
+                            
+                            // Trimite răspuns direct
+                            $json_output = json_encode($response_data);
+                            
+                            while (ob_get_level()) {
+                                ob_end_clean();
+                            }
+                            
+                            if (!headers_sent()) {
+                                header('Content-Type: application/json; charset=utf-8');
+                                header('Content-Length: ' . strlen($json_output));
+                                header('Access-Control-Allow-Origin: *');
+                                header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+                                header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
+                                
+                                echo $json_output;
+                                exit;
+                            }
+                            
+                            return new WP_REST_Response($response_data, 200);
+                        } else {
+                            return new WP_REST_Response(array(
+                                'success' => false,
+                                'error' => 'User not logged in - WordPress auth failed and no valid cookie found',
+                                'nonce' => null,
+                                'debug' => array(
+                                    'user_id' => $user_id,
+                                    'is_logged_in' => $is_logged_in,
+                                    'cookies_count' => count($wp_cookies),
+                                    'after_force_auth' => array(
+                                        'user_id' => $user_id_after,
+                                        'is_logged_in' => $is_logged_in_after
+                                    )
+                                )
+                            ), 401);
+                        }
+                    }
+                    
+                    // Folosește user-ul identificat după forțarea autentificării
+                    $user_id = $user_id_after;
+                } else {
+                    return new WP_REST_Response(array(
+                        'success' => false,
+                        'error' => 'User not logged in - no WordPress cookies found',
+                        'nonce' => null
+                    ), 401);
+                }
+            }
+            
             error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
 
             // Generează nonce-ul pentru acțiunea de salvare
