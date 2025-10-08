@@ -68,8 +68,8 @@ class AI_Web_Site_Website_Manager
         // Bypass WordPress global nonce verification for our test nonce
         add_filter('rest_authentication_errors', array($this, 'bypass_nonce_for_test'));
 
-        // Dezactivez complet verificarea nonce pentru endpoint-ul nostru
-        add_filter('rest_pre_dispatch', array($this, 'disable_nonce_check'), 10, 3);
+        // TEMPORAR: Dezactivez filter-ul care poate interfera
+        // add_filter('rest_pre_dispatch', array($this, 'disable_nonce_check'), 10, 3);
 
         // Debug filter pentru a vedea toate requesturile REST
         add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request'));
@@ -355,16 +355,16 @@ class AI_Web_Site_Website_Manager
 
             // TEMPORAR: Suspendăm verificarea de autentificare pentru testare
             error_log('AI-WEB-SITE: 🧪 TEMPORARY: Skipping authentication check for testing');
-            
+
             // Folosește un user ID fixat pentru testare (user-ul tester cu ID 2)
             $user_id = 2;
             error_log('AI-WEB-SITE: 🧪 TEMPORARY: Using fixed user ID for testing: ' . $user_id);
-            
+
             /* COMENTAT TEMPORAR - Verificarea de autentificare
             // Verifică dacă user-ul este logat
             $user_id = get_current_user_id();
             $is_logged_in = is_user_logged_in();
-            
+
             error_log('AI-WEB-SITE: 🔍 DEBUG - WordPress Auth State in permission check:');
             error_log('AI-WEB-SITE: - is_user_logged_in(): ' . ($is_logged_in ? 'TRUE' : 'FALSE'));
             error_log('AI-WEB-SITE: - get_current_user_id(): ' . $user_id);
@@ -372,7 +372,7 @@ class AI_Web_Site_Website_Manager
             // Dacă WordPress nu recunoaște user-ul, încearcă fallback-ul
             if (!$is_logged_in || $user_id === 0) {
                 error_log('AI-WEB-SITE: 🔧 FALLBACK: WordPress auth failed in permission check, trying cookie fallback');
-                
+
                 // Extrage user ID din cookie dacă este posibil
                 $fallback_user_id = 0;
                 foreach ($_COOKIE as $cookie_name => $cookie_value) {
