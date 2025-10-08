@@ -1413,7 +1413,7 @@ class AI_Web_Site_Website_Manager
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(200);
-            exit();
+            // Nu folosim exit() pentru a nu interfera cu WordPress REST API
         }
     }
 
@@ -1437,7 +1437,7 @@ class AI_Web_Site_Website_Manager
 
             if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
                 http_response_code(200);
-                exit();
+                // Nu folosim exit() pentru a nu interfera cu WordPress REST API
             }
         }
     }
