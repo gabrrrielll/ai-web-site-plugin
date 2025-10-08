@@ -73,6 +73,9 @@ class AI_Web_Site_Website_Manager
 
         // Debug filter pentru a vedea toate requesturile REST
         add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request'));
+        
+        // Hook foarte devreme pentru a vedea toate cererile REST
+        add_filter('rest_pre_dispatch', array($this, 'debug_pre_dispatch'), 10, 3);
     }
 
     /**
@@ -525,6 +528,34 @@ class AI_Web_Site_Website_Manager
         return $result; // Continuă cu procesarea normală
     }
 
+    /**
+     * Debug pre-dispatch pentru a vedea EXACT ce se întâmplă
+     */
+    public function debug_pre_dispatch($result, $server, $request)
+    {
+        // Verifică dacă este request pentru endpoint-ul nostru
+        if ($request && strpos($request->get_route(), '/ai-web-site/v1/website-config') !== false) {
+            error_log('=== AI-WEB-SITE: debug_pre_dispatch() CALLED ===');
+            error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
+            error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
+            error_log('AI-WEB-SITE: Result type: ' . gettype($result));
+            
+            if (is_wp_error($result)) {
+                error_log('AI-WEB-SITE: ❌ WP_Error found: ' . $result->get_error_code());
+                error_log('AI-WEB-SITE: Error message: ' . $result->get_error_message());
+                error_log('AI-WEB-SITE: Error data: ' . json_encode($result->get_error_data()));
+            } else if ($result instanceof WP_REST_Response) {
+                error_log('AI-WEB-SITE: ✅ WP_REST_Response found with status: ' . $result->get_status());
+            } else if ($result === null) {
+                error_log('AI-WEB-SITE: ✅ Result is null - request will proceed normally');
+            } else {
+                error_log('AI-WEB-SITE: ⚠️ Unknown result type: ' . json_encode($result));
+            }
+        }
+
+        return $result;
+    }
+    
     /**
      * Debug filter pentru a vedea toate requesturile REST
      */
