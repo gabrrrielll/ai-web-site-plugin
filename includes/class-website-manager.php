@@ -826,8 +826,13 @@ class AI_Web_Site_Website_Manager
         $headers = getallheaders();
         error_log('AI-WEB-SITE: Headers count: ' . count($headers));
 
-        $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
-        error_log('AI-WEB-SITE: Nonce received from headers: ' . $nonce);
+        // 🔧 Extragem nonce-ul din request (WordPress REST API way)
+        $nonce = $request->get_header('X-WP-Nonce');
+        if (empty($nonce)) {
+            // Fallback la getallheaders()
+            $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
+        }
+        error_log('AI-WEB-SITE: Nonce received from headers: ' . ($nonce ?? 'EMPTY'));
 
         // Dacă nu avem nonce în headers, verificăm în body (pentru localhost)
         if (empty($nonce)) {
@@ -837,7 +842,11 @@ class AI_Web_Site_Website_Manager
         }
 
         // SECURITATE: Verificare Origin pentru localhost DEVELOPMENT
-        $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
+        $origin = $request->get_header('Origin');
+        if (empty($origin)) {
+            // Fallback la getallheaders()
+            $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
+        }
         error_log('AI-WEB-SITE: Request origin: ' . $origin);
 
         // ✅ LOCALHOST BYPASS - Pentru development, acceptăm requesturi din localhost
