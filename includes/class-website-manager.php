@@ -700,6 +700,20 @@ class AI_Web_Site_Website_Manager
             'permission_callback' => '__return_true',
         ));
 
+        // Alternative endpoint pentru POST-uri mari (GET cu data în URL)
+        register_rest_route('ai-web-site/v1', '/website-config-large', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'rest_save_website_config_large'),
+            'permission_callback' => '__return_true',
+            'args' => array(
+                'data' => array(
+                    'required' => true,
+                    'type' => 'string',
+                    'description' => 'Base64 encoded site configuration data'
+                )
+            ),
+        ));
+
         // Debug endpoint to update existing editor config with original content
         register_rest_route('ai-web-site/v1', '/update-editor-config', array(
             'methods' => 'POST',
@@ -841,6 +855,81 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
+     * REST API: Save website config LARGE (GET endpoint pentru POST-uri mari)
+     */
+    public function rest_save_website_config_large($request)
+    {
+        error_log('==========================================================');
+        error_log('=== AI-WEB-SITE: rest_save_website_config_large() CALLED ===');
+        error_log('=== LARGE POST REQUEST VIA GET ENDPOINT ===');
+        error_log('==========================================================');
+
+        $this->set_cors_headers();
+
+        // Verifică dacă este cerere OPTIONS pentru CORS preflight
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            error_log('AI-WEB-SITE: OPTIONS preflight request handled in rest_save_website_config_large');
+            http_response_code(200);
+            exit;
+        }
+
+        // Obține datele din parametrul URL
+        $encoded_data = $request->get_param('data');
+        if (empty($encoded_data)) {
+            error_log('AI-WEB-SITE: ❌ No data parameter provided');
+            return new WP_Error('missing_data', 'No data parameter provided', array('status' => 400));
+        }
+
+        // Decodează datele Base64
+        $json_data = base64_decode($encoded_data);
+        if ($json_data === false) {
+            error_log('AI-WEB-SITE: ❌ Failed to decode Base64 data');
+            return new WP_Error('invalid_data', 'Failed to decode Base64 data', array('status' => 400));
+        }
+
+        error_log('AI-WEB-SITE: ✅ Data decoded successfully, size: ' . strlen($json_data) . ' bytes');
+
+        // Parsează JSON-ul
+        $config_data = json_decode($json_data, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('AI-WEB-SITE: ❌ Invalid JSON data: ' . json_last_error_msg());
+            return new WP_Error('invalid_json', 'Invalid JSON data: ' . json_last_error_msg(), array('status' => 400));
+        }
+
+        error_log('AI-WEB-SITE: ✅ JSON parsed successfully');
+
+        // Folosește aceeași logică ca în rest_save_website_config
+        try {
+            $result = $this->save_website_config($config_data);
+            
+            error_log('AI-WEB-SITE: ✅ Configuration saved successfully via large endpoint');
+            
+            // Returnează răspuns de succes
+            $response_data = array(
+                'success' => true,
+                'message' => 'Configuration saved successfully via large endpoint',
+                'website_id' => $result['website_id'],
+                'timestamp' => date('c')
+            );
+
+            echo json_encode($response_data);
+            exit;
+
+        } catch (Exception $e) {
+            error_log('AI-WEB-SITE: ❌ Error saving configuration via large endpoint: ' . $e->getMessage());
+            
+            $response_data = array(
+                'success' => false,
+                'error' => 'Failed to save configuration: ' . $e->getMessage(),
+                'timestamp' => date('c')
+            );
+
+            echo json_encode($response_data);
+            exit;
+        }
+    }
+
+    /**
      * REST API: Save website config (ETAPA 1 - cu verificări de securitate)
      */
     public function rest_save_website_config($request)
@@ -848,8 +937,29 @@ class AI_Web_Site_Website_Manager
         error_log('==========================================================');
         error_log('=== AI-WEB-SITE: rest_save_website_config() CALLED ===');
         error_log('=== POST REQUEST REACHED THE CALLBACK SUCCESSFULLY! ===');
-        error_log('=== REQUEST SIZE: ' . $_SERVER['CONTENT_LENGTH'] . ' bytes ===');
+        error_log('=== REQUEST SIZE: ' . ($_SERVER['CONTENT_LENGTH'] ?? 'unknown') . ' bytes ===');
         error_log('=== REQUEST METHOD: ' . $_SERVER['REQUEST_METHOD'] . ' ===');
+        
+        // 🔍 LOG ALL REQUEST DETAILS
+        error_log('=== REQUEST DETAILS ===');
+        error_log('Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? 'not set'));
+        error_log('Referer: ' . ($_SERVER['HTTP_REFERER'] ?? 'not set'));
+        error_log('User-Agent: ' . ($_SERVER['HTTP_USER_AGENT'] ?? 'not set'));
+        error_log('Remote-Addr: ' . ($_SERVER['REMOTE_ADDR'] ?? 'not set'));
+        
+        // 🔍 LOG CUSTOM HEADERS
+        $all_headers = getallheaders();
+        error_log('=== ALL HEADERS ===');
+        foreach ($all_headers as $key => $value) {
+            if (strtolower($key) !== 'cookie') { // Nu loga cookies pentru securitate
+                error_log("Header: {$key} = {$value}");
+            }
+        }
+        
+        // 🔍 LOG LOCAL API KEY specifically
+        $local_api_key_from_request = $request->get_header('X-Local-API-Key');
+        error_log('=== X-Local-API-Key from request: ' . ($local_api_key_from_request ?? 'NOT SET') . ' ===');
+        
         error_log('==========================================================');
 
         $this->set_cors_headers();
