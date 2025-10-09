@@ -798,11 +798,18 @@ class AI_Web_Site_Website_Manager
             return true;
         }
 
-        // ✅ LOCAL API KEY BYPASS - Verifică cheia locală (pentru test production)
+        // ✅ LOCAL API KEY BYPASS - Verifică cheia locală (doar pentru localhost development)
         $local_api_key = $headers['X-Local-API-Key'] ?? $headers['x-local-api-key'] ?? '';
         if ($local_api_key === 'dev-local-key-2024') {
-            error_log('AI-WEB-SITE: ✅ LOCAL API KEY VALID - Bypassing all security checks for test');
-            return true;
+            // Verifică dacă vine de pe localhost (pentru securitate)
+            if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
+                error_log('AI-WEB-SITE: ✅ LOCAL API KEY VALID - Bypassing all security checks for localhost');
+                return true;
+            } else {
+                error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Local API key from non-localhost origin REJECTED!');
+                error_log('AI-WEB-SITE: ❌ Suspicious origin: ' . $origin);
+                return new WP_Error('invalid_local_key', 'Local API key not allowed from non-localhost origins', array('status' => 403));
+            }
         }
 
         // ❌ SECURITY: Test-nonce BLOCAT în production
@@ -868,38 +875,38 @@ class AI_Web_Site_Website_Manager
     private function get_user_id_from_cookie()
     {
         $cookie_name = 'wordpress_logged_in_' . COOKIEHASH;
-        
+
         if (!isset($_COOKIE[$cookie_name])) {
             error_log('AI-WEB-SITE: No WordPress login cookie found');
             return 0;
         }
-        
+
         $cookie_value = $_COOKIE[$cookie_name];
         error_log('AI-WEB-SITE: Found WordPress cookie: ' . substr($cookie_value, 0, 50) . '...');
-        
+
         // Parsează cookie-ul WordPress
         $cookie_parts = explode('|', $cookie_value);
         if (count($cookie_parts) < 4) {
             error_log('AI-WEB-SITE: Invalid cookie format');
             return 0;
         }
-        
+
         $username = $cookie_parts[0];
         $expiration = intval($cookie_parts[1]);
-        
+
         // Verifică dacă cookie-ul nu a expirat
         if ($expiration < time()) {
             error_log('AI-WEB-SITE: Cookie expired');
             return 0;
         }
-        
+
         // Găsește user-ul în baza de date
         $user = get_user_by('login', $username);
         if (!$user) {
             error_log('AI-WEB-SITE: User not found in database: ' . $username);
             return 0;
         }
-        
+
         error_log('AI-WEB-SITE: Valid user found from cookie: ' . $username . ' (ID: ' . $user->ID . ')');
         return $user->ID;
     }
@@ -1060,6 +1067,14 @@ class AI_Web_Site_Website_Manager
                 $user_id = 1;
                 $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'No valid cookie found, using admin user ID as fallback.', array('user_id' => $user_id));
             }
+        } else {
+            // 🔧 Pentru nonce-uri WordPress normale, folosește user_id real din cookie
+            $cookie_user_id = $this->get_user_id_from_cookie();
+            if ($cookie_user_id > 0) {
+                $user_id = $cookie_user_id;
+                $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Using real user ID from cookie for WordPress nonce.', array('user_id' => $user_id));
+            }
+            // Dacă nu avem cookie, folosește $user_id din get_current_user_id() (care ar trebui să fie > 0)
         }
 
         // ETAPA 2: Verificare abonament activ (IHC)
