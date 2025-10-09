@@ -120,68 +120,6 @@ class AI_Web_Site_User_Site_Shortcode
         document.addEventListener('DOMContentLoaded', function () {
             console.log('AI Web Site: Website management loaded');
             
-            // Handle add subdomain for existing websites
-            document.addEventListener('click', function (e) {
-                if (e.target.classList.contains('ai-add-subdomain')) {
-                    e.preventDefault();
-                    
-                    var button = e.target;
-                    var form = button.closest('.ai-subdomain-form');
-                    var siteId = form.dataset.siteId;
-                    var input = form.querySelector('.ai-subdomain-input');
-                    var messageSpan = form.querySelector('.ai-subdomain-message');
-                    var subdomain = input.value.trim();
-                    
-                    if (!subdomain) {
-                        showSubdomainMessage(messageSpan, 'error', 'Please enter a subdomain name');
-                        return;
-                    }
-                    
-                    // Validate subdomain format
-                    if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/.test(subdomain)) {
-                        showSubdomainMessage(messageSpan, 'error', 'Invalid subdomain format. Use only letters, numbers, and hyphens.');
-                        return;
-                    }
-                    
-                    // Show loading state
-                    button.disabled = true;
-                    button.textContent = 'Adding...';
-                    showSubdomainMessage(messageSpan, '', 'Adding subdomain...');
-                    
-                    // Make AJAX request
-                    fetch('/wp-json/ai-web-site/v1/add-subdomain', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-WP-Nonce': window.aiWebSiteUserSites?.nonce || ''
-                        },
-                        body: JSON.stringify({
-                            website_id: siteId,
-                            subdomain_name: subdomain
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showSubdomainMessage(messageSpan, 'success', 'Subdomain added successfully!');
-                            input.value = '';
-                            setTimeout(() => location.reload(), 2000);
-                        } else {
-                            showSubdomainMessage(messageSpan, 'error', data.message || 'Failed to add subdomain');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error adding subdomain:', error);
-                        showSubdomainMessage(messageSpan, 'error', 'Network error occurred');
-                    })
-                    .finally(() => {
-                        button.disabled = false;
-                        button.textContent = 'Add Subdomain';
-                    });
-                }
-            });
-            
             // Helper function to show subdomain messages
             function showSubdomainMessage(element, type, message) {
                 if (!element) return;
@@ -202,6 +140,92 @@ class AI_Web_Site_User_Site_Shortcode
                     }, 3000);
                 }
             }
+            
+            // Handle add subdomain for existing websites
+            document.addEventListener('click', function (e) {
+                // ✅ Verificări robuste pentru a evita erorile
+                if (!e.target || !e.target.classList || !e.target.classList.contains('ai-add-subdomain')) {
+                    return;
+                }
+                
+                e.preventDefault();
+                
+                var button = e.target;
+                var form = button.closest('.ai-subdomain-form');
+                
+                if (!form) {
+                    console.error('AI Web Site: Form not found');
+                    return;
+                }
+                
+                var siteId = form.getAttribute('data-site-id');
+                var input = form.querySelector('.ai-subdomain-input');
+                var messageSpan = form.querySelector('.ai-subdomain-message');
+                
+                if (!siteId || !input || !messageSpan) {
+                    console.error('AI Web Site: Missing required elements', {
+                        siteId: siteId,
+                        input: !!input,
+                        messageSpan: !!messageSpan
+                    });
+                    return;
+                }
+                
+                var subdomain = input.value.trim();
+                
+                if (!subdomain) {
+                    showSubdomainMessage(messageSpan, 'error', 'Please enter a subdomain name');
+                    return;
+                }
+                
+                // Validate subdomain format
+                if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/.test(subdomain)) {
+                    showSubdomainMessage(messageSpan, 'error', 'Invalid subdomain format. Use only letters, numbers, and hyphens.');
+                    return;
+                }
+                
+                // Show loading state
+                button.disabled = true;
+                button.textContent = 'Adding...';
+                showSubdomainMessage(messageSpan, '', 'Adding subdomain...');
+                
+                // Make AJAX request
+                fetch('/wp-json/ai-web-site/v1/add-subdomain', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': window.aiWebSiteUserSites?.nonce || ''
+                    },
+                    body: JSON.stringify({
+                        website_id: parseInt(siteId),
+                        subdomain_name: subdomain
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showSubdomainMessage(messageSpan, 'success', 'Subdomain added successfully!');
+                        input.value = '';
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showSubdomainMessage(messageSpan, 'error', data.message || 'Failed to add subdomain');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding subdomain:', error);
+                    showSubdomainMessage(messageSpan, 'error', 'Network error occurred: ' + error.message);
+                })
+                .finally(() => {
+                    button.disabled = false;
+                    button.textContent = 'Add Subdomain';
+                });
+            });
         });
         </script>
         
