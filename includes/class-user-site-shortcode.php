@@ -103,7 +103,7 @@ class AI_Web_Site_User_Site_Shortcode
         <?php
         // ✅ Script-urile și stilurile sunt deja încărcate prin enqueue_frontend_assets()
         // Nu mai încercăm să le încărcăm din nou
-        
+
         // Adăugăm nonce-ul pentru JavaScript (dacă nu este deja setat)
         ?>
         <script type="text/javascript">
