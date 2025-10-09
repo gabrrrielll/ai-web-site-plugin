@@ -1693,8 +1693,11 @@ class AI_Web_Site_Website_Manager
      */
     public function rest_add_user_subdomain(WP_REST_Request $request)
     {
+        error_log('AI-WEB-SITE: rest_add_user_subdomain() called');
+        
         // Check user permissions already done by permission_callback
         $user_id = get_current_user_id();
+        error_log('AI-WEB-SITE: User ID: ' . $user_id);
 
         $params = $request->get_json_params();
         $website_id = isset($params['website_id']) ? intval($params['website_id']) : 0;
