@@ -338,7 +338,7 @@ class AI_Web_Site_Website_Manager
         }
 
         // Verifică origin pentru localhost
-        $headers = getallheaders();
+                $headers = getallheaders();
         $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
         error_log('AI-WEB-SITE: Request origin: ' . $origin);
 
@@ -354,7 +354,7 @@ class AI_Web_Site_Website_Manager
 
             // SECURITATE: Blochează test nonce-ul în production
             $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
-            if ($nonce === 'test-nonce-12345') {
+                if ($nonce === 'test-nonce-12345') {
                 error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from editor.ai-web.site REJECTED!');
                 return new WP_Error('invalid_nonce', 'Test nonce not allowed in production', array('status' => 403));
             }
@@ -798,6 +798,13 @@ class AI_Web_Site_Website_Manager
             return true;
         }
 
+        // ✅ LOCAL API KEY BYPASS - Verifică cheia locală (pentru test production)
+        $local_api_key = $headers['X-Local-API-Key'] ?? $headers['x-local-api-key'] ?? '';
+        if ($local_api_key === 'dev-local-key-2024') {
+            error_log('AI-WEB-SITE: ✅ LOCAL API KEY VALID - Bypassing all security checks for test');
+            return true;
+        }
+
         // ❌ SECURITY: Test-nonce BLOCAT în production
         if ($nonce === 'test-nonce-12345') {
             error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from non-localhost origin REJECTED!');
@@ -901,9 +908,9 @@ class AI_Web_Site_Website_Manager
         // Folosește aceeași logică ca în rest_save_website_config
         try {
             $result = $this->save_website_config($config_data);
-            
+
             error_log('AI-WEB-SITE: ✅ Configuration saved successfully via large endpoint');
-            
+
             // Returnează răspuns de succes
             $response_data = array(
                 'success' => true,
@@ -917,7 +924,7 @@ class AI_Web_Site_Website_Manager
 
         } catch (Exception $e) {
             error_log('AI-WEB-SITE: ❌ Error saving configuration via large endpoint: ' . $e->getMessage());
-            
+
             $response_data = array(
                 'success' => false,
                 'error' => 'Failed to save configuration: ' . $e->getMessage(),
@@ -939,14 +946,14 @@ class AI_Web_Site_Website_Manager
         error_log('=== POST REQUEST REACHED THE CALLBACK SUCCESSFULLY! ===');
         error_log('=== REQUEST SIZE: ' . ($_SERVER['CONTENT_LENGTH'] ?? 'unknown') . ' bytes ===');
         error_log('=== REQUEST METHOD: ' . $_SERVER['REQUEST_METHOD'] . ' ===');
-        
+
         // 🔍 LOG ALL REQUEST DETAILS
         error_log('=== REQUEST DETAILS ===');
         error_log('Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? 'not set'));
         error_log('Referer: ' . ($_SERVER['HTTP_REFERER'] ?? 'not set'));
         error_log('User-Agent: ' . ($_SERVER['HTTP_USER_AGENT'] ?? 'not set'));
         error_log('Remote-Addr: ' . ($_SERVER['REMOTE_ADDR'] ?? 'not set'));
-        
+
         // 🔍 LOG CUSTOM HEADERS
         $all_headers = getallheaders();
         error_log('=== ALL HEADERS ===');
@@ -955,11 +962,11 @@ class AI_Web_Site_Website_Manager
                 error_log("Header: {$key} = {$value}");
             }
         }
-        
+
         // 🔍 LOG LOCAL API KEY specifically
         $local_api_key_from_request = $request->get_header('X-Local-API-Key');
         error_log('=== X-Local-API-Key from request: ' . ($local_api_key_from_request ?? 'NOT SET') . ' ===');
-        
+
         error_log('==========================================================');
 
         $this->set_cors_headers();
@@ -1027,22 +1034,22 @@ class AI_Web_Site_Website_Manager
         // ETAPA 3: Rate Limiting Check
         // Sări peste verificarea rate limiting dacă folosim cheia locală pentru dezvoltare
         if ($local_api_key !== $expected_local_key) {
-            $rate_limit_check = $security_manager->check_rate_limit($user_id);
-            if (!$rate_limit_check['allowed']) {
-                error_log('AI-WEB-SITE: ❌ RATE LIMIT EXCEEDED');
-                $security_manager->log_security_event('RATE_LIMIT_EXCEEDED', array(
-                    'user_id' => $user_id,
-                    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-                ));
+        $rate_limit_check = $security_manager->check_rate_limit($user_id);
+        if (!$rate_limit_check['allowed']) {
+            error_log('AI-WEB-SITE: ❌ RATE LIMIT EXCEEDED');
+            $security_manager->log_security_event('RATE_LIMIT_EXCEEDED', array(
+                'user_id' => $user_id,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+            ));
 
-                return new WP_REST_Response(array(
-                    'error' => 'rate_limit_exceeded',
-                    'message' => $rate_limit_check['message'],
-                    'remaining' => $rate_limit_check['remaining'],
-                    'timestamp' => date('c')
-                ), 429);
-            }
-            error_log('AI-WEB-SITE: ✅ RATE LIMIT CHECK PASSED - Remaining: ' . $rate_limit_check['remaining']);
+            return new WP_REST_Response(array(
+                'error' => 'rate_limit_exceeded',
+                'message' => $rate_limit_check['message'],
+                'remaining' => $rate_limit_check['remaining'],
+                'timestamp' => date('c')
+            ), 429);
+        }
+        error_log('AI-WEB-SITE: ✅ RATE LIMIT CHECK PASSED - Remaining: ' . $rate_limit_check['remaining']);
         } else {
             error_log('AI-WEB-SITE: ✅ LOCAL API KEY - Rate limiting skipped for development');
         }
@@ -1482,7 +1489,7 @@ class AI_Web_Site_Website_Manager
                 $origin = get_http_origin();
                 if ($origin) {
                     header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-                } else {
+        } else {
                     // Fallback for non-browser requests or if origin is not set
                     header('Access-Control-Allow-Origin: *');
                 }
@@ -2037,7 +2044,7 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: set_cors_headers() - Set dynamic origin: ' . esc_url_raw($origin));
         } else {
             // Fallback for non-browser requests or if origin is not set
-            header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Origin: *');
             error_log('AI-WEB-SITE: set_cors_headers() - Set wildcard origin (fallback)');
         }
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
