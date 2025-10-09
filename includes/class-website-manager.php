@@ -1090,12 +1090,25 @@ class AI_Web_Site_Website_Manager
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $security_manager = AI_Web_Site_Security_Manager::get_instance();
-        $user_id = get_current_user_id();
+        
+        // 🔧 MODIFICARE: Folosește MEREU get_user_id_from_cookie() în loc de get_current_user_id()
+        $user_id_wordpress = get_current_user_id();
+        $user_id = $this->get_user_id_from_cookie();
+        
+        error_log('🔍 DEBUG USER_ID: get_current_user_id() = ' . $user_id_wordpress);
+        error_log('🔍 DEBUG USER_ID: get_user_id_from_cookie() = ' . $user_id);
 
         // ETAPA 1: Verificare autentificare user
         // Verifică dacă există cheia locală pentru dezvoltare
         $local_api_key = $request->get_header('X-Local-API-Key');
         $expected_local_key = 'dev-local-key-2024'; // Aceeași cheie ca în .env.local
+
+        // Verifică dacă user-ul este identificat (din cookie SAU WordPress standard)
+        if ($user_id <= 0 && $user_id_wordpress > 0) {
+            // Fallback la WordPress standard dacă cookie-ul nu funcționează
+            $user_id = $user_id_wordpress;
+            error_log('🔍 DEBUG USER_ID: Fallback to WordPress user_id = ' . $user_id);
+        }
 
         if (!$user_id && $local_api_key !== $expected_local_key) {
             $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Unauthorized access attempt - user not logged in and no valid local API key.');
@@ -1106,39 +1119,25 @@ class AI_Web_Site_Website_Manager
             ), 401);
         }
 
-        if ($local_api_key === $expected_local_key) {
-            $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Valid local API key detected - skipping user authentication for development.');
-
-            // 🔧 Încearcă să obțină user_id real din cookie (ca în rest_get_wp_nonce)
-            $cookie_user_id = $this->get_user_id_from_cookie();
-            error_log('🔍 DEBUG USER_ID: get_current_user_id() = ' . $user_id);
-            error_log('🔍 DEBUG USER_ID: get_user_id_from_cookie() = ' . $cookie_user_id);
-            
-            if ($cookie_user_id > 0) {
-                $user_id = $cookie_user_id;
-                error_log('🔍 DEBUG USER_ID: Using cookie user_id = ' . $user_id);
-                $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Using real user ID from cookie for local API key.', array('user_id' => $user_id));
-            } else {
-                // Fallback: folosește ID-ul admin-ului WordPress
+        // Dacă nu am identificat user-ul din cookie, folosim fallback
+        if ($user_id <= 0) {
+            if ($local_api_key === $expected_local_key) {
+                // Cu local API key, folosim admin ca fallback
                 $user_id = 1;
-                error_log('🔍 DEBUG USER_ID: Fallback to admin user_id = 1');
-                $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'No valid cookie found, using admin user ID as fallback.', array('user_id' => $user_id));
+                error_log('🔍 DEBUG USER_ID: Using admin user_id as fallback (local API key) = ' . $user_id);
+            } else {
+                // Fără local API key și fără user identificat - eroare
+                $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'No user identified from cookie or WordPress.');
+                return new WP_REST_Response(array(
+                    'error' => 'Unauthorized',
+                    'message' => 'Could not identify user from cookies.',
+                    'timestamp' => date('c')
+                ), 401);
             }
-        } else {
-            // 🔧 Pentru nonce-uri WordPress normale, folosește user_id real din cookie
-            $cookie_user_id = $this->get_user_id_from_cookie();
-            error_log('🔍 DEBUG USER_ID: get_current_user_id() = ' . $user_id);
-            error_log('🔍 DEBUG USER_ID: get_user_id_from_cookie() = ' . $cookie_user_id);
-            
-            if ($cookie_user_id > 0) {
-                $user_id = $cookie_user_id;
-                error_log('🔍 DEBUG USER_ID: Using cookie user_id = ' . $user_id);
-                $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Using real user ID from cookie for WordPress nonce.', array('user_id' => $user_id));
-            }
-            // Dacă nu avem cookie, folosește $user_id din get_current_user_id() (care ar trebui să fie > 0)
         }
         
         error_log('🔍 DEBUG USER_ID: FINAL user_id before save = ' . $user_id);
+        $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'User identified successfully.', array('user_id' => $user_id, 'method' => $user_id === $user_id_wordpress ? 'WordPress' : 'Cookie'));
 
         // ETAPA 2: Verificare abonament activ (IHC)
         // Include clasa UMP Integration dacă nu a fost deja inclusă
