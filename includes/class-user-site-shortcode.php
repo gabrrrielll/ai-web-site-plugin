@@ -210,7 +210,18 @@ class AI_Web_Site_User_Site_Shortcode
                     if (!response.ok) {
                         throw new Error('Network response was not ok: ' + response.status);
                     }
-                    return response.json();
+                    
+                    // ✅ Debug: să vedem ce returnează serverul
+                    return response.text().then(text => {
+                        console.log('AI-WEB-SITE: Server response:', text);
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error('AI-WEB-SITE: Failed to parse JSON:', e);
+                            console.error('AI-WEB-SITE: Raw response:', text);
+                            throw new Error('Server returned invalid JSON: ' + text.substring(0, 100));
+                        }
+                    });
                 })
                 .then(data => {
                     if (data.success) {
@@ -237,7 +248,7 @@ class AI_Web_Site_User_Site_Shortcode
         <script type="text/javascript">
         if (typeof window.aiWebSiteUserSites === 'undefined') {
             window.aiWebSiteUserSites = {
-                nonce: '<?php echo wp_create_nonce('wp_rest'); ?>',
+                nonce: '<?php echo wp_create_nonce('ai_web_site_nonce'); ?>',
                 ajax_url: '<?php echo admin_url('admin-ajax.php'); ?>',
                 base_domain: '<?php echo preg_replace('#^https?://#', '', get_option('siteurl')); ?>',
                 editor_url: 'https://editor.ai-web.site/',

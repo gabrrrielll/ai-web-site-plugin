@@ -173,7 +173,7 @@ class AI_Web_Site
         if (!$current_user_id) {
             wp_die('You must be logged in');
         }
-        
+
         // Dacă este admin, permite direct
         if (!current_user_can('manage_options')) {
             // Pentru user-i normali, verifică subscription-ul UMP
@@ -182,7 +182,7 @@ class AI_Web_Site
             }
             $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
             $required_ump_level_id = $ump_integration->get_required_ump_level_id();
-            
+
             if ($required_ump_level_id > 0) {
                 if (!$ump_integration->user_has_active_ump_level($current_user_id, $required_ump_level_id)) {
                     wp_die('You need an active subscription to perform this action');
@@ -218,7 +218,7 @@ class AI_Web_Site
                     array('%s'),
                     array('%d', '%d')
                 );
-                
+
                 if ($update_result === false) {
                     error_log('AI-WEB-SITE: Failed to update website subdomain: ' . $wpdb->last_error);
                 } else {
