@@ -191,17 +191,19 @@ class AI_Web_Site_User_Site_Shortcode
                 button.textContent = 'Adding...';
                 showSubdomainMessage(messageSpan, '', 'Adding subdomain...');
                 
-                // Make AJAX request - folosește același endpoint ca admin-ul
-                fetch('/wp-json/ai-web-site/v1/add-subdomain', {
+                // Make AJAX request - folosește aceeași metodă ca admin-ul (AJAX WordPress)
+                fetch(window.aiWebSiteUserSites?.ajax_url || '/wp-admin/admin-ajax.php', {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-WP-Nonce': window.aiWebSiteUserSites?.nonce || ''
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: JSON.stringify({
-                        website_id: parseInt(siteId),
-                        subdomain_name: subdomain
+                    body: new URLSearchParams({
+                        action: 'create_subdomain',
+                        nonce: window.aiWebSiteUserSites?.nonce || '',
+                        subdomain: subdomain,
+                        domain: window.aiWebSiteUserSites?.base_domain || 'ai-web.site',
+                        website_id: parseInt(siteId)
                     })
                 })
                 .then(response => {

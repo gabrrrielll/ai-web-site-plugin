@@ -168,9 +168,26 @@ class AI_Web_Site
             wp_die('Security check failed');
         }
 
-        // Check permissions
+        // Check permissions - admin sau user cu subscription activ
+        $current_user_id = get_current_user_id();
+        if (!$current_user_id) {
+            wp_die('You must be logged in');
+        }
+        
+        // Dacă este admin, permite direct
         if (!current_user_can('manage_options')) {
-            wp_die('Insufficient permissions');
+            // Pentru user-i normali, verifică subscription-ul UMP
+            if (!class_exists('AI_Web_Site_UMP_Integration')) {
+                require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ump-integration.php';
+            }
+            $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+            $required_ump_level_id = $ump_integration->get_required_ump_level_id();
+            
+            if ($required_ump_level_id > 0) {
+                if (!$ump_integration->user_has_active_ump_level($current_user_id, $required_ump_level_id)) {
+                    wp_die('You need an active subscription to perform this action');
+                }
+            }
         }
 
         $subdomain = sanitize_text_field($_POST['subdomain']);
@@ -178,17 +195,6 @@ class AI_Web_Site
 
         if (empty($subdomain) || empty($domain)) {
             wp_send_json_error('Subdomain and domain are required');
-        }
-
-        // Check UMP subscription
-        $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
-        $required_ump_level_id = $ump_integration->get_required_ump_level_id();
-        $current_user_id = get_current_user_id();
-
-        if ($required_ump_level_id > 0) {
-            if (!$ump_integration->user_has_active_ump_level($current_user_id, $required_ump_level_id)) {
-                wp_send_json_error(__('You need an active Ultimate Membership Pro subscription to perform this action.', 'ai-web-site-plugin'));
-            }
         }
 
         // Create subdomain using cPanel API
@@ -199,6 +205,26 @@ class AI_Web_Site
             // Save to database
             $database = AI_Web_Site_Database::get_instance();
             $database->save_subdomain($subdomain, $domain, array());
+
+            // ✅ Dacă este furnizat website_id, actualizează site-ul în baza de date
+            $website_id = isset($_POST['website_id']) ? intval($_POST['website_id']) : 0;
+            if ($website_id > 0) {
+                global $wpdb;
+                $table_name = $wpdb->prefix . 'ai_web_site_websites';
+                $update_result = $wpdb->update(
+                    $table_name,
+                    array('subdomain' => $subdomain),
+                    array('id' => $website_id, 'user_id' => $current_user_id),
+                    array('%s'),
+                    array('%d', '%d')
+                );
+                
+                if ($update_result === false) {
+                    error_log('AI-WEB-SITE: Failed to update website subdomain: ' . $wpdb->last_error);
+                } else {
+                    error_log('AI-WEB-SITE: Updated website ID ' . $website_id . ' with subdomain: ' . $subdomain);
+                }
+            }
 
             wp_send_json_success('Subdomain created successfully');
         } else {
