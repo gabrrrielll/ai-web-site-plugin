@@ -79,7 +79,7 @@ class AI_Web_Site_Website_Manager
 
         // Hook ULTRA devreme pentru a vedea TOATE cererile REST (chiar și cele blocate)
         add_action('parse_request', array($this, 'debug_parse_request'));
-        
+
         // Hook-uri suplimentare pentru debugging
         add_action('rest_api_init', array($this, 'debug_rest_api_init'));
         add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request_before_callbacks'), 10, 3);
@@ -541,13 +541,24 @@ class AI_Web_Site_Website_Manager
      */
     public function debug_parse_request($wp)
     {
-        // Verifică dacă este cerere REST API
+        // Verifică dacă este cerere către endpoint-ul nostru
         if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/wp-json/ai-web-site/v1/website-config') !== false) {
             error_log('=== AI-WEB-SITE: debug_parse_request() CALLED ===');
             error_log('AI-WEB-SITE: REQUEST_URI: ' . $_SERVER['REQUEST_URI']);
             error_log('AI-WEB-SITE: REQUEST_METHOD: ' . $_SERVER['REQUEST_METHOD']);
+            error_log('AI-WEB-SITE: CONTENT_LENGTH: ' . ($_SERVER['CONTENT_LENGTH'] ?? 'not set'));
+            error_log('AI-WEB-SITE: CONTENT_TYPE: ' . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
             error_log('AI-WEB-SITE: Query vars: ' . json_encode($wp->query_vars));
             error_log('AI-WEB-SITE: Is REST request: ' . (defined('REST_REQUEST') ? 'YES' : 'NO'));
+            
+            // Log toate header-ele pentru debugging
+            $headers = getallheaders();
+            error_log('AI-WEB-SITE: ALL HEADERS in parse_request:');
+            foreach ($headers as $key => $value) {
+                if (strtolower($key) !== 'cookie') { // Nu loga cookies pentru securitate
+                    error_log("AI-WEB-SITE: Header: {$key} = {$value}");
+                }
+            }
         }
     }
 
