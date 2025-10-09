@@ -78,7 +78,11 @@ class AI_Web_Site_User_Site_Shortcode
                                 <td><?php echo esc_html($site->created_at); ?></td>
                                 <td><?php echo esc_html($site->updated_at); ?></td>
                                 <td>
-                                    <?php if (empty($site->subdomain) || $site->subdomain === 'my-site') : ?>
+                                    <?php 
+                                    // Debug: să vedem ce valoare are subdomain-ul
+                                    error_log('AI-WEB-SITE DEBUG: Site ID ' . $site->id . ' - subdomain: "' . $site->subdomain . '", domain: "' . $site->domain . '"');
+                                    
+                                    if (empty($site->subdomain) || $site->subdomain === '' || $site->subdomain === 'my-site') : ?>
                                         <div class="ai-subdomain-form" data-site-id="<?php echo esc_attr($site->id); ?>">
                                             <strong><?php _e('No subdomain assigned', 'ai-web-site-plugin'); ?></strong><br/>
                                             <input type="text" placeholder="<?php esc_attr_e('Enter subdomain (e.g., my-site)', 'ai-web-site-plugin'); ?>" class="ai-subdomain-input" />

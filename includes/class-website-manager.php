@@ -1876,19 +1876,27 @@ class AI_Web_Site_Website_Manager
         $domain_parts = explode('.', $full_domain);
 
         if (count($domain_parts) >= 3) {
-            // ex: "editor.ai-web.site" -> subdomain: "editor", domain: "ai-web.site"
-            $subdomain = $domain_parts[0];
-            $domain = implode('.', array_slice($domain_parts, 1));
-            error_log("AI-WEB-SITE: Parsed full domain - subdomain: {$subdomain}, domain: {$domain}");
+            // ✅ Pentru editor.ai-web.site, NU salvăm subdomain-ul automat
+            // User-ul va adăuga subdomain-ul manual prin interfața de management
+            if ($domain_parts[0] === 'editor') {
+                $subdomain = ''; // Subdomain gol - va fi adăugat manual
+                $domain = implode('.', array_slice($domain_parts, 1));
+                error_log("AI-WEB-SITE: Editor domain detected - subdomain: '{$subdomain}' (empty), domain: {$domain}");
+            } else {
+                // Pentru alte subdomain-uri (ex: my-site.ai-web.site)
+                $subdomain = $domain_parts[0];
+                $domain = implode('.', array_slice($domain_parts, 1));
+                error_log("AI-WEB-SITE: Parsed full domain - subdomain: {$subdomain}, domain: {$domain}");
+            }
         } else {
-            // ex: "ai-web.site" -> folosește subdomain-ul provided sau "my-site"
-            $subdomain = $provided_subdomain ?? 'my-site';
+            // ex: "ai-web.site" -> folosește subdomain-ul provided sau gol
+            $subdomain = $provided_subdomain ?? ''; // Gol în loc de 'my-site'
             $domain = $full_domain;
-            error_log("AI-WEB-SITE: Using provided - subdomain: {$subdomain}, domain: {$domain}");
+            error_log("AI-WEB-SITE: Using provided - subdomain: '{$subdomain}' (empty), domain: {$domain}");
         }
 
-        // Validate subdomain format
-        if (!preg_match('/^[a-zA-Z0-9-]+$/', $subdomain)) {
+        // Validate subdomain format (permite subdomain gol)
+        if (!empty($subdomain) && !preg_match('/^[a-zA-Z0-9-]+$/', $subdomain)) {
             throw new Exception('Invalid subdomain format');
         }
 

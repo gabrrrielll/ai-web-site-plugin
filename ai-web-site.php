@@ -318,7 +318,7 @@ class AI_Web_Site_Plugin
         // ✅ Dezactivat - fișierele se încarcă direct în shortcode
         // Această metodă evita problemele de MIME type de pe server
         return;
-        
+
         // Codul original comentat pentru referință:
         /*
         wp_register_style('ai-web-site-admin-style', plugins_url('assets/admin.css', __FILE__), array(), AI_WEB_SITE_PLUGIN_VERSION, 'all');
