@@ -246,7 +246,14 @@ class AI_Web_Site_Database
     }
 
     /**
-     * Get all subdomains for a user
+     * Get all websites for a user (subdomain is optional - can be added later)
+     * 
+     * @param int|null $user_id User ID, defaults to current user
+     * @return array Array of user's websites
+     * 
+     * Note: Subdomain is optional and can be empty. User can add subdomain later
+     * through the management interface. This function returns ALL websites
+     * belonging to the user, regardless of subdomain status.
      */
     public function get_user_subdomains($user_id = null)
     {
@@ -259,6 +266,7 @@ class AI_Web_Site_Database
         // ✅ Folosește tabela corectă din Website Manager
         $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
+        // ✅ Returnează TOATE site-urile user-ului (subdomain este optional)
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC",
             $user_id

@@ -1954,7 +1954,7 @@ class AI_Web_Site_Website_Manager
             error_log("AI-WEB-SITE: 🔍 DEBUG SAVE - subdomain: '{$subdomain}'");
             error_log("AI-WEB-SITE: 🔍 DEBUG SAVE - domain: '{$domain}'");
             error_log("AI-WEB-SITE: 🔍 DEBUG SAVE - config size: " . strlen($config_json));
-            
+
             $result = $wpdb->insert(
                 $this->table_name,
                 array(
@@ -1966,7 +1966,7 @@ class AI_Web_Site_Website_Manager
                 ),
                 array('%d', '%s', '%s', '%s', '%s')
             );
-            
+
             error_log("AI-WEB-SITE: 🔍 DEBUG SAVE - Insert result: " . ($result ? 'SUCCESS' : 'FAILED'));
             if ($result === false) {
                 error_log("AI-WEB-SITE: 🔍 DEBUG SAVE - DB Error: " . $wpdb->last_error);

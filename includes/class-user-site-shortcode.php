@@ -67,7 +67,7 @@ class AI_Web_Site_User_Site_Shortcode
                             <th><?php _e('Site ID', 'ai-web-site-plugin'); ?></th>
                             <th><?php _e('Created At', 'ai-web-site-plugin'); ?></th>
                             <th><?php _e('Last Update', 'ai-web-site-plugin'); ?></th>
-                            <th><?php _e('Subdomain', 'ai-web-site-plugin'); ?></th>
+                            <th><?php _e('Website URL', 'ai-web-site-plugin'); ?></th>
                             <th><?php _e('Actions', 'ai-web-site-plugin'); ?></th>
                         </tr>
                     </thead>
@@ -80,12 +80,13 @@ class AI_Web_Site_User_Site_Shortcode
                                 <td>
                                     <?php if (empty($site->subdomain) || $site->subdomain === 'my-site') : ?>
                                         <div class="ai-subdomain-form" data-site-id="<?php echo esc_attr($site->id); ?>">
-                                            <input type="text" placeholder="<?php esc_attr_e('Enter subdomain', 'ai-web-site-plugin'); ?>" class="ai-subdomain-input" />
+                                            <strong><?php _e('No subdomain assigned', 'ai-web-site-plugin'); ?></strong><br/>
+                                            <input type="text" placeholder="<?php esc_attr_e('Enter subdomain (e.g., my-site)', 'ai-web-site-plugin'); ?>" class="ai-subdomain-input" />
                                             <button class="button button-primary ai-add-subdomain"><?php _e('Add Subdomain', 'ai-web-site-plugin'); ?></button>
                                             <span class="ai-subdomain-message"></span>
                                         </div>
                                     <?php else : ?>
-                                        <?php echo esc_html($site->subdomain . '.' . $site->domain); ?>
+                                        <strong><?php echo esc_html($site->subdomain . '.' . $site->domain); ?></strong><br/>
                                         <a href="<?php echo esc_url('https://' . $site->subdomain . '.' . $site->domain); ?>" target="_blank" class="button button-secondary"><?php _e('View Site', 'ai-web-site-plugin'); ?></a>
                                     <?php endif; ?>
                                 </td>
