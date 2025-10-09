@@ -21,6 +21,11 @@ class AI_Web_Site_Website_Manager
      * Database table name
      */
     private $table_name;
+    
+    /**
+     * Database instance
+     */
+    private $database;
 
     /**
      * Get single instance
@@ -40,6 +45,13 @@ class AI_Web_Site_Website_Manager
     {
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'ai_web_site_websites';
+        
+        // ✅ Inițializează obiectul database
+        if (!class_exists('AI_Web_Site_Database')) {
+            require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-database.php';
+        }
+        $this->database = new AI_Web_Site_Database();
+        
         $this->init_hooks();
     }
 
@@ -1694,7 +1706,7 @@ class AI_Web_Site_Website_Manager
     public function rest_add_user_subdomain(WP_REST_Request $request)
     {
         error_log('AI-WEB-SITE: rest_add_user_subdomain() called');
-        
+
         // Check user permissions already done by permission_callback
         $user_id = get_current_user_id();
         error_log('AI-WEB-SITE: User ID: ' . $user_id);
