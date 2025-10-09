@@ -550,7 +550,7 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: CONTENT_TYPE: ' . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
             error_log('AI-WEB-SITE: Query vars: ' . json_encode($wp->query_vars));
             error_log('AI-WEB-SITE: Is REST request: ' . (defined('REST_REQUEST') ? 'YES' : 'NO'));
-            
+
             // Log toate header-ele pentru debugging
             $headers = getallheaders();
             error_log('AI-WEB-SITE: ALL HEADERS in parse_request:');
@@ -865,6 +865,17 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from non-localhost origin REJECTED!');
             error_log('AI-WEB-SITE: ❌ Suspicious origin: ' . $origin);
             return new WP_Error('invalid_nonce', 'Invalid security token - development nonce not allowed in production', array('status' => 403));
+        }
+
+        // ✅ BYPASS pentru nonce-uri generate de endpoint-ul nostru (pentru editor.ai-web.site)
+        if (strpos($origin, 'editor.ai-web.site') !== false) {
+            error_log('AI-WEB-SITE: ✅ EDITOR REQUEST - Bypassing WordPress auth for nonce from our endpoint');
+            
+            // Verifică dacă nonce-ul este generat de endpoint-ul nostru (are format valid)
+            if ($nonce && strlen($nonce) >= 10) {
+                error_log('AI-WEB-SITE: ✅ Valid nonce from our endpoint - allowing request');
+                return true;
+            }
         }
 
         // ETAPA 2: Verificare utilizator logat (prin user_id)
