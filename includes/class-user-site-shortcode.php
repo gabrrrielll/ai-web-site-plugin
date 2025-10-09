@@ -101,15 +101,121 @@ class AI_Web_Site_User_Site_Shortcode
             <?php endif; ?>
         </div>
         <?php
-        // ✅ Script-urile și stilurile sunt deja încărcate prin enqueue_frontend_assets()
-        // Nu mai încercăm să le încărcăm din nou
-
-        // Adăugăm nonce-ul pentru JavaScript (dacă nu este deja setat)
+        // ✅ Metodă alternativă: CSS inline pentru a evita problemele de MIME type
+        $css_content = file_get_contents(plugin_dir_path(dirname(__FILE__)) . 'assets/admin.css');
         ?>
+        
+        <!-- CSS inline pentru a evita problemele de MIME type -->
+        <style type="text/css">
+        <?php echo $css_content; ?>
+        </style>
+        
+        <!-- JavaScript inline pentru funcționalități -->
+        <script type="text/javascript">
+        // ✅ JavaScript inline pentru website management
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('AI Web Site: Website management loaded');
+            
+            // Handle add subdomain for existing websites
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('ai-add-subdomain')) {
+                    e.preventDefault();
+                    
+                    var button = e.target;
+                    var form = button.closest('.ai-subdomain-form');
+                    var siteId = form.dataset.siteId;
+                    var input = form.querySelector('.ai-subdomain-input');
+                    var messageSpan = form.querySelector('.ai-subdomain-message');
+                    var subdomain = input.value.trim();
+                    
+                    if (!subdomain) {
+                        showSubdomainMessage(messageSpan, 'error', 'Please enter a subdomain name');
+                        return;
+                    }
+                    
+                    // Validate subdomain format
+                    if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/.test(subdomain)) {
+                        showSubdomainMessage(messageSpan, 'error', 'Invalid subdomain format. Use only letters, numbers, and hyphens.');
+                        return;
+                    }
+                    
+                    // Show loading state
+                    button.disabled = true;
+                    button.textContent = 'Adding...';
+                    showSubdomainMessage(messageSpan, '', 'Adding subdomain...');
+                    
+                    // Make AJAX request
+                    fetch('/wp-json/ai-web-site/v1/add-subdomain', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': window.aiWebSiteUserSites?.nonce || ''
+                        },
+                        body: JSON.stringify({
+                            website_id: siteId,
+                            subdomain_name: subdomain
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSubdomainMessage(messageSpan, 'success', 'Subdomain added successfully!');
+                            input.value = '';
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            showSubdomainMessage(messageSpan, 'error', data.message || 'Failed to add subdomain');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error adding subdomain:', error);
+                        showSubdomainMessage(messageSpan, 'error', 'Network error occurred');
+                    })
+                    .finally(() => {
+                        button.disabled = false;
+                        button.textContent = 'Add Subdomain';
+                    });
+                }
+            });
+            
+            // Helper function to show subdomain messages
+            function showSubdomainMessage(element, type, message) {
+                if (!element) return;
+                
+                element.textContent = message;
+                element.className = 'ai-subdomain-message';
+                
+                if (type === 'success') {
+                    element.classList.add('success');
+                } else if (type === 'error') {
+                    element.classList.add('error');
+                }
+                
+                if (type === 'success') {
+                    setTimeout(() => {
+                        element.textContent = '';
+                        element.className = 'ai-subdomain-message';
+                    }, 3000);
+                }
+            }
+        });
+        </script>
+        
+        <!-- Nonce pentru JavaScript -->
         <script type="text/javascript">
         if (typeof window.aiWebSiteUserSites === 'undefined') {
             window.aiWebSiteUserSites = {
-                nonce: '<?php echo wp_create_nonce('wp_rest'); ?>'
+                nonce: '<?php echo wp_create_nonce('wp_rest'); ?>',
+                ajax_url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                base_domain: '<?php echo preg_replace('#^https?://#', '', get_option('siteurl')); ?>',
+                editor_url: 'https://editor.ai-web.site/',
+                add_subdomain_success: '<?php echo __('Subdomain added successfully. Refreshing...', 'ai-web-site-plugin'); ?>',
+                add_subdomain_error: '<?php echo __('Error adding subdomain. Please try again.', 'ai-web-site-plugin'); ?>',
+                delete_site_success: '<?php echo __('Website deleted successfully.', 'ai-web-site-plugin'); ?>',
+                delete_site_error: '<?php echo __('Error deleting website. Please try again.', 'ai-web-site-plugin'); ?>',
+                confirm_delete: '<?php echo __('Are you sure you want to delete this website? This action cannot be undone.', 'ai-web-site-plugin'); ?>',
+                invalid_subdomain: '<?php echo __('Invalid subdomain format. Use only letters, numbers, and hyphens.', 'ai-web-site-plugin'); ?>',
+                subdomain_required: '<?php echo __('Please enter a subdomain name.', 'ai-web-site-plugin'); ?>'
             };
         }
         </script>

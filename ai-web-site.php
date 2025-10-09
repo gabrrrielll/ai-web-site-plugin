@@ -311,28 +311,21 @@ class AI_Web_Site_Plugin
 
     /**
      * Enqueue frontend scripts and styles for shortcode
+     * ✅ Dezactivat - fișierele se încarcă direct în HTML pentru a evita problemele de MIME type
      */
     public function enqueue_frontend_assets()
     {
-        // ✅ Enqueue styles for the user site shortcode (folosește admin.css)
+        // ✅ Dezactivat - fișierele se încarcă direct în shortcode
+        // Această metodă evita problemele de MIME type de pe server
+        return;
+        
+        // Codul original comentat pentru referință:
+        /*
         wp_register_style('ai-web-site-admin-style', plugins_url('assets/admin.css', __FILE__), array(), AI_WEB_SITE_PLUGIN_VERSION, 'all');
         wp_enqueue_style('ai-web-site-admin-style');
-
-        // ✅ Enqueue scripts for the user site shortcode (folosește admin.js)
         wp_register_script('ai-web-site-admin-script', plugins_url('assets/admin.js', __FILE__), array('jquery'), AI_WEB_SITE_PLUGIN_VERSION, true);
         wp_enqueue_script('ai-web-site-admin-script');
-        wp_localize_script('ai-web-site-admin-script', 'aiWebSiteUserSites', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('ai-user-sites-nonce'),
-            'base_domain' => preg_replace('#^https?://#', '', get_option('siteurl')),
-            'editor_url' => 'https://editor.ai-web.site/',
-            'add_subdomain_success' => __('Subdomain added successfully. Refreshing...', 'ai-web-site-plugin'),
-            'add_subdomain_error' => __('Error adding subdomain.', 'ai-web-site-plugin'),
-            'subdomain_exists_error' => __('Subdomain already exists. Please choose another.', 'ai-web-site-plugin'),
-            'delete_site_confirm' => __('Are you sure you want to delete this website? This action cannot be undone.', 'ai-web-site-plugin'),
-            'delete_site_success' => __('Website deleted successfully. Refreshing...', 'ai-web-site-plugin'),
-            'delete_site_error' => __('Error deleting website.', 'ai-web-site-plugin'),
-        ));
+        */
     }
 
     /**
