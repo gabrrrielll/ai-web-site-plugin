@@ -1929,24 +1929,38 @@ class AI_Web_Site_Website_Manager
 
         error_log('AI-WEB-SITE: ✅ CONFIG SIZE CHECK PASSED - Size: ' . $size_check['size_mb'] . 'MB');
 
-        // Check if website already exists
+        // ✅ Check if website already exists for this user and domain (ignoring subdomain)
+        // Acest lucru permite actualizarea site-ului existent chiar dacă subdomain-ul a fost adăugat
         $existing = $wpdb->get_row($wpdb->prepare(
-            "SELECT id FROM {$this->table_name} WHERE user_id = %d AND subdomain = %s AND domain = %s",
+            "SELECT id FROM {$this->table_name} WHERE user_id = %d AND domain = %s ORDER BY created_at ASC LIMIT 1",
             $user_id,
-            $subdomain,
             $domain
         ));
+        
+        error_log("AI-WEB-SITE: Searching for existing site - user_id: {$user_id}, domain: {$domain}");
+        if ($existing) {
+            error_log("AI-WEB-SITE: Found existing site ID: {$existing->id}");
+        } else {
+            error_log("AI-WEB-SITE: No existing site found for user {$user_id} and domain {$domain}");
+        }
 
         if ($existing) {
-            // Update existing website
+            // ✅ Update existing website - păstrează subdomain-ul existent dacă nu este furnizat unul nou
+            $update_data = array(
+                'config' => $config_json,
+                'updated_at' => current_time('mysql')
+            );
+            
+            // Dacă se furnizează un subdomain nou și este diferit de cel existent, actualizează-l
+            if (!empty($subdomain)) {
+                $update_data['subdomain'] = $subdomain;
+            }
+            
             $result = $wpdb->update(
                 $this->table_name,
-                array(
-                    'config' => $config_json,
-                    'updated_at' => current_time('mysql')
-                ),
+                $update_data,
                 array('id' => $existing->id),
-                array('%s', '%s'),
+                array_fill(0, count($update_data), '%s'),
                 array('%d')
             );
 
