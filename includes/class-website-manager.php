@@ -79,6 +79,11 @@ class AI_Web_Site_Website_Manager
 
         // Hook ULTRA devreme pentru a vedea TOATE cererile REST (chiar și cele blocate)
         add_action('parse_request', array($this, 'debug_parse_request'));
+        
+        // Hook-uri suplimentare pentru debugging
+        add_action('rest_api_init', array($this, 'debug_rest_api_init'));
+        add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request_before_callbacks'), 10, 3);
+        add_filter('rest_request_after_callbacks', array($this, 'debug_rest_request_after_callbacks'), 10, 3);
     }
 
     /**
@@ -544,6 +549,38 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: Query vars: ' . json_encode($wp->query_vars));
             error_log('AI-WEB-SITE: Is REST request: ' . (defined('REST_REQUEST') ? 'YES' : 'NO'));
         }
+    }
+
+    /**
+     * Debug REST API init hook
+     */
+    public function debug_rest_api_init()
+    {
+        error_log('=== AI-WEB-SITE: debug_rest_api_init() CALLED ===');
+    }
+
+    /**
+     * Debug rest request before callbacks hook
+     */
+    public function debug_rest_request_before_callbacks($response, $handler, $request)
+    {
+        error_log('=== AI-WEB-SITE: debug_rest_request_before_callbacks() CALLED ===');
+        error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
+        error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
+        error_log('AI-WEB-SITE: Response type: ' . gettype($response));
+        return $response;
+    }
+
+    /**
+     * Debug rest request after callbacks hook
+     */
+    public function debug_rest_request_after_callbacks($response, $handler, $request)
+    {
+        error_log('=== AI-WEB-SITE: debug_rest_request_after_callbacks() CALLED ===');
+        error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
+        error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
+        error_log('AI-WEB-SITE: Response status: ' . $response->get_status());
+        return $response;
     }
 
     /**
@@ -1056,7 +1093,7 @@ class AI_Web_Site_Website_Manager
 
         if ($local_api_key === $expected_local_key) {
             $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Valid local API key detected - skipping user authentication for development.');
-            
+
             // 🔧 Încearcă să obțină user_id real din cookie (ca în rest_get_wp_nonce)
             $cookie_user_id = $this->get_user_id_from_cookie();
             if ($cookie_user_id > 0) {
