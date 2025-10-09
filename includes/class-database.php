@@ -247,10 +247,10 @@ class AI_Web_Site_Database
 
     /**
      * Get all websites for a user (subdomain is optional - can be added later)
-     * 
+     *
      * @param int|null $user_id User ID, defaults to current user
      * @return array Array of user's websites
-     * 
+     *
      * Note: Subdomain is optional and can be empty. User can add subdomain later
      * through the management interface. This function returns ALL websites
      * belonging to the user, regardless of subdomain status.

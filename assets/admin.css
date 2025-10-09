@@ -233,3 +233,291 @@
     margin-top: 25px;
     margin-bottom: 15px;
 }
+
+/* ========================================
+   WEBSITE MANAGEMENT TABLE STYLES
+   ======================================== */
+
+.ai-web-site-user-sites {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.ai-web-site-user-sites h2 {
+    color: #23282d;
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 30px 0;
+    padding: 0;
+    border-bottom: 3px solid #0073aa;
+    padding-bottom: 15px;
+}
+
+/* Modern Table Container */
+.ai-web-site-user-sites .wp-list-table {
+    width: 100% !important;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 0;
+}
+
+/* Table Headers */
+.ai-web-site-user-sites .wp-list-table thead th {
+    background: linear-gradient(135deg, #0073aa 0%, #005a87 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 20px 15px;
+    border: none;
+    text-align: left;
+    position: relative;
+}
+
+.ai-web-site-user-sites .wp-list-table thead th:first-child {
+    border-radius: 8px 0 0 0;
+}
+
+.ai-web-site-user-sites .wp-list-table thead th:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+/* Table Body */
+.ai-web-site-user-sites .wp-list-table tbody tr {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.ai-web-site-user-sites .wp-list-table tbody tr:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ai-web-site-user-sites .wp-list-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.ai-web-site-user-sites .wp-list-table tbody tr:last-child td:first-child {
+    border-radius: 0 0 0 8px;
+}
+
+.ai-web-site-user-sites .wp-list-table tbody tr:last-child td:last-child {
+    border-radius: 0 0 8px 0;
+}
+
+/* Table Cells */
+.ai-web-site-user-sites .wp-list-table td {
+    padding: 20px 15px;
+    vertical-align: middle;
+    border: none;
+    font-size: 14px;
+    color: #444;
+}
+
+/* Site ID Column */
+.ai-web-site-user-sites .wp-list-table td:first-child {
+    font-weight: 600;
+    color: #0073aa;
+    font-size: 16px;
+}
+
+/* Date Columns */
+.ai-web-site-user-sites .wp-list-table td:nth-child(2),
+.ai-web-site-user-sites .wp-list-table td:nth-child(3) {
+    color: #666;
+    font-size: 13px;
+}
+
+/* Website URL Column */
+.ai-web-site-user-sites .wp-list-table td:nth-child(4) {
+    font-weight: 500;
+}
+
+/* Subdomain Form Styles */
+.ai-subdomain-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.ai-subdomain-form strong {
+    color: #666;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.ai-subdomain-form .ai-subdomain-input {
+    width: 200px;
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.ai-subdomain-form .ai-subdomain-input:focus {
+    border-color: #0073aa;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.1);
+}
+
+.ai-subdomain-form .ai-add-subdomain {
+    background: #0073aa;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ai-subdomain-form .ai-add-subdomain:hover {
+    background: #005a87;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 115, 170, 0.3);
+}
+
+.ai-subdomain-form .ai-subdomain-message {
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.ai-subdomain-form .ai-subdomain-message.success {
+    color: #00a32a;
+}
+
+.ai-subdomain-form .ai-subdomain-message.error {
+    color: #d63638;
+}
+
+/* Website URL with Subdomain */
+.ai-web-site-user-sites .wp-list-table td:nth-child(4) strong {
+    color: #0073aa;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Actions Column */
+.ai-web-site-user-sites .wp-list-table td:last-child {
+    text-align: left;
+}
+
+/* Action Buttons */
+.ai-web-site-user-sites .button {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 2px 4px 2px 0;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-width: 80px;
+}
+
+.ai-web-site-user-sites .button-primary {
+    background: #0073aa;
+    color: white;
+}
+
+.ai-web-site-user-sites .button-primary:hover {
+    background: #005a87;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 115, 170, 0.3);
+}
+
+.ai-web-site-user-sites .button-secondary {
+    background: #00a32a;
+    color: white;
+}
+
+.ai-web-site-user-sites .button-secondary:hover {
+    background: #008a20;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 163, 42, 0.3);
+}
+
+.ai-web-site-user-sites .button-danger {
+    background: #d63638;
+    color: white;
+}
+
+.ai-web-site-user-sites .button-danger:hover {
+    background: #b32d2e;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(214, 54, 56, 0.3);
+}
+
+/* Empty State */
+.ai-web-site-user-sites p {
+    text-align: center;
+    color: #666;
+    font-size: 16px;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: 2px dashed #ddd;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .ai-web-site-user-sites .wp-list-table {
+        font-size: 12px;
+    }
+    
+    .ai-web-site-user-sites .wp-list-table th,
+    .ai-web-site-user-sites .wp-list-table td {
+        padding: 12px 8px;
+    }
+    
+    .ai-web-site-user-sites .wp-list-table th {
+        font-size: 12px;
+    }
+    
+    .ai-subdomain-form .ai-subdomain-input {
+        width: 150px;
+    }
+    
+    .ai-web-site-user-sites .button {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ai-web-site-user-sites h2 {
+        font-size: 24px;
+    }
+    
+    .ai-web-site-user-sites .wp-list-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .ai-subdomain-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .ai-subdomain-form .ai-subdomain-input {
+        width: 100%;
+    }
+}

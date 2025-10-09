@@ -101,17 +101,21 @@ class AI_Web_Site_User_Site_Shortcode
             <?php endif; ?>
         </div>
         <?php
-        // Adaugăm script-ul JavaScript pentru interacțiune
-        wp_enqueue_script('ai-web-site-user-sites-script');
-        wp_enqueue_style('ai-web-site-user-sites-style');
+        // Adaugăm script-ul JavaScript și stilurile pentru interacțiune
+        wp_enqueue_script('ai-web-site-admin-script');
+        wp_enqueue_style('ai-web-site-admin-style');
+        
+        // Adăugăm nonce-ul pentru JavaScript
+        ?>
+        <script type="text/javascript">
+        window.aiWebSiteUserSites = {
+            nonce: '<?php echo wp_create_nonce('wp_rest'); ?>'
+        };
+        </script>
+        <?php
+        
         return ob_get_clean();
     }
 }
 
 AI_Web_Site_User_Site_Shortcode::get_instance();
-
-
-
-
-
-

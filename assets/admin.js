@@ -380,4 +380,176 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // ========================================
+    // WEBSITE MANAGEMENT FUNCTIONALITY
+    // ========================================
+
+    // Handle add subdomain for existing websites
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('ai-add-subdomain')) {
+            e.preventDefault();
+            
+            var button = e.target;
+            var form = button.closest('.ai-subdomain-form');
+            var siteId = form.dataset.siteId;
+            var input = form.querySelector('.ai-subdomain-input');
+            var messageSpan = form.querySelector('.ai-subdomain-message');
+            var subdomain = input.value.trim();
+            
+            if (!subdomain) {
+                showSubdomainMessage(messageSpan, 'error', 'Please enter a subdomain name');
+                return;
+            }
+            
+            // Validate subdomain format
+            if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/.test(subdomain)) {
+                showSubdomainMessage(messageSpan, 'error', 'Invalid subdomain format. Use only letters, numbers, and hyphens.');
+                return;
+            }
+            
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Adding...';
+            showSubdomainMessage(messageSpan, '', 'Adding subdomain...');
+            
+            // Make AJAX request
+            fetch('/wp-json/ai-web-site/v1/add-subdomain', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': window.aiWebSiteUserSites?.nonce || ''
+                },
+                body: JSON.stringify({
+                    website_id: siteId,
+                    subdomain_name: subdomain
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSubdomainMessage(messageSpan, 'success', 'Subdomain added successfully!');
+                    input.value = '';
+                    
+                    // Reload page after 2 seconds to show updated URL
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showSubdomainMessage(messageSpan, 'error', data.message || 'Failed to add subdomain');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding subdomain:', error);
+                showSubdomainMessage(messageSpan, 'error', 'Network error occurred');
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.textContent = 'Add Subdomain';
+            });
+        }
+    });
+    
+    // Handle delete website
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('ai-delete-site')) {
+            e.preventDefault();
+            
+            var button = e.target;
+            var siteId = button.dataset.siteId;
+            
+            if (!confirm('Are you sure you want to delete this website? This action cannot be undone.')) {
+                return;
+            }
+            
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Deleting...';
+            
+            // Make AJAX request
+            fetch('/wp-json/ai-web-site/v1/delete-website/' + siteId, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'X-WP-Nonce': window.aiWebSiteUserSites?.nonce || ''
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove row with animation
+                    var row = button.closest('tr');
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-100%)';
+                    
+                    setTimeout(() => {
+                        row.remove();
+                        
+                        // Check if table is empty
+                        var tbody = row.closest('tbody');
+                        if (tbody && tbody.children.length === 0) {
+                            // Show empty state
+                            var table = tbody.closest('table');
+                            var emptyMessage = document.createElement('p');
+                            emptyMessage.textContent = 'You have not created any websites yet. Start by saving your configuration in the editor.';
+                            table.parentNode.insertBefore(emptyMessage, table);
+                            table.style.display = 'none';
+                        }
+                    }, 300);
+                } else {
+                    alert('Failed to delete website: ' + (data.message || 'Unknown error'));
+                    button.disabled = false;
+                    button.textContent = 'Delete Site';
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting website:', error);
+                alert('Network error occurred');
+                button.disabled = false;
+                button.textContent = 'Delete Site';
+            });
+        }
+    });
+    
+    // Helper function to show subdomain messages
+    function showSubdomainMessage(element, type, message) {
+        if (!element) return;
+        
+        element.textContent = message;
+        element.className = 'ai-subdomain-message';
+        
+        if (type === 'success') {
+            element.classList.add('success');
+        } else if (type === 'error') {
+            element.classList.add('error');
+        }
+        
+        // Auto-hide success messages after 3 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                element.textContent = '';
+                element.className = 'ai-subdomain-message';
+            }, 3000);
+        }
+    }
+    
+    // Real-time subdomain validation
+    document.addEventListener('input', function (e) {
+        if (e.target.classList.contains('ai-subdomain-input')) {
+            var input = e.target;
+            var value = input.value.trim();
+            var messageSpan = input.closest('.ai-subdomain-form').querySelector('.ai-subdomain-message');
+            
+            if (value && !/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/.test(value)) {
+                input.classList.add('error');
+                showSubdomainMessage(messageSpan, 'error', 'Invalid format. Use letters, numbers, and hyphens only.');
+            } else {
+                input.classList.remove('error');
+                if (messageSpan && messageSpan.classList.contains('error')) {
+                    showSubdomainMessage(messageSpan, '', '');
+                }
+            }
+        }
+    });
+
 });
