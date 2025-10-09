@@ -256,16 +256,17 @@ class AI_Web_Site_Database
             $user_id = get_current_user_id();
         }
 
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        // ✅ Folosește tabela corectă din Website Manager
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$table_name} WHERE user_id = %d AND status = 'active' ORDER BY created_at DESC",
+            "SELECT * FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC",
             $user_id
         ));
 
         // Decode JSON for each result
         foreach ($results as $result) {
-            $result->site_config = json_decode($result->site_config, true);
+            $result->config = json_decode($result->config, true);
         }
 
         return $results;
