@@ -814,12 +814,12 @@ class AI_Web_Site_Website_Manager
 
         // ETAPA 2: Verificare utilizator logat (prin user_id)
         $user_id = get_current_user_id();
-        
+
         if ($user_id <= 0) {
             error_log('AI-WEB-SITE: ❌ User NOT logged in (user_id: ' . $user_id . ')');
             return new WP_Error('not_logged_in', 'Trebuie să fii autentificat pentru a salva configurații', array('status' => 401));
         }
-        
+
         error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
 
         // ETAPA 3: Verificare abonament activ
