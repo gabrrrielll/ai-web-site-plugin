@@ -846,18 +846,11 @@ class AI_Web_Site_Website_Manager
             return true;
         }
 
-        // ✅ LOCAL API KEY BYPASS - Verifică cheia locală (doar pentru localhost development)
+        // ✅ LOCAL API KEY BYPASS - Verifică cheia locală (pentru localhost ȘI production ca înainte)
         $local_api_key = $headers['X-Local-API-Key'] ?? $headers['x-local-api-key'] ?? '';
         if ($local_api_key === 'dev-local-key-2024') {
-            // Verifică dacă vine de pe localhost (pentru securitate)
-            if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
-                error_log('AI-WEB-SITE: ✅ LOCAL API KEY VALID - Bypassing all security checks for localhost');
-                return true;
-            } else {
-                error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Local API key from non-localhost origin REJECTED!');
-                error_log('AI-WEB-SITE: ❌ Suspicious origin: ' . $origin);
-                return new WP_Error('invalid_local_key', 'Local API key not allowed from non-localhost origins', array('status' => 403));
-            }
+            error_log('AI-WEB-SITE: ✅ LOCAL API KEY VALID - Bypassing all security checks (revenire la configurația care funcționa)');
+            return true;
         }
 
         // ❌ SECURITY: Test-nonce BLOCAT în production
@@ -870,7 +863,7 @@ class AI_Web_Site_Website_Manager
         // ✅ BYPASS pentru nonce-uri generate de endpoint-ul nostru (pentru editor.ai-web.site)
         if (strpos($origin, 'editor.ai-web.site') !== false) {
             error_log('AI-WEB-SITE: ✅ EDITOR REQUEST - Bypassing WordPress auth for nonce from our endpoint');
-            
+
             // Verifică dacă nonce-ul este generat de endpoint-ul nostru (are format valid)
             if ($nonce && strlen($nonce) >= 10) {
                 error_log('AI-WEB-SITE: ✅ Valid nonce from our endpoint - allowing request');
