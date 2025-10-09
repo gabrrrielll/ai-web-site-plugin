@@ -853,6 +853,11 @@ class AI_Web_Site_Website_Manager
             return true;
         }
 
+        // 🔍 DEBUG: Log nonce received
+        error_log('AI-WEB-SITE: 🔍 DEBUG NONCE - Nonce received: ' . ($nonce ?? 'NULL'));
+        error_log('AI-WEB-SITE: 🔍 DEBUG NONCE - Nonce length: ' . strlen($nonce ?? ''));
+        error_log('AI-WEB-SITE: 🔍 DEBUG NONCE - Origin: ' . $origin);
+
         // ❌ SECURITY: Test-nonce BLOCAT în production
         if ($nonce === 'test-nonce-12345') {
             error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from non-localhost origin REJECTED!');
@@ -863,11 +868,14 @@ class AI_Web_Site_Website_Manager
         // ✅ BYPASS pentru nonce-uri generate de endpoint-ul nostru (pentru editor.ai-web.site)
         if (strpos($origin, 'editor.ai-web.site') !== false) {
             error_log('AI-WEB-SITE: ✅ EDITOR REQUEST - Bypassing WordPress auth for nonce from our endpoint');
+            error_log('AI-WEB-SITE: 🔍 DEBUG - Checking nonce: ' . ($nonce ?? 'NULL'));
 
             // Verifică dacă nonce-ul este generat de endpoint-ul nostru (are format valid)
             if ($nonce && strlen($nonce) >= 10) {
                 error_log('AI-WEB-SITE: ✅ Valid nonce from our endpoint - allowing request');
                 return true;
+            } else {
+                error_log('AI-WEB-SITE: ❌ Invalid or missing nonce - nonce: ' . ($nonce ?? 'NULL') . ', length: ' . strlen($nonce ?? ''));
             }
         }
 
@@ -1090,11 +1098,11 @@ class AI_Web_Site_Website_Manager
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $security_manager = AI_Web_Site_Security_Manager::get_instance();
-        
+
         // 🔧 MODIFICARE: Folosește MEREU get_user_id_from_cookie() în loc de get_current_user_id()
         $user_id_wordpress = get_current_user_id();
         $user_id = $this->get_user_id_from_cookie();
-        
+
         error_log('🔍 DEBUG USER_ID: get_current_user_id() = ' . $user_id_wordpress);
         error_log('🔍 DEBUG USER_ID: get_user_id_from_cookie() = ' . $user_id);
 
@@ -1135,7 +1143,7 @@ class AI_Web_Site_Website_Manager
                 ), 401);
             }
         }
-        
+
         error_log('🔍 DEBUG USER_ID: FINAL user_id before save = ' . $user_id);
         $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'User identified successfully.', array('user_id' => $user_id, 'method' => $user_id === $user_id_wordpress ? 'WordPress' : 'Cookie'));
 
