@@ -469,7 +469,7 @@ class AI_Web_Site_Website_Manager
             error_log('AI-WEB-SITE: ✅ BYPASSING WordPress global authentication for /website-config endpoint');
             error_log('AI-WEB-SITE: Request method: ' . $_SERVER['REQUEST_METHOD']);
             error_log('AI-WEB-SITE: Original errors: ' . ($errors ? json_encode($errors) : 'null'));
-            
+
             // 🔧 MODIFICARE: Returnăm TRUE în loc de NULL pentru a forța bypass-ul complet
             // NULL = no error (dar WordPress continuă verificările)
             // TRUE = user authenticated (WordPress skip-uiește TOATE verificările)
