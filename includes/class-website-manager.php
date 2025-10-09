@@ -1111,23 +1111,34 @@ class AI_Web_Site_Website_Manager
 
             // 🔧 Încearcă să obțină user_id real din cookie (ca în rest_get_wp_nonce)
             $cookie_user_id = $this->get_user_id_from_cookie();
+            error_log('🔍 DEBUG USER_ID: get_current_user_id() = ' . $user_id);
+            error_log('🔍 DEBUG USER_ID: get_user_id_from_cookie() = ' . $cookie_user_id);
+            
             if ($cookie_user_id > 0) {
                 $user_id = $cookie_user_id;
+                error_log('🔍 DEBUG USER_ID: Using cookie user_id = ' . $user_id);
                 $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Using real user ID from cookie for local API key.', array('user_id' => $user_id));
             } else {
                 // Fallback: folosește ID-ul admin-ului WordPress
                 $user_id = 1;
+                error_log('🔍 DEBUG USER_ID: Fallback to admin user_id = 1');
                 $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'No valid cookie found, using admin user ID as fallback.', array('user_id' => $user_id));
             }
         } else {
             // 🔧 Pentru nonce-uri WordPress normale, folosește user_id real din cookie
             $cookie_user_id = $this->get_user_id_from_cookie();
+            error_log('🔍 DEBUG USER_ID: get_current_user_id() = ' . $user_id);
+            error_log('🔍 DEBUG USER_ID: get_user_id_from_cookie() = ' . $cookie_user_id);
+            
             if ($cookie_user_id > 0) {
                 $user_id = $cookie_user_id;
+                error_log('🔍 DEBUG USER_ID: Using cookie user_id = ' . $user_id);
                 $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'Using real user ID from cookie for WordPress nonce.', array('user_id' => $user_id));
             }
             // Dacă nu avem cookie, folosește $user_id din get_current_user_id() (care ar trebui să fie > 0)
         }
+        
+        error_log('🔍 DEBUG USER_ID: FINAL user_id before save = ' . $user_id);
 
         // ETAPA 2: Verificare abonament activ (IHC)
         // Include clasa UMP Integration dacă nu a fost deja inclusă
