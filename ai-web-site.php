@@ -357,6 +357,14 @@ class AI_Web_Site_Plugin
             'permission_callback' => array($this, 'check_user_permissions'),
         ));
 
+        // ✅ Register the same endpoint with simpler path (for admin compatibility)
+        register_rest_route('ai-web-site/v1', '/add-subdomain', array(
+            'methods' => 'POST',
+            'callback' => array($website_manager, 'rest_add_user_subdomain'),
+            'permission_callback' => array($this, 'check_user_permissions'),
+        ));
+        error_log('AI-WEB-SITE: ✅ Endpoint /add-subdomain înregistrat cu succes');
+
         // Register a REST API route for deleting a website (user initiated from shortcode)
         register_rest_route('ai-web-site/v1', '/user-site/delete', array(
             'methods' => 'POST',
