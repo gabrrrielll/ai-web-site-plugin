@@ -314,14 +314,14 @@ class AI_Web_Site_Plugin
      */
     public function enqueue_frontend_assets()
     {
-        // Enqueue styles for the user site shortcode
-        wp_register_style('ai-web-site-user-sites-style', plugins_url('assets/user-sites.css', __FILE__), array(), AI_WEB_SITE_PLUGIN_VERSION, 'all');
-        wp_enqueue_style('ai-web-site-user-sites-style');
+        // ✅ Enqueue styles for the user site shortcode (folosește admin.css)
+        wp_register_style('ai-web-site-admin-style', plugins_url('assets/admin.css', __FILE__), array(), AI_WEB_SITE_PLUGIN_VERSION, 'all');
+        wp_enqueue_style('ai-web-site-admin-style');
 
-        // Enqueue scripts for the user site shortcode
-        wp_register_script('ai-web-site-user-sites-script', plugins_url('assets/user-sites.js', __FILE__), array('jquery'), AI_WEB_SITE_PLUGIN_VERSION, true);
-        wp_enqueue_script('ai-web-site-user-sites-script');
-        wp_localize_script('ai-web-site-user-sites-script', 'aiUserSitesAjax', array(
+        // ✅ Enqueue scripts for the user site shortcode (folosește admin.js)
+        wp_register_script('ai-web-site-admin-script', plugins_url('assets/admin.js', __FILE__), array('jquery'), AI_WEB_SITE_PLUGIN_VERSION, true);
+        wp_enqueue_script('ai-web-site-admin-script');
+        wp_localize_script('ai-web-site-admin-script', 'aiWebSiteUserSites', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('ai-user-sites-nonce'),
             'base_domain' => preg_replace('#^https?://#', '', get_option('siteurl')),

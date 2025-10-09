@@ -480,20 +480,20 @@
     .ai-web-site-user-sites .wp-list-table {
         font-size: 12px;
     }
-    
+
     .ai-web-site-user-sites .wp-list-table th,
     .ai-web-site-user-sites .wp-list-table td {
         padding: 12px 8px;
     }
-    
+
     .ai-web-site-user-sites .wp-list-table th {
         font-size: 12px;
     }
-    
+
     .ai-subdomain-form .ai-subdomain-input {
         width: 150px;
     }
-    
+
     .ai-web-site-user-sites .button {
         padding: 6px 12px;
         font-size: 12px;
@@ -505,18 +505,18 @@
     .ai-web-site-user-sites h2 {
         font-size: 24px;
     }
-    
+
     .ai-web-site-user-sites .wp-list-table {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
     }
-    
+
     .ai-subdomain-form {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .ai-subdomain-form .ai-subdomain-input {
         width: 100%;
     }
