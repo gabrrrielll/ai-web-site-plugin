@@ -21,11 +21,6 @@ class AI_Web_Site_Website_Manager
      * Database table name
      */
     private $table_name;
-    
-    /**
-     * Database instance
-     */
-    private $database;
 
     /**
      * Get single instance
@@ -45,13 +40,9 @@ class AI_Web_Site_Website_Manager
     {
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'ai_web_site_websites';
-        
-        // ✅ Inițializează obiectul database
-        if (!class_exists('AI_Web_Site_Database')) {
-            require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-database.php';
-        }
-        $this->database = new AI_Web_Site_Database();
-        
+
+        // ✅ Nu mai inițializăm database-ul aici - se va folosi funcționalitatea existentă din admin
+
         $this->init_hooks();
     }
 
@@ -1721,7 +1712,8 @@ class AI_Web_Site_Website_Manager
         }
 
         // Check if subdomain already exists in DB
-        if ($this->database->subdomain_exists($subdomain_name, $main_domain)) {
+        $database = AI_Web_Site_Database::get_instance();
+        if ($database->subdomain_exists($subdomain_name, $main_domain)) {
             return new WP_REST_Response(array('success' => false, 'message' => __('Subdomain already exists. Please choose another.', 'ai-web-site-plugin')), 409);
         }
 

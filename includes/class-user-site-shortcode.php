@@ -191,8 +191,8 @@ class AI_Web_Site_User_Site_Shortcode
                 button.textContent = 'Adding...';
                 showSubdomainMessage(messageSpan, '', 'Adding subdomain...');
                 
-                // Make AJAX request
-                fetch('/wp-json/ai-web-site/v1/user-site/add-subdomain', {
+                // Make AJAX request - folosește același endpoint ca admin-ul
+                fetch('/wp-json/ai-web-site/v1/add-subdomain', {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
