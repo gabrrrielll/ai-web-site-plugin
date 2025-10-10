@@ -17,8 +17,8 @@ if (!defined('ABSPATH')) {
         <div class="max-w-7xl mx-auto px-4 sm-px-6 lg-px-8 py-20 lg-py-32">
             <div class="text-center awb-animate-fade-in-up">
                 <h1 class="text-4xl sm-text-5xl lg-text-6xl font-bold text-white mb-6">
-                    <span class="block">Financial infrastructure</span>
-                    <span class="block text-white">to grow your website</span>
+                    <span class="block">Free AI Website Builder</span>
+                    <span class="block text-white">to digitize your business</span>
                 </h1>
                 <p class="text-xl sm-text-2xl text-white-90 mb-8 max-w-3xl mx-auto leading-relaxed">
                     Join the millions of companies that use AI to create stunning websites in minutes, 

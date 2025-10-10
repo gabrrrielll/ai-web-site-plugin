@@ -1936,7 +1936,7 @@ class AI_Web_Site_Website_Manager
             $user_id,
             $domain
         ));
-        
+
         error_log("AI-WEB-SITE: Searching for existing site - user_id: {$user_id}, domain: {$domain}");
         if ($existing) {
             error_log("AI-WEB-SITE: Found existing site ID: {$existing->id}");
@@ -1950,12 +1950,12 @@ class AI_Web_Site_Website_Manager
                 'config' => $config_json,
                 'updated_at' => current_time('mysql')
             );
-            
+
             // Dacă se furnizează un subdomain nou și este diferit de cel existent, actualizează-l
             if (!empty($subdomain)) {
                 $update_data['subdomain'] = $subdomain;
             }
-            
+
             $result = $wpdb->update(
                 $this->table_name,
                 $update_data,
