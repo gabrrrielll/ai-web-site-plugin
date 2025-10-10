@@ -96,6 +96,9 @@ class AI_Web_Site_Plugin
         AI_Web_Site_Home_Page_Shortcode::get_instance();
         AI_Web_Site_User_Site_Shortcode::get_instance();
 
+        // Register REST API routes
+        add_action('rest_api_init', array($this, 'register_rest_routes'));
+
         // Load text domain for translations
         load_plugin_textdomain('ai-web-site-plugin', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
@@ -134,6 +137,65 @@ class AI_Web_Site_Plugin
     public function deactivate()
     {
         flush_rewrite_rules();
+    }
+
+    /**
+     * Register REST API routes
+     */
+    public function register_rest_routes()
+    {
+        $website_manager = AI_Web_Site_Website_Manager::get_instance();
+
+        // Register REST API route for getting website config by ID
+        register_rest_route('ai-web-site/v1', '/website/(?P<id>\d+)', array(
+            'methods' => 'GET',
+            'callback' => array($website_manager, 'rest_get_website_config_by_id'),
+            'permission_callback' => '__return_true',
+        ));
+
+        // Register REST API route for getting website config by domain
+        register_rest_route('ai-web-site/v1', '/website/(?P<domain>[a-zA-Z0-9.-]+)', array(
+            'methods' => 'GET',
+            'callback' => array($website_manager, 'rest_get_website_config_by_domain'),
+            'permission_callback' => '__return_true',
+        ));
+
+        // Register REST API route for adding a subdomain
+        register_rest_route('ai-web-site/v1', '/user-site/add-subdomain', array(
+            'methods' => 'POST',
+            'callback' => array($website_manager, 'rest_add_user_subdomain'),
+            'permission_callback' => array($this, 'check_user_permissions'),
+        ));
+
+        // Register simpler endpoint for admin compatibility
+        register_rest_route('ai-web-site/v1', '/add-subdomain', array(
+            'methods' => 'POST',
+            'callback' => array($website_manager, 'rest_add_user_subdomain'),
+            'permission_callback' => array($this, 'check_user_permissions'),
+        ));
+
+        // Register REST API route for deleting a website
+        register_rest_route('ai-web-site/v1', '/user-site/delete', array(
+            'methods' => 'POST',
+            'callback' => array($website_manager, 'rest_delete_user_website'),
+            'permission_callback' => array($this, 'check_user_permissions'),
+        ));
+    }
+
+    /**
+     * Check user permissions for REST API routes
+     */
+    public function check_user_permissions()
+    {
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            return false;
+        }
+
+        $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
+        $required_ump_level_id = $ump_integration->get_required_ump_level_id();
+
+        return ($required_ump_level_id === 0 || $ump_integration->user_has_active_ump_level($user_id, $required_ump_level_id));
     }
 }
 
