@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
                 </p>
                 
                 <!-- Main CTA Button -->
-                <div class="my-12">
+                <div class="my-16">
                     <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site?edit=true'); ?>" 
                        class="awb-cta-button inline-flex items-center px-8 py-4 text-lg font-semibold text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
                         <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +159,7 @@ if (!defined('ABSPATH')) {
 
     <?php if ($show_pricing !== 'false'): ?>
     <!-- Pricing Section -->
-    <section class="py-20 bg-gray-50">
+    <section class="py-20 bg-blue-50">
         <div class="max-w-7xl mx-auto px-4 sm-px-6 lg-px-8">
             <div class="text-center mb-16">
                 <h2 class="text-3xl sm-text-4xl font-bold text-gray-900 mb-4">
@@ -227,13 +227,15 @@ if (!defined('ABSPATH')) {
                         </li>
                     </ul>
                     
-                    <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site'); ?>" 
-                       class="awb-cta-button w-full inline-flex items-center justify-center px-6 py-3 text-lg font-semibold text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div class="mt-8">
+                        <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site/?edit=true'); ?>" 
+                           class="awb-cta-button w-full inline-flex items-center justify-center px-6 py-3 text-lg font-semibold text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
                         Get Started Free
                         <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                         </svg>
-                    </a>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -300,13 +302,15 @@ if (!defined('ABSPATH')) {
                 <p class="text-xl text-white-90 mb-12 max-w-2xl mx-auto">
                 Join thousands of users who have already created amazing websites with our AI-powered builder.
             </p>
-            <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site?edit=true'); ?>" 
-               class="inline-flex items-center px-8 py-4 text-lg font-semibold text-primary bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:transform hover:scale-105">
+            <div class="mb-8">
+                <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site?edit=true'); ?>" 
+                   class="inline-flex items-center px-8 py-4 text-lg font-semibold text-primary bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:transform hover:scale-105">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
                 Start Building for Free
-            </a>
+                </a>
+            </div>
             <p class="text-white-80 text-sm mt-4">No credit card required • Free forever plan</p>
         </div>
     </section>
