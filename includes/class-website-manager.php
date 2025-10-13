@@ -750,11 +750,13 @@ class AI_Web_Site_Website_Manager
         ));
 
         // Debug endpoint to create default editor config
-        register_rest_route('ai-web-site/v1', '/create-default-config', array(
+        error_log('AI-WEB-SITE: 🔧 Înregistrez ruta /create-default-config');
+        $create_route_registered = register_rest_route('ai-web-site/v1', '/create-default-config', array(
             'methods' => 'POST',
             'callback' => array($this, 'rest_create_default_config'),
             'permission_callback' => '__return_true',
         ));
+        error_log('AI-WEB-SITE: 🔧 Ruta /create-default-config înregistrată: ' . ($create_route_registered ? 'SUCCESS' : 'FAILED'));
 
         // Alternative endpoint pentru POST-uri mari (GET cu data în URL)
         register_rest_route('ai-web-site/v1', '/website-config-large', array(
@@ -1398,7 +1400,7 @@ class AI_Web_Site_Website_Manager
     public function rest_create_default_config($request)
     {
         error_log('AI-WEB-SITE: 🚀 rest_create_default_config() CALLED!');
-        
+
         $this->set_cors_headers();
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
