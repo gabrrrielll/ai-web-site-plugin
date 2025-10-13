@@ -302,7 +302,7 @@ if (!defined('ABSPATH')) {
                 <p class="text-xl text-white-90 mb-12 max-w-2xl mx-auto">
                 Join thousands of users who have already created amazing websites with our AI-powered builder.
             </p>
-            <div class="mb-8">
+            <div class="mt-8 mb-8">
                 <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site/?edit=true'); ?>" 
                    class="inline-flex items-center px-8 py-4 text-lg font-semibold text-primary bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:transform hover:scale-105">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
