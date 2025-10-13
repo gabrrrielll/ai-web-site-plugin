@@ -598,7 +598,17 @@ class AI_Web_Site_Website_Manager
         error_log('=== AI-WEB-SITE: debug_rest_request_after_callbacks() CALLED ===');
         error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
         error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
-        error_log('AI-WEB-SITE: Response status: ' . $response->get_status());
+        
+        // Verifică tipul răspunsului înainte de a apela get_status()
+        if (is_object($response) && method_exists($response, 'get_status')) {
+            error_log('AI-WEB-SITE: Response status: ' . $response->get_status());
+        } else {
+            error_log('AI-WEB-SITE: Response type: ' . gettype($response));
+            if (is_array($response)) {
+                error_log('AI-WEB-SITE: Response is array with ' . count($response) . ' elements');
+            }
+        }
+        
         return $response;
     }
 
@@ -2175,23 +2185,23 @@ class AI_Web_Site_Website_Manager
             // Pentru editor.ai-web.site, caută după user_id = 1 (admin)
             if ($full_domain === 'editor.ai-web.site') {
                 $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Pentru editor.ai-web.site, caută după user_id = 1");
-                
+
                 $config = $wpdb->get_row($wpdb->prepare(
                     "SELECT config FROM {$this->table_name} WHERE user_id = %d ORDER BY updated_at DESC LIMIT 1",
                     1 // Admin user ID
                 ));
-                
+
                 $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Căutare după user_id = 1 rezultat:", array(
                     'found' => $config ? 'YES' : 'NO',
                     'user_id' => 1
                 ));
-                
+
                 if ($config) {
                     $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "✅ Configurația pentru editor.ai-web.site găsită după user_id = 1");
                 }
             }
         }
-        
+
         if (!$config) {
             $logger->warning('WEBSITE_MANAGER', 'GET_CONFIG', "Nu s-a găsit configurația pentru domeniul: {$full_domain}");
             return null;
