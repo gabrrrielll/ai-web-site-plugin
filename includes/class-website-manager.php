@@ -2172,6 +2172,27 @@ class AI_Web_Site_Website_Manager
         }
 
         if (!$config) {
+            // Pentru editor.ai-web.site, caută după user_id = 1 (admin)
+            if ($full_domain === 'editor.ai-web.site') {
+                $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Pentru editor.ai-web.site, caută după user_id = 1");
+                
+                $config = $wpdb->get_row($wpdb->prepare(
+                    "SELECT config FROM {$this->table_name} WHERE user_id = %d ORDER BY updated_at DESC LIMIT 1",
+                    1 // Admin user ID
+                ));
+                
+                $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "Căutare după user_id = 1 rezultat:", array(
+                    'found' => $config ? 'YES' : 'NO',
+                    'user_id' => 1
+                ));
+                
+                if ($config) {
+                    $logger->info('WEBSITE_MANAGER', 'GET_CONFIG', "✅ Configurația pentru editor.ai-web.site găsită după user_id = 1");
+                }
+            }
+        }
+        
+        if (!$config) {
             $logger->warning('WEBSITE_MANAGER', 'GET_CONFIG', "Nu s-a găsit configurația pentru domeniul: {$full_domain}");
             return null;
         }
