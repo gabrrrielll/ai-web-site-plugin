@@ -1414,37 +1414,44 @@ class AI_Web_Site_Website_Manager
                 ), 200);
             }
 
-            // Încarcă configurația din fișierul default-config.json din plugin
-            $config_file = AI_WEB_SITE_PLUGIN_DIR . 'assets/default-config.json';
+            // Încarcă configurația din URL-ul de pe server
+            $config_url = 'https://ai-web.site/wp-content/uploads/site-config.json';
+            
+            $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Loading default config from URL: ' . $config_url);
 
-            if (!file_exists($config_file)) {
-                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Default config file not found', array(
-                    'config_file' => $config_file
+            // Load configuration from URL
+            $config_content = wp_remote_get($config_url);
+
+            if (is_wp_error($config_content)) {
+                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Failed to load config from URL', array(
+                    'error' => $config_content->get_error_message(),
+                    'url' => $config_url
                 ));
                 return new WP_REST_Response(array(
-                    'error' => 'Default config file not found',
-                    'message' => 'Could not locate default-config.json file in plugin assets',
-                    'config_file' => $config_file,
+                    'error' => 'Failed to load default config from URL',
+                    'message' => 'Could not fetch site-config.json from server',
+                    'url' => $config_url,
                     'timestamp' => date('c')
                 ), 404);
             }
 
-            $config_content = file_get_contents($config_file);
+            $config_content = wp_remote_retrieve_body($config_content);
             $config_data = json_decode($config_content, true);
 
             if (!$config_data) {
-                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Failed to parse default config file', array(
-                    'config_file' => $config_file
+                $logger->error('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Failed to parse default config from URL', array(
+                    'url' => $config_url
                 ));
                 return new WP_REST_Response(array(
-                    'error' => 'Invalid default config file',
-                    'message' => 'Could not parse default-config.json file',
+                    'error' => 'Invalid default config from URL',
+                    'message' => 'Could not parse site-config.json from URL',
+                    'url' => $config_url,
                     'timestamp' => date('c')
                 ), 400);
             }
 
-            $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Loaded default configuration from file', array(
-                'config_file' => $config_file,
+            $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Loaded default configuration from URL', array(
+                'url' => $config_url,
                 'config_size' => strlen($config_content)
             ));
 
