@@ -1416,7 +1416,7 @@ class AI_Web_Site_Website_Manager
 
             // Încarcă configurația din URL-ul de pe server
             $config_url = 'https://ai-web.site/wp-content/uploads/site-config.json';
-            
+
             $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Loading default config from URL: ' . $config_url);
 
             // Load configuration from URL
@@ -1467,7 +1467,7 @@ class AI_Web_Site_Website_Manager
             $logger->info('WEBSITE_MANAGER', 'CREATE_DEFAULT_CONFIG', 'Default editor configuration created successfully', array(
                 'website_id' => $result['website_id'],
                 'config_type' => 'original_site_config',
-                'config_file' => $config_file
+                'config_url' => $config_url
             ));
 
             return new WP_REST_Response(array(
@@ -1475,7 +1475,7 @@ class AI_Web_Site_Website_Manager
                 'message' => 'Default configuration created for editor.ai-web.site',
                 'website_id' => $result['website_id'],
                 'config_type' => 'original_site_config',
-                'config_file' => $config_file,
+                'config_url' => $config_url,
                 'timestamp' => date('c')
             ), 200);
 
@@ -1943,7 +1943,7 @@ class AI_Web_Site_Website_Manager
             $user_id,
             $domain
         ));
-        
+
         error_log("AI-WEB-SITE: Searching for existing site - user_id: {$user_id}, domain: {$domain}");
         if ($existing) {
             error_log("AI-WEB-SITE: Found existing site ID: {$existing->id}");
@@ -1957,12 +1957,12 @@ class AI_Web_Site_Website_Manager
                 'config' => $config_json,
                 'updated_at' => current_time('mysql')
             );
-            
+
             // Dacă se furnizează un subdomain nou și este diferit de cel existent, actualizează-l
             if (!empty($subdomain)) {
                 $update_data['subdomain'] = $subdomain;
             }
-            
+
             $result = $wpdb->update(
                 $this->table_name,
                 $update_data,
