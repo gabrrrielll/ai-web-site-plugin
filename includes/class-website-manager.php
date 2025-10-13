@@ -1397,6 +1397,8 @@ class AI_Web_Site_Website_Manager
      */
     public function rest_create_default_config($request)
     {
+        error_log('AI-WEB-SITE: 🚀 rest_create_default_config() CALLED!');
+        
         $this->set_cors_headers();
 
         $logger = AI_Web_Site_Debug_Logger::get_instance();
