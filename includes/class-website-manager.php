@@ -598,7 +598,7 @@ class AI_Web_Site_Website_Manager
         error_log('=== AI-WEB-SITE: debug_rest_request_after_callbacks() CALLED ===');
         error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
         error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
-        
+
         // Verifică tipul răspunsului înainte de a apela get_status()
         if (is_object($response) && method_exists($response, 'get_status')) {
             error_log('AI-WEB-SITE: Response status: ' . $response->get_status());
@@ -608,7 +608,7 @@ class AI_Web_Site_Website_Manager
                 error_log('AI-WEB-SITE: Response is array with ' . count($response) . ' elements');
             }
         }
-        
+
         return $response;
     }
 

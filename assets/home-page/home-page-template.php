@@ -17,8 +17,8 @@ if (!defined('ABSPATH')) {
         <div class="max-w-7xl mx-auto px-4 sm-px-6 lg-px-8 py-20 lg-py-32">
             <div class="text-center awb-animate-fade-in-up">
                 <h1 class="text-4xl sm-text-5xl lg-text-6xl font-bold text-white mb-6">
-                    <span class="block">Financial infrastructure</span>
-                    <span class="block text-white">to grow your website</span>
+                    <span class="block">Free AI Website Builder</span>
+                    <span class="block text-white">to digitize your business</span>
                 </h1>
                 <p class="text-xl sm-text-2xl text-white-90 mb-8 max-w-3xl mx-auto leading-relaxed">
                     Join the millions of companies that use AI to create stunning websites in minutes, 
@@ -26,8 +26,8 @@ if (!defined('ABSPATH')) {
                 </p>
                 
                 <!-- Main CTA Button -->
-                <div class="mb-12">
-                    <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site'); ?>" 
+                <div class="my-12">
+                    <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site?edit=true'); ?>" 
                        class="awb-cta-button inline-flex items-center px-8 py-4 text-lg font-semibold text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
                         <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -297,10 +297,10 @@ if (!defined('ABSPATH')) {
             <h2 class="text-3xl sm-text-4xl font-bold text-white mb-6">
                 Ready to build your dream website?
             </h2>
-                <p class="text-xl text-white-90 mb-8 max-w-2xl mx-auto">
+                <p class="text-xl text-white-90 mb-12 max-w-2xl mx-auto">
                 Join thousands of users who have already created amazing websites with our AI-powered builder.
             </p>
-            <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site'); ?>" 
+            <a href="<?php echo esc_url($cta_url ?? 'https://editor.ai-web.site?edit=true''); ?>" 
                class="inline-flex items-center px-8 py-4 text-lg font-semibold text-primary bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:transform hover:scale-105">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
