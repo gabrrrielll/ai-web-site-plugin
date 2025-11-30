@@ -34,6 +34,9 @@ require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-website-manager.php'; // N
 require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-user-site-shortcode.php';
 require_once AI_WEB_SITE_PLUGIN_DIR . 'admin/class-admin.php';
 
+// NEW: Route Registry System (v1.1.0)
+require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/routing/class-route-registry.php';
+
 /**
  * Main plugin class
  */
@@ -101,10 +104,15 @@ class AI_Web_Site_Plugin
 
         AI_Web_Site_Admin::get_instance();
 
+        // NEW: Initialize Route Registry (v1.1.0)
+        // This replaces the old register_rest_routes() method
+        AI_Web_Site_Route_Registry::get_instance();
+
         // Enqueue frontend scripts and styles for shortcode
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
 
-        // Register REST API routes
+        // BACKWARD COMPATIBILITY: Keep old route registration for now
+        // TODO: Remove after verifying new routes work correctly
         add_action('rest_api_init', array($this, 'register_rest_routes'));
 
         // Load text domain for translations
