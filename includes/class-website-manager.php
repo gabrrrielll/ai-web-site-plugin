@@ -711,34 +711,15 @@ class AI_Web_Site_Website_Manager
             }
         }, 999); // Prioritate foarte mare pentru a rula după toate înregistrările
 
-        // TODO: Remove old endpoints - kept for compatibility
-        /*
-        register_rest_route('ai-web-site/v1', '/website-config', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'rest_get_website_config'),
-            'permission_callback' => '__return_true', // Allow public access for editor
-        ));
-
-        register_rest_route('ai-web-site/v1', '/website-config', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'rest_save_website_config'),
-            'permission_callback' => '__return_true', // Allow public access for editor
-        ));
-        */
-
+        // DUAL-RUN MODE: Critical routes are kept here for backward compatibility
+        // until the new Router Classes system is fully verified.
+        
         // Debug: verifică dacă ruta se înregistrează corect
         error_log('AI-WEB-SITE: Înregistrez ruta pentru website-config cu domain parameter');
 
         register_rest_route('ai-web-site/v1', '/website-config/(?P<domain>[a-zA-Z0-9.-]+)', array(
             'methods' => 'GET',
             'callback' => array($this, 'rest_get_website_config_by_domain'),
-            'permission_callback' => '__return_true',
-        ));
-
-        // Adaugă și o rută simplă pentru test
-        register_rest_route('ai-web-site/v1', '/test-config', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'rest_test_config'),
             'permission_callback' => '__return_true',
         ));
 
@@ -752,49 +733,7 @@ class AI_Web_Site_Website_Manager
         ));
         error_log('AI-WEB-SITE: 🔧 Ruta POST înregistrată: ' . ($route_registered ? 'SUCCESS' : 'FAILED'));
 
-        // Test endpoint to verify REST API is working
-        register_rest_route('ai-web-site/v1', '/test', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'rest_test_endpoint'),
-            'permission_callback' => '__return_true',
-        ));
 
-        // Debug endpoint to create default editor config
-        error_log('AI-WEB-SITE: 🔧 Înregistrez ruta /create-default-config');
-        $create_route_registered = register_rest_route('ai-web-site/v1', '/create-default-config', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'rest_create_default_config'),
-            'permission_callback' => '__return_true',
-        ));
-        error_log('AI-WEB-SITE: 🔧 Ruta /create-default-config înregistrată: ' . ($create_route_registered ? 'SUCCESS' : 'FAILED'));
-
-        // Alternative endpoint pentru POST-uri mari (GET cu data în URL)
-        register_rest_route('ai-web-site/v1', '/website-config-large', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'rest_save_website_config_large'),
-            'permission_callback' => '__return_true',
-            'args' => array(
-                'data' => array(
-                    'required' => true,
-                    'type' => 'string',
-                    'description' => 'Base64 encoded site configuration data'
-                )
-            ),
-        ));
-
-        // Debug endpoint to update existing editor config with original content
-        register_rest_route('ai-web-site/v1', '/update-editor-config', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'rest_update_editor_config'),
-            'permission_callback' => '__return_true',
-        ));
-
-        // Get website config by ID
-        register_rest_route('ai-web-site/v1', '/website-config/(?P<id>\d+)', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'rest_get_website_config_by_id'),
-            'permission_callback' => '__return_true',
-        ));
 
         // Add a subdomain for a user's website
         register_rest_route('ai-web-site/v1', '/add-user-subdomain', array(
