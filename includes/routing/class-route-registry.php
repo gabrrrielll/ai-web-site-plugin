@@ -68,6 +68,7 @@ class AI_Web_Site_Route_Registry {
         $this->register_version_routes('v1', array(
             new AI_Web_Site_Website_Routes(),
             new AI_Web_Site_Auth_Routes(),
+            new AI_Web_Site_User_Routes(),
         ));
         
         $logger->info('ROUTING', 'REGISTRY_COMPLETE', 'All routes registered successfully');
@@ -92,6 +93,7 @@ class AI_Web_Site_Route_Registry {
         // Load specific route classes
         require_once $routing_dir . 'class-website-routes.php';
         require_once $routing_dir . 'class-auth-routes.php';
+        require_once $routing_dir . 'class-user-routes.php';
     }
     
     /**

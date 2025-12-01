@@ -689,75 +689,14 @@ class AI_Web_Site_Website_Manager
 
     /**
      * Register REST API routes
+     * 
+     * DEPRECATED: Routes are now handled by the Router Classes system in includes/routing/
+     * - AI_Web_Site_Website_Routes
+     * - AI_Web_Site_Auth_Routes
+     * - AI_Web_Site_User_Routes
+     * 
+     * This method is removed to prevent duplicate route registration.
      */
-    public function register_rest_routes()
-    {
-        // Log REST API registration
-        $logger = AI_Web_Site_Debug_Logger::get_instance();
-        $logger->info('WEBSITE_MANAGER', 'REST_API', 'Registering REST API routes');
-
-        // Debug: Afișează toate rutele înregistrate după ce sunt create
-        add_action('rest_api_init', function () {
-            global $wp_rest_server;
-            if ($wp_rest_server) {
-                $routes = $wp_rest_server->get_routes();
-                if (isset($routes['/ai-web-site/v1/website-config'])) {
-                    error_log('AI-WEB-SITE: 🔍 Ruta /ai-web-site/v1/website-config EXISTĂ în server');
-                    error_log('AI-WEB-SITE: 🔍 Ruta detalii: ' . json_encode($routes['/ai-web-site/v1/website-config']));
-                } else {
-                    error_log('AI-WEB-SITE: ❌ Ruta /ai-web-site/v1/website-config NU EXISTĂ în server!');
-                    error_log('AI-WEB-SITE: 🔍 Rute disponibile: ' . implode(', ', array_keys($routes)));
-                }
-            }
-        }, 999); // Prioritate foarte mare pentru a rula după toate înregistrările
-
-        // DUAL-RUN MODE: Critical routes are kept here for backward compatibility
-        // until the new Router Classes system is fully verified.
-        
-        // Debug: verifică dacă ruta se înregistrează corect
-        error_log('AI-WEB-SITE: Înregistrez ruta pentru website-config cu domain parameter');
-
-        register_rest_route('ai-web-site/v1', '/website-config/(?P<domain>[a-zA-Z0-9.-]+)', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'rest_get_website_config_by_domain'),
-            'permission_callback' => '__return_true',
-        ));
-
-        // POST endpoint pentru salvarea configurației cu verificări de securitate
-        error_log('AI-WEB-SITE: 🔧 Înregistrez ruta POST /website-config');
-        $route_registered = register_rest_route('ai-web-site/v1', '/website-config', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'rest_save_website_config'),
-            'permission_callback' => '__return_true', // TEMPORAR: Bypass complet pentru testare
-            'args' => array(),
-        ));
-        error_log('AI-WEB-SITE: 🔧 Ruta POST înregistrată: ' . ($route_registered ? 'SUCCESS' : 'FAILED'));
-
-
-
-        // Add a subdomain for a user's website
-        register_rest_route('ai-web-site/v1', '/add-user-subdomain', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'rest_add_user_subdomain'),
-            'permission_callback' => '__return_true',
-        ));
-
-        // Delete a user's website
-        register_rest_route('ai-web-site/v1', '/delete-user-website', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'rest_delete_user_website'),
-            'permission_callback' => '__return_true',
-        ));
-
-        // Custom endpoint pentru nonce-ul WordPress
-        register_rest_route('ai-web-site/v1', '/wp-nonce', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'rest_get_wp_nonce'),
-            'permission_callback' => '__return_true',
-        ));
-
-        $logger->info('WEBSITE_MANAGER', 'REST_API', 'REST API routes registered successfully');
-    }
 
     /**
      * Check permissions for saving website config (ETAPA 1)

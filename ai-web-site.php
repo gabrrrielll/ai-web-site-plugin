@@ -111,10 +111,6 @@ class AI_Web_Site_Plugin
         // Enqueue frontend scripts and styles for shortcode
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
 
-        // BACKWARD COMPATIBILITY: Keep old route registration for now
-        // TODO: Remove after verifying new routes work correctly
-        add_action('rest_api_init', array($this, 'register_rest_routes'));
-
         // Load text domain for translations
         load_plugin_textdomain('ai-web-site-plugin', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
@@ -334,44 +330,6 @@ class AI_Web_Site_Plugin
         wp_register_script('ai-web-site-admin-script', plugins_url('assets/admin.js', __FILE__), array('jquery'), AI_WEB_SITE_PLUGIN_VERSION, true);
         wp_enqueue_script('ai-web-site-admin-script');
         */
-    }
-
-    /**
-     * Register REST API routes
-     */
-    public function register_rest_routes()
-    {
-        // Ensure the website manager is initialized
-        $website_manager = AI_Web_Site_Website_Manager::get_instance();
-
-        // DUAL-RUN MODE: Some routes are kept here for backward compatibility
-        // or because they are specific to shortcodes (user-site).
-        
-        // NOTE: /website/{domain} is now handled by AI_Web_Site_Website_Routes
-        // NOTE: /website/{id} removed as unused by frontend
-
-        // Register a REST API route for adding a subdomain (user initiated from shortcode)
-        register_rest_route('ai-web-site/v1', '/user-site/add-subdomain', array(
-            'methods' => 'POST',
-            'callback' => array($website_manager, 'rest_add_user_subdomain'),
-            'permission_callback' => array($this, 'check_user_permissions'),
-        ));
-
-
-
-        // Register a REST API route for deleting a website (user initiated from shortcode)
-        register_rest_route('ai-web-site/v1', '/user-site/delete', array(
-            'methods' => 'POST',
-            'callback' => array($website_manager, 'rest_delete_user_website'),
-            'permission_callback' => array($this, 'check_user_permissions'),
-        ));
-    }
-
-    /**
-     * Check user permissions for REST API routes (logged in and active subscription)
-     */
-    public function check_user_permissions()
-    {
         $user_id = get_current_user_id();
         if (!$user_id) {
             return false;
