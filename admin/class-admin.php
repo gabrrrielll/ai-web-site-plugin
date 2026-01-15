@@ -154,6 +154,10 @@ class AI_Web_Site_Admin
         $options['ump_domain_override'] = sanitize_text_field($_POST['ump_domain_override']);
         $options['disable_ump_tracking'] = isset($_POST['disable_ump_tracking']) ? 1 : 0;
         
+        // AI Settings
+        $options['ai_gemini_api_key'] = sanitize_text_field($_POST['ai_gemini_api_key']);
+        $options['ai_deepseek_api_key'] = sanitize_text_field($_POST['ai_deepseek_api_key']);
+        
         // Security settings
         $options['rate_limit_requests'] = max(1, min(10000, (int)sanitize_text_field($_POST['rate_limit_requests'] ?? 100)));
         $options['rate_limit_period'] = (int)sanitize_text_field($_POST['rate_limit_period'] ?? 3600);

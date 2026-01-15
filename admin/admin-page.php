@@ -149,7 +149,33 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                    </tr>
                </table>
 
-               <h2 style="margin-top: 40px;"><?php _e('Security Settings', 'ai-web-site-plugin'); ?></h2>
+                <h2 style="margin-top: 40px;"><?php _e('AI Settings', 'ai-web-site-plugin'); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="ai_gemini_api_key"><?php _e('Gemini API Key', 'ai-web-site-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="password" id="ai_gemini_api_key" name="ai_gemini_api_key" 
+                                   value="<?php echo esc_attr($options['ai_gemini_api_key'] ?? ''); ?>" 
+                                   class="regular-text">
+                            <p class="description"><?php _e('API Key for Google Gemini (required for AI features)', 'ai-web-site-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ai_deepseek_api_key"><?php _e('DeepSeek API Key', 'ai-web-site-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="password" id="ai_deepseek_api_key" name="ai_deepseek_api_key" 
+                                   value="<?php echo esc_attr($options['ai_deepseek_api_key'] ?? ''); ?>" 
+                                   class="regular-text">
+                            <p class="description"><?php _e('API Key for DeepSeek (optional)', 'ai-web-site-plugin'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
+                <h2 style="margin-top: 40px;"><?php _e('Security Settings', 'ai-web-site-plugin'); ?></h2>
                <table class="form-table">
                    <tr>
                        <th scope="row">
