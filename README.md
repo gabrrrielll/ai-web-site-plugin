@@ -70,18 +70,18 @@ The plugin handles:
 
 Base namespace: `/wp-json/ai-web-site/v1`
 
-| Ruta | Metodă | Descriere |
+| Route | Method | Description |
 |---|---|---|
-| `/website-config/{domain}` | GET | Încarcă configurația website-ului după domeniu |
-| `/website-config` | POST | Salvează configurația website-ului |
-| `/website/{domain}` | GET | Endpoint de compatibilitate pentru citirea configurației |
-| `/wp-nonce` | GET | Returnează nonce WordPress pentru autentificare |
-| `/user-site/add-subdomain` | POST | Adaugă subdomeniu pentru site-ul utilizatorului |
-| `/user-site/delete` | POST | Șterge website-ul utilizatorului |
-| `/ai/generate-text` | POST | Generează text prin provider AI |
-| `/ai/generate-image` | POST | Generează imagine prin provider AI |
-| `/site-config` | GET | Returnează configurația site-ului după parametrul `subdomain` |
-| `/logs` | GET | Returnează log-uri de debugging |
+| `/website-config/{domain}` | GET | Load website configuration by domain |
+| `/website-config` | POST | Save website configuration |
+| `/website/{domain}` | GET | Backward-compatibility endpoint for reading configuration |
+| `/wp-nonce` | GET | Return WordPress nonce used for authentication |
+| `/user-site/add-subdomain` | POST | Add subdomain for a user website |
+| `/user-site/delete` | POST | Delete user website |
+| `/ai/generate-text` | POST | Generate text using configured AI provider |
+| `/ai/generate-image` | POST | Generate image using configured AI provider |
+| `/site-config` | GET | Return site configuration by `subdomain` parameter |
+| `/logs` | GET | Return debugging logs |
 
 ## 🔄 Auto-Update
 
