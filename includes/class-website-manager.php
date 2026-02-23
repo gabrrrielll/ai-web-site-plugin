@@ -100,12 +100,16 @@ class AI_Web_Site_Website_Manager
             ), 401);
         }
 
-        return new WP_REST_Response(array(
+        $response = new WP_REST_Response(array(
             'success' => true,
             'nonce' => wp_create_nonce('save_site_config'),
             'user_id' => get_current_user_id(),
             'timestamp' => date('c')
         ), 200);
+
+        if (!defined('AI_WEB_SITE_USE_LEGACY_NONCE_FLOW') || !AI_WEB_SITE_USE_LEGACY_NONCE_FLOW) {
+            return $response;
+        }
 
         try {
             // DEBUG: Verifică starea autentificării WordPress
