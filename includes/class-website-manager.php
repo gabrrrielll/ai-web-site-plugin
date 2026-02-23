@@ -101,7 +101,7 @@ class AI_Web_Site_Website_Manager
             'success' => true,
             'nonce' => wp_create_nonce('save_site_config'),
             'user_id' => get_current_user_id(),
-            'timestamp' => date('c')
+            'timestamp' => gmdate('c')
         ), 200);
     }
 
