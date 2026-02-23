@@ -88,10 +88,10 @@ class AI_Web_Site
 
         // Get site configuration from database
         global $wpdb;
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         $site_config = $wpdb->get_var($wpdb->prepare(
-            "SELECT site_config FROM {$table_name} WHERE subdomain = %s AND status = 'active'",
+            "SELECT config FROM {$table_name} WHERE subdomain = %s AND status = 'active'",
             $subdomain
         ));
 
