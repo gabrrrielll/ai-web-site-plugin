@@ -57,8 +57,7 @@ class AI_Web_Site_Website_Manager
         add_action('wp_ajax_nopriv_get_website_config', array($this, 'ajax_get_website_config'));
         add_action('wp_ajax_delete_website', array($this, 'ajax_delete_website'));
 
-        // REST API endpoints
-        add_action('rest_api_init', array($this, 'register_rest_routes'));
+        // REST API endpoints are registered by Route Registry (includes/routing/class-route-registry.php)
 
         // Setează header-ele CORS foarte devreme pentru cereri REST API
         add_action('init', array($this, 'set_cors_headers_early'), 1);
@@ -67,10 +66,6 @@ class AI_Web_Site_Website_Manager
 
         // Forțează header-ele CORS prin filtrele WordPress
         add_filter('rest_pre_serve_request', array($this, 'force_cors_headers'), 10, 1);
-
-        // Bypass WordPress global nonce verification for our test nonce
-        // 🔧 IMPORTANT: Prioritate 1 pentru a fi ÎNAINTE de verificarea WordPress de nonce (care are prioritate 10)
-        add_filter('rest_authentication_errors', array($this, 'bypass_nonce_for_test'), 1);
 
         // TEMPORAR: Dezactivez filter-ul care poate interfera
         // add_filter('rest_pre_dispatch', array($this, 'disable_nonce_check'), 10, 3);
@@ -95,19 +90,22 @@ class AI_Web_Site_Website_Manager
      */
     public function rest_get_wp_nonce($request)
     {
-        error_log('=== AI-WEB-SITE: rest_get_wp_nonce() CALLED ===');
-
-        // NOU: Loghează toate cookie-urile primite
-        error_log('AI-WEB-SITE: 🔍 DEBUG - Received Cookies: ' . json_encode($_COOKIE));
-
         $this->set_cors_headers();
 
-        // Handle OPTIONS request pentru CORS preflight
-        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-            error_log('AI-WEB-SITE: OPTIONS preflight request handled in rest_get_wp_nonce');
-            http_response_code(200);
-            exit;
+        if (!is_user_logged_in()) {
+            return new WP_REST_Response(array(
+                'success' => false,
+                'error' => 'User not logged in',
+                'nonce' => null
+            ), 401);
         }
+
+        return new WP_REST_Response(array(
+            'success' => true,
+            'nonce' => wp_create_nonce('save_site_config'),
+            'user_id' => get_current_user_id(),
+            'timestamp' => date('c')
+        ), 200);
 
         try {
             // DEBUG: Verifică starea autentificării WordPress
@@ -703,108 +701,24 @@ class AI_Web_Site_Website_Manager
      */
     public function check_save_permissions($request)
     {
-        // LOG DETALIAT PENTRU DEBUGGING
-        error_log('=== AI-WEB-SITE: check_save_permissions() CALLED ===');
-        error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
-        error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
-
-        // Pentru requesturi OPTIONS (preflight CORS), returnează true direct
         if ($request->get_method() === 'OPTIONS') {
-            error_log('AI-WEB-SITE: OPTIONS request - allowing CORS preflight');
             return true;
         }
 
-        // Log pentru toate requesturile non-OPTIONS
-        error_log('AI-WEB-SITE: NON-OPTIONS request - method: ' . $request->get_method());
-
-        error_log('AI-WEB-SITE: User logged in: ' . (is_user_logged_in() ? 'YES' : 'NO'));
-        error_log('AI-WEB-SITE: User ID: ' . get_current_user_id());
-
-        // 1. Verificare utilizator logat (pentru localhost, sărim această verificare)
         $headers = getallheaders();
-        error_log('AI-WEB-SITE: Headers count: ' . count($headers));
-
-        // 🔧 Extragem nonce-ul din request (WordPress REST API way)
         $nonce = $request->get_header('X-WP-Nonce');
         if (empty($nonce)) {
-            // Fallback la getallheaders()
             $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
         }
-        error_log('AI-WEB-SITE: Nonce received from headers: ' . ($nonce ?? 'EMPTY'));
-
-        // Dacă nu avem nonce în headers, verificăm în body (pentru localhost)
-        if (empty($nonce)) {
-            $body = $request->get_json_params();
-            $nonce = $body['nonce'] ?? '';
-            error_log('AI-WEB-SITE: Nonce received from body: ' . $nonce);
-        }
-
-        // SECURITATE: Verificare Origin pentru localhost DEVELOPMENT
-        $origin = $request->get_header('Origin');
-        if (empty($origin)) {
-            // Fallback la getallheaders()
-            $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
-        }
-        error_log('AI-WEB-SITE: Request origin: ' . $origin);
-
-        // ✅ LOCALHOST BYPASS - Pentru development, acceptăm requesturi din localhost
-        if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
-            error_log('AI-WEB-SITE: ✅ LOCALHOST REQUEST - Bypassing all security checks for development');
-            return true;
-        }
-
-        // ✅ LOCAL API KEY BYPASS - Verifică cheia locală (pentru localhost ȘI production ca înainte)
-        $local_api_key = $headers['X-Local-API-Key'] ?? $headers['x-local-api-key'] ?? '';
-        if ($local_api_key === 'dev-local-key-2024') {
-            error_log('AI-WEB-SITE: ✅ LOCAL API KEY VALID - Bypassing all security checks (revenire la configurația care funcționa)');
-            return true;
-        }
-
-        // 🔍 DEBUG: Log nonce received
-        error_log('AI-WEB-SITE: 🔍 DEBUG NONCE - Nonce received: ' . ($nonce ?? 'NULL'));
-        error_log('AI-WEB-SITE: 🔍 DEBUG NONCE - Nonce length: ' . strlen($nonce ?? ''));
-        error_log('AI-WEB-SITE: 🔍 DEBUG NONCE - Origin: ' . $origin);
-
-        // ❌ SECURITY: Test-nonce BLOCAT în production
-        if ($nonce === 'test-nonce-12345') {
-            error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from non-localhost origin REJECTED!');
-            error_log('AI-WEB-SITE: ❌ Suspicious origin: ' . $origin);
-            return new WP_Error('invalid_nonce', 'Invalid security token - development nonce not allowed in production', array('status' => 403));
-        }
-
-        // ✅ BYPASS pentru nonce-uri generate de endpoint-ul nostru (pentru editor.ai-web.site)
-        if (strpos($origin, 'editor.ai-web.site') !== false) {
-            error_log('AI-WEB-SITE: ✅ EDITOR REQUEST - Bypassing WordPress auth for nonce from our endpoint');
-            error_log('AI-WEB-SITE: 🔍 DEBUG - Checking nonce: ' . ($nonce ?? 'NULL'));
-
-            // Verifică dacă nonce-ul este generat de endpoint-ul nostru (are format valid)
-            if ($nonce && strlen($nonce) >= 10) {
-                error_log('AI-WEB-SITE: ✅ Valid nonce from our endpoint - allowing request');
-                return true;
-            } else {
-                error_log('AI-WEB-SITE: ❌ Invalid or missing nonce - nonce: ' . ($nonce ?? 'NULL') . ', length: ' . strlen($nonce ?? ''));
-            }
-        }
-
-        // ETAPA 2: Verificare utilizator logat (prin user_id)
         $user_id = get_current_user_id();
-
         if ($user_id <= 0) {
-            error_log('AI-WEB-SITE: ❌ User NOT logged in (user_id: ' . $user_id . ')');
             return new WP_Error('not_logged_in', 'Trebuie să fii autentificat pentru a salva configurații', array('status' => 401));
         }
 
-        error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
-
-        // ETAPA 3: Verificare abonament activ
         $subscription_manager = AI_Web_Site_Subscription_Manager::get_instance();
         $can_save = $subscription_manager->can_save_configuration($user_id);
 
-        error_log('AI-WEB-SITE: Subscription check - allowed: ' . ($can_save['allowed'] ? 'YES' : 'NO') . ', reason: ' . $can_save['reason']);
-
         if (!$can_save['allowed']) {
-            error_log('AI-WEB-SITE: ❌ User does NOT have active subscription');
-
             return new WP_Error(
                 'subscription_required',
                 $can_save['message'],
@@ -817,22 +731,10 @@ class AI_Web_Site_Website_Manager
             );
         }
 
-        error_log('AI-WEB-SITE: ✅ User has active subscription - Save allowed');
-
-        // 2. Verificare nonce pentru protecție CSRF (doar dacă nu folosim nonce de testare)
-        error_log('AI-WEB-SITE: Verifying nonce with action: save_site_config');
-
         if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
-            error_log('AI-WEB-SITE: ❌ NONCE VERIFICATION FAILED');
-            error_log('AI-WEB-SITE: Nonce empty: ' . (empty($nonce) ? 'YES' : 'NO'));
-            if (!empty($nonce)) {
-                error_log('AI-WEB-SITE: wp_verify_nonce result: ' . (wp_verify_nonce($nonce, 'save_site_config') ? 'SUCCESS' : 'FAILED'));
-            }
             return new WP_Error('invalid_nonce', 'Invalid security token', array('status' => 403));
         }
 
-        error_log('AI-WEB-SITE: ✅ NONCE VERIFICATION SUCCESS');
-        error_log('AI-WEB-SITE: ✅ PERMISSION CHECK PASSED');
         return true;
     }
 
@@ -1514,52 +1416,7 @@ class AI_Web_Site_Website_Manager
                 'config_size' => strlen(json_encode($config_data))
             ));
 
-            // SOLUȚIE ALTERNATIVĂ: Bypass WordPress REST API și trimite direct JSON
-            // output_buffering = 4096 nu poate fi dezactivat, deci ocolim WordPress complet
-
-            // Golește toate buffer-ele WordPress
-            while (ob_get_level()) {
-                ob_end_clean();
-            }
-
-            // Creează JSON-ul
-            $json_output = json_encode($config_data);
-
-            if ($json_output === false) {
-                $logger->error('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'JSON encoding failed: ' . json_last_error_msg());
-                return new WP_REST_Response(array('error' => 'JSON encoding failed'), 500);
-            }
-
-            $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Bypassing WordPress REST API - sending direct output', array(
-                'json_length' => strlen($json_output)
-            ));
-
-            // Setează header-ele manual și trimite JSON direct
-            if (!headers_sent()) {
-                header('Content-Type: application/json; charset=utf-8');
-                header('Content-Length: ' . strlen($json_output));
-                // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-                $origin = get_http_origin();
-                if ($origin) {
-                    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-                } else {
-                    // Fallback for non-browser requests or if origin is not set
-                    header('Access-Control-Allow-Origin: *');
-                }
-                header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-                header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
-
-                // Trimite JSON-ul direct, fără WordPress REST API
-                echo $json_output;
-
-                // Oprește execuția pentru a evita alte output-uri
-                exit;
-            }
-
-            // Fallback: dacă header-ele au fost deja trimise, folosește WordPress REST API
-            $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Headers already sent, using WordPress REST API fallback');
-            $response = new WP_REST_Response($config_data, 200);
-            return $response;
+            return new WP_REST_Response($config_data, 200);
         } else {
             $logger->warning('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'No configuration found for domain: ' . $domain);
             return new WP_REST_Response(array('error' => 'Website not found for this domain'), 404);
