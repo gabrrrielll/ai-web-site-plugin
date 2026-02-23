@@ -67,9 +67,6 @@ class AI_Web_Site_Website_Manager
         // Forțează header-ele CORS prin filtrele WordPress
         add_filter('rest_pre_serve_request', array($this, 'force_cors_headers'), 10, 1);
 
-        // TEMPORAR: Dezactivez filter-ul care poate interfera
-        // add_filter('rest_pre_dispatch', array($this, 'disable_nonce_check'), 10, 3);
-
         // Debug filter pentru a vedea toate requesturile REST
         add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request'));
 
@@ -100,237 +97,12 @@ class AI_Web_Site_Website_Manager
             ), 401);
         }
 
-        $response = new WP_REST_Response(array(
+        return new WP_REST_Response(array(
             'success' => true,
             'nonce' => wp_create_nonce('save_site_config'),
             'user_id' => get_current_user_id(),
             'timestamp' => date('c')
         ), 200);
-
-        if (!defined('AI_WEB_SITE_USE_LEGACY_NONCE_FLOW') || !AI_WEB_SITE_USE_LEGACY_NONCE_FLOW) {
-            return $response;
-        }
-
-        try {
-            // DEBUG: Verifică starea autentificării WordPress
-            $user_id = get_current_user_id();
-            $is_logged_in = is_user_logged_in();
-
-            error_log('AI-WEB-SITE: 🔍 DEBUG - WordPress Auth State:');
-            error_log('AI-WEB-SITE: - is_user_logged_in(): ' . ($is_logged_in ? 'TRUE' : 'FALSE'));
-            error_log('AI-WEB-SITE: - get_current_user_id(): ' . $user_id);
-
-            // DEBUG: Verifică configurația cookie-urilor WordPress
-            error_log('AI-WEB-SITE: 🔍 DEBUG - WordPress Cookie Config:');
-            error_log('AI-WEB-SITE: - COOKIE_DOMAIN: ' . (defined('COOKIE_DOMAIN') ? COOKIE_DOMAIN : 'NOT DEFINED'));
-            error_log('AI-WEB-SITE: - COOKIE_PATH: ' . (defined('COOKIE_PATH') ? COOKIE_PATH : 'NOT DEFINED'));
-            error_log('AI-WEB-SITE: - COOKIE_HTTPS: ' . (defined('COOKIE_HTTPS') ? (COOKIE_HTTPS ? 'true' : 'false') : 'NOT DEFINED'));
-            error_log('AI-WEB-SITE: - COOKIEHASH: ' . (defined('COOKIEHASH') ? COOKIEHASH : 'NOT DEFINED'));
-
-            // Verifică cookie-urile
-            $cookies = $_COOKIE;
-            $wp_cookies = array_filter($cookies, function ($key) {
-                return strpos($key, 'wordpress_') === 0;
-            }, ARRAY_FILTER_USE_KEY);
-
-            error_log('AI-WEB-SITE: 🔍 WordPress Cookies found: ' . count($wp_cookies));
-            foreach ($wp_cookies as $cookie_name => $cookie_value) {
-                error_log('AI-WEB-SITE: - ' . $cookie_name . ': ' . substr($cookie_value, 0, 50) . '...');
-
-                // DEBUG: Analizează cookie-ul de login WordPress
-                if (strpos($cookie_name, 'wordpress_logged_in_') === 0) {
-                    error_log('AI-WEB-SITE: 🔍 DEBUG - Analyzing WordPress login cookie:');
-                    $cookie_parts = explode('|', urldecode($cookie_value));
-                    if (count($cookie_parts) >= 3) {
-                        $username = $cookie_parts[0];
-                        $expiration = $cookie_parts[1];
-                        $token = substr($cookie_parts[2], 0, 20) . '...';
-
-                        error_log('AI-WEB-SITE: - Username: ' . $username);
-                        error_log('AI-WEB-SITE: - Expiration: ' . $expiration . ' (current time: ' . time() . ')');
-                        error_log('AI-WEB-SITE: - Token: ' . $token);
-                        error_log('AI-WEB-SITE: - Cookie expired: ' . ($expiration < time() ? 'YES' : 'NO'));
-
-                        // Verifică dacă user-ul există
-                        $user = get_user_by('login', $username);
-                        if ($user) {
-                            error_log('AI-WEB-SITE: - User exists: YES (ID: ' . $user->ID . ')');
-                        } else {
-                            error_log('AI-WEB-SITE: - User exists: NO');
-                        }
-                    }
-                }
-            }
-
-            // Verifică dacă user-ul este logat
-            if (!$is_logged_in || $user_id === 0) {
-                error_log('AI-WEB-SITE: ❌ User NOT logged in for nonce request');
-
-                // Încearcă să forțeze recunoașterea user-ului din cookie
-                if (!empty($wp_cookies)) {
-                    error_log('AI-WEB-SITE: 🔧 Attempting to force WordPress auth from cookies...');
-
-                    // Forțează WordPress să proceseze cookie-urile
-                    wp_set_current_user(0);
-                    wp_set_current_user(0); // Double call to force refresh
-
-                    $user_id_after = get_current_user_id();
-                    $is_logged_in_after = is_user_logged_in();
-
-                    error_log('AI-WEB-SITE: 🔧 After force auth:');
-                    error_log('AI-WEB-SITE: - is_user_logged_in(): ' . ($is_logged_in_after ? 'TRUE' : 'FALSE'));
-                    error_log('AI-WEB-SITE: - get_current_user_id(): ' . $user_id_after);
-
-                    if (!$is_logged_in_after || $user_id_after === 0) {
-                        // FALLBACK: Dacă există cookie WordPress valid, generează nonce-ul anyway
-                        error_log('AI-WEB-SITE: 🔧 FALLBACK: Generating nonce despite WordPress auth failure');
-
-                        // Extrage user ID din cookie dacă este posibil
-                        $fallback_user_id = 0;
-                        foreach ($wp_cookies as $cookie_name => $cookie_value) {
-                            if (strpos($cookie_name, 'wordpress_logged_in_') === 0) {
-                                // WordPress logged in cookie format: username|expiration|token|hash
-                                $cookie_parts = explode('|', urldecode($cookie_value));
-                                if (count($cookie_parts) >= 3) {
-                                    $username = $cookie_parts[0];
-                                    $expiration = $cookie_parts[1];
-
-                                    // Verifică dacă cookie-ul nu a expirat
-                                    if ($expiration > time()) {
-                                        // Găsește user ID după username
-                                        $user = get_user_by('login', $username);
-                                        if ($user) {
-                                            $fallback_user_id = $user->ID;
-                                            error_log('AI-WEB-SITE: 🔧 FALLBACK: Found user ID from cookie: ' . $fallback_user_id . ' (username: ' . $username . ')');
-                                            break;
-                                        }
-                                    } else {
-                                        error_log('AI-WEB-SITE: 🔧 FALLBACK: Cookie expired for user: ' . $username);
-                                    }
-                                }
-                            }
-                        }
-
-                        if ($fallback_user_id > 0) {
-                            // Generează nonce-ul pentru user-ul identificat din cookie
-                            $nonce = wp_create_nonce('save_site_config');
-                            error_log('AI-WEB-SITE: ✅ FALLBACK: Nonce generated for user ID: ' . $fallback_user_id);
-
-                            $response_data = array(
-                                'success' => true,
-                                'nonce' => $nonce,
-                                'user_id' => $fallback_user_id,
-                                'timestamp' => date('c'),
-                                'auth_method' => 'cookie_fallback'
-                            );
-
-                            // Trimite răspuns direct
-                            $json_output = json_encode($response_data);
-
-                            while (ob_get_level()) {
-                                ob_end_clean();
-                            }
-
-                            if (!headers_sent()) {
-                                header('Content-Type: application/json; charset=utf-8');
-                                header('Content-Length: ' . strlen($json_output));
-                                // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-                                $origin = get_http_origin();
-                                if ($origin) {
-                                    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-                                } else {
-                                    // Fallback for non-browser requests or if origin is not set
-                                    header('Access-Control-Allow-Origin: *');
-                                }
-                                header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-                                header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
-                                header('Access-Control-Allow-Credentials: true');
-
-                                echo $json_output;
-                                exit;
-                            }
-
-                            return new WP_REST_Response($response_data, 200);
-                        } else {
-                            return new WP_REST_Response(array(
-                                'success' => false,
-                                'error' => 'User not logged in - WordPress auth failed and no valid cookie found',
-                                'nonce' => null,
-                                'debug' => array(
-                                    'user_id' => $user_id,
-                                    'is_logged_in' => $is_logged_in,
-                                    'cookies_count' => count($wp_cookies),
-                                    'after_force_auth' => array(
-                                        'user_id' => $user_id_after,
-                                        'is_logged_in' => $is_logged_in_after
-                                    )
-                                )
-                            ), 401);
-                        }
-                    }
-
-                    // Folosește user-ul identificat după forțarea autentificării
-                    $user_id = $user_id_after;
-                } else {
-                    return new WP_REST_Response(array(
-                        'success' => false,
-                        'error' => 'User not logged in - no WordPress cookies found',
-                        'nonce' => null
-                    ), 401);
-                }
-            }
-
-            error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
-
-            // Generează nonce-ul pentru acțiunea de salvare
-            $nonce = wp_create_nonce('save_site_config');
-            error_log('AI-WEB-SITE: ✅ Nonce generated: ' . $nonce);
-
-            $response_data = array(
-                'success' => true,
-                'nonce' => $nonce,
-                'user_id' => $user_id,
-                'timestamp' => date('c')
-            );
-
-            // Trimite răspuns direct pentru a evita output buffering
-            $json_output = json_encode($response_data);
-
-            // Golește buffer-ele WordPress
-            while (ob_get_level()) {
-                ob_end_clean();
-            }
-
-            // Setează header-ele și trimite JSON direct
-            if (!headers_sent()) {
-                header('Content-Type: application/json; charset=utf-8');
-                header('Content-Length: ' . strlen($json_output));
-                // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-                $origin = get_http_origin();
-                if ($origin) {
-                    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-                } else {
-                    // Fallback for non-browser requests or if origin is not set
-                    header('Access-Control-Allow-Origin: *');
-                }
-                header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-                header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
-
-                echo $json_output;
-                exit;
-            }
-
-            return new WP_REST_Response($response_data, 200);
-
-        } catch (Exception $e) {
-            error_log('AI-WEB-SITE: ❌ Error generating nonce: ' . $e->getMessage());
-
-            return new WP_REST_Response(array(
-                'success' => false,
-                'error' => $e->getMessage(),
-                'nonce' => null
-            ), 500);
-        }
     }
 
     /**
@@ -464,27 +236,6 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
-     * Bypass WordPress global nonce verification for our test nonce
-     */
-    public function bypass_nonce_for_test($errors)
-    {
-        // Verifică dacă este request pentru endpoint-ul nostru
-        if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/wp-json/ai-web-site/v1/website-config') !== false) {
-            // TEMPORAR: Bypass complet pentru orice nonce pentru debugging
-            error_log('AI-WEB-SITE: ✅ BYPASSING WordPress global authentication for /website-config endpoint');
-            error_log('AI-WEB-SITE: Request method: ' . $_SERVER['REQUEST_METHOD']);
-            error_log('AI-WEB-SITE: Original errors: ' . ($errors ? json_encode($errors) : 'null'));
-
-            // 🔧 MODIFICARE: Returnăm TRUE în loc de NULL pentru a forța bypass-ul complet
-            // NULL = no error (dar WordPress continuă verificările)
-            // TRUE = user authenticated (WordPress skip-uiește TOATE verificările)
-            return true;
-        }
-
-        return $errors; // Returnează erorile normale pentru alte requesturi
-    }
-
-    /**
      * Create database table
      */
     public function create_table()
@@ -516,34 +267,6 @@ class AI_Web_Site_Website_Manager
         // Log table creation
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('WEBSITE_MANAGER', 'TABLE_CREATED', 'Website configurations table created');
-    }
-
-    /**
-     * Dezactivez complet verificarea nonce pentru endpoint-ul nostru
-     */
-    public function disable_nonce_check($result, $server, $request)
-    {
-        // Verifică dacă este request pentru endpoint-ul nostru
-        if (strpos($request->get_route(), '/ai-web-site/v1/website-config') !== false) {
-            // Verifică dacă este POST request
-            if ($request->get_method() === 'POST') {
-                // Verifică header-ele pentru nonce-ul nostru de test
-                $headers = getallheaders();
-                $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
-
-                if ($nonce === 'test-nonce-12345') {
-                    error_log('AI-WEB-SITE: 🚫 DISABLING nonce check completely for test nonce');
-
-                    // Returnează un răspuns de succes pentru a bypassa toate verificările
-                    return new WP_REST_Response(array(
-                        'success' => true,
-                        'message' => 'Nonce check disabled for test'
-                    ), 200);
-                }
-            }
-        }
-
-        return $result; // Continuă cu procesarea normală
     }
 
     /**
