@@ -68,15 +68,20 @@ The plugin handles:
 
 ## 📡 REST API Endpoints
 
-### Site Configuration
-- **GET** `/wp-json/ai-web-site/v1/site-config/{subdomain}` - Get site config
-- **POST** `/wp-json/ai-web-site/v1/site-config/{subdomain}` - Save site config
-- **DELETE** `/wp-json/ai-web-site/v1/site-config/{subdomain}` - Delete site config
+Base namespace: `/wp-json/ai-web-site/v1`
 
-### Subdomain Management
-- **GET** `/wp-json/ai-web-site/v1/subdomains` - List all subdomains
-- **POST** `/wp-json/ai-web-site/v1/subdomains` - Create new subdomain
-- **DELETE** `/wp-json/ai-web-site/v1/subdomains/{subdomain}` - Delete subdomain
+| Ruta | Metodă | Descriere |
+|---|---|---|
+| `/website-config/{domain}` | GET | Încarcă configurația website-ului după domeniu |
+| `/website-config` | POST | Salvează configurația website-ului |
+| `/website/{domain}` | GET | Endpoint de compatibilitate pentru citirea configurației |
+| `/wp-nonce` | GET | Returnează nonce WordPress pentru autentificare |
+| `/user-site/add-subdomain` | POST | Adaugă subdomeniu pentru site-ul utilizatorului |
+| `/user-site/delete` | POST | Șterge website-ul utilizatorului |
+| `/ai/generate-text` | POST | Generează text prin provider AI |
+| `/ai/generate-image` | POST | Generează imagine prin provider AI |
+| `/site-config` | GET | Returnează configurația site-ului după parametrul `subdomain` |
+| `/logs` | GET | Returnează log-uri de debugging |
 
 ## 🔄 Auto-Update
 
