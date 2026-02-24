@@ -10,6 +10,7 @@ if (!defined('ABSPATH')) {
 
 // Get current options
 $options = get_option('ai_web_site_options', array());
+$selected_gemini_model = $options['ai_gemini_model'] ?? '';
 $admin = AI_Web_Site_Admin::get_instance();
 $messages = $admin->get_admin_messages();
 
@@ -171,6 +172,30 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                                    value="<?php echo esc_attr($options['ai_deepseek_api_key'] ?? ''); ?>" 
                                    class="regular-text">
                             <p class="description"><?php _e('API Key for DeepSeek (optional)', 'ai-web-site-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ai_gemini_model"><?php _e('Gemini Model', 'ai-web-site-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <select id="ai_gemini_model" name="ai_gemini_model" class="regular-text">
+                                <option value=""><?php _e('Auto (backend default)', 'ai-web-site-plugin'); ?></option>
+                                <?php if (!empty($selected_gemini_model)): ?>
+                                    <option value="<?php echo esc_attr($selected_gemini_model); ?>" selected>
+                                        <?php echo esc_html($selected_gemini_model); ?>
+                                    </option>
+                                <?php endif; ?>
+                            </select>
+                            <p style="margin-top: 8px;">
+                                <button type="button" id="refresh_gemini_models" class="button button-secondary">
+                                    <?php _e('Refresh Gemini list', 'ai-web-site-plugin'); ?>
+                                </button>
+                            </p>
+                            <p class="description">
+                                <?php _e('Load live Gemini models from Google API (using the saved API key) and select one for text generation.', 'ai-web-site-plugin'); ?>
+                            </p>
+                            <p id="gemini_models_status" class="description"></p>
                         </td>
                     </tr>
                 </table>

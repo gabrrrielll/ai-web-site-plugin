@@ -52,6 +52,7 @@ class AI_Web_Site_Admin
 
         // Handle UMP license activation
         add_action('wp_ajax_activate_ump_license', array($this, 'activate_ump_license'));
+        add_action('wp_ajax_get_gemini_models', array($this, 'get_gemini_models'));
 
         // Add admin menu
         add_action('admin_menu', array($this, 'add_admin_menu'));
@@ -88,7 +89,9 @@ class AI_Web_Site_Admin
                     'creating' => __('Creating...', 'ai-web-site-plugin'),
                     'deleting' => __('Deleting...', 'ai-web-site-plugin'),
                     'testing' => __('Testing...', 'ai-web-site-plugin'),
-                    'activating' => __('Activating...', 'ai-web-site-plugin')
+                    'activating' => __('Activating...', 'ai-web-site-plugin'),
+                    'loadingModels' => __('Loading models...', 'ai-web-site-plugin'),
+                    'refreshModels' => __('Refresh Gemini list', 'ai-web-site-plugin')
                 )
             )) . ';';
             echo file_get_contents($js_path);
@@ -157,6 +160,7 @@ class AI_Web_Site_Admin
         // AI Settings
         $options['ai_gemini_api_key'] = sanitize_text_field($_POST['ai_gemini_api_key']);
         $options['ai_deepseek_api_key'] = sanitize_text_field($_POST['ai_deepseek_api_key']);
+        $options['ai_gemini_model'] = sanitize_text_field($_POST['ai_gemini_model'] ?? '');
         
         // Security settings
         $options['rate_limit_requests'] = max(1, min(10000, (int)sanitize_text_field($_POST['rate_limit_requests'] ?? 100)));
@@ -221,6 +225,79 @@ class AI_Web_Site_Admin
         // Redirect back with result message
         wp_redirect(add_query_arg('message', $message, admin_url('options-general.php?page=ai-web-site-plugin')));
         exit;
+    }
+
+    /**
+     * Fetch Gemini models from Google AI API using current key.
+     */
+    public function get_gemini_models()
+    {
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'ai_web_site_nonce')) {
+            wp_send_json_error('Security check failed');
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+
+        $posted_key = sanitize_text_field($_POST['api_key'] ?? '');
+        $options = get_option('ai_web_site_options', array());
+        $api_key = !empty($posted_key) ? $posted_key : ($options['ai_gemini_api_key'] ?? '');
+
+        if (empty($api_key)) {
+            wp_send_json_error('Gemini API key is required');
+        }
+
+        $response = wp_remote_get(
+            'https://generativelanguage.googleapis.com/v1beta/models?key=' . rawurlencode($api_key),
+            array(
+                'timeout' => 20,
+                'headers' => array(
+                    'Accept' => 'application/json'
+                )
+            )
+        );
+
+        if (is_wp_error($response)) {
+            wp_send_json_error($response->get_error_message());
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if ($status_code >= 400 || isset($data['error'])) {
+            $message = $data['error']['message'] ?? ('Gemini API error (' . $status_code . ')');
+            wp_send_json_error($message);
+        }
+
+        $models = array();
+        foreach (($data['models'] ?? array()) as $model) {
+            $methods = $model['supportedGenerationMethods'] ?? array();
+            $name = $model['name'] ?? '';
+
+            if (empty($name) || !in_array('generateContent', $methods, true)) {
+                continue;
+            }
+
+            if (strpos($name, 'models/gemini') !== 0) {
+                continue;
+            }
+
+            $display_name = $model['displayName'] ?? $name;
+            $models[] = array(
+                'value' => $name,
+                'label' => $display_name . ' (' . $name . ')'
+            );
+        }
+
+        usort($models, function ($a, $b) {
+            return strcasecmp($a['label'], $b['label']);
+        });
+
+        wp_send_json_success(array(
+            'models' => $models
+        ));
     }
 
     /**

@@ -284,6 +284,90 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Gemini models loader (live from Google API)
+    var refreshGeminiModelsButton = document.getElementById('refresh_gemini_models');
+    var geminiModelSelect = document.getElementById('ai_gemini_model');
+    var geminiModelStatus = document.getElementById('gemini_models_status');
+    var geminiApiKeyInput = document.getElementById('ai_gemini_api_key');
+
+    function setGeminiModelStatus(message, isError) {
+        if (!geminiModelStatus) return;
+        geminiModelStatus.textContent = message || '';
+        geminiModelStatus.style.color = isError ? '#dc3232' : '#2271b1';
+    }
+
+    function populateGeminiModelSelect(models) {
+        if (!geminiModelSelect) return;
+
+        var previousSelection = geminiModelSelect.value || '';
+        geminiModelSelect.innerHTML = '';
+
+        var autoOption = document.createElement('option');
+        autoOption.value = '';
+        autoOption.textContent = 'Auto (backend default)';
+        geminiModelSelect.appendChild(autoOption);
+
+        models.forEach(function (model) {
+            var option = document.createElement('option');
+            option.value = model.value;
+            option.textContent = model.label;
+            geminiModelSelect.appendChild(option);
+        });
+
+        var preferredSelection = previousSelection || (aiWebSite.options && aiWebSite.options.ai_gemini_model) || '';
+        if (preferredSelection) {
+            geminiModelSelect.value = preferredSelection;
+        }
+    }
+
+    function fetchGeminiModels() {
+        if (!refreshGeminiModelsButton) return;
+
+        var previousButtonText = refreshGeminiModelsButton.textContent;
+        refreshGeminiModelsButton.disabled = true;
+        refreshGeminiModelsButton.textContent = (aiWebSite.strings && aiWebSite.strings.loadingModels) || 'Loading models...';
+        setGeminiModelStatus('Loading Gemini models...', false);
+
+        var apiKey = geminiApiKeyInput ? geminiApiKeyInput.value.trim() : '';
+
+        fetch(aiWebSite.ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'get_gemini_models',
+                nonce: aiWebSite.nonce,
+                api_key: apiKey
+            })
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data.success) {
+                    throw new Error(data.data || 'Failed to load Gemini models.');
+                }
+
+                var models = (data.data && data.data.models) ? data.data.models : [];
+                populateGeminiModelSelect(models);
+                setGeminiModelStatus('Gemini models updated: ' + models.length + ' available.', false);
+            })
+            .catch(function (error) {
+                setGeminiModelStatus(error.message || 'Could not load Gemini models.', true);
+            })
+            .finally(function () {
+                refreshGeminiModelsButton.disabled = false;
+                refreshGeminiModelsButton.textContent = previousButtonText || ((aiWebSite.strings && aiWebSite.strings.refreshModels) || 'Refresh Gemini list');
+            });
+    }
+
+    if (refreshGeminiModelsButton) {
+        refreshGeminiModelsButton.addEventListener('click', function () {
+            fetchGeminiModels();
+        });
+    }
+
     // Tab functionality
     var tabLinks = document.querySelectorAll('.nav-tab');
     var tabContents = document.querySelectorAll('.tab-content');

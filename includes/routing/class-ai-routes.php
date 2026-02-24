@@ -96,7 +96,8 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
         }
         
         if ($provider === 'gemini') {
-            return $this->call_gemini_text($api_key, $prompt, $format);
+            $gemini_model = $options['ai_gemini_model'] ?? 'models/gemini-1.5-flash';
+            return $this->call_gemini_text($api_key, $prompt, $format, $gemini_model);
         } else {
             // Placeholder for DeepSeek implementation
             return new WP_Error('not_implemented', 'DeepSeek provider not fully implemented yet', array('status' => 501));
@@ -127,10 +128,13 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
     /**
      * Call Gemini API for text
      */
-    private function call_gemini_text($api_key, $prompt, $format) {
-        // gemini-pro is deprecated/not available for many API keys on v1beta.
-        // Use a currently supported text model.
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $api_key;
+    private function call_gemini_text($api_key, $prompt, $format, $model_name) {
+        $model_name = sanitize_text_field((string) $model_name);
+        if (empty($model_name) || !preg_match('/^models\/[a-zA-Z0-9._-]+$/', $model_name)) {
+            $model_name = 'models/gemini-1.5-flash';
+        }
+
+        $url = 'https://generativelanguage.googleapis.com/v1beta/' . $model_name . ':generateContent?key=' . $api_key;
         
         $body = array(
             'contents' => array(
