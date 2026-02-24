@@ -48,6 +48,11 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
                     )
                 )
             ),
+            '/ai/model-limits' => array(
+                'methods' => 'GET',
+                'callback' => array($this, 'get_model_limits'),
+                'permission_callback' => array($this, 'check_authenticated_permission'),
+            ),
             '/ai/generate-image' => array(
                 'methods' => 'POST',
                 'callback' => array($this, 'generate_image'),
@@ -106,6 +111,28 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
     }
 
     /**
+     * Return selected Gemini model limits saved in plugin options.
+     */
+    public function get_model_limits($request) {
+        $options = get_option('ai_web_site_options', array());
+        $model = $options['ai_gemini_model'] ?? 'models/gemini-1.5-flash';
+        $input_limit = isset($options['ai_gemini_input_token_limit']) ? (int) $options['ai_gemini_input_token_limit'] : 1048576;
+        $output_limit = isset($options['ai_gemini_output_token_limit']) ? (int) $options['ai_gemini_output_token_limit'] : 2048;
+
+        // Keep a healthy headroom for model/system/output overhead.
+        $recommended_prompt_input_tokens = max(8192, (int) floor($input_limit * 0.55));
+
+        return array(
+            'success' => true,
+            'provider' => 'gemini',
+            'model' => $model,
+            'inputTokenLimit' => $input_limit,
+            'outputTokenLimit' => $output_limit,
+            'recommendedPromptInputTokens' => $recommended_prompt_input_tokens,
+        );
+    }
+
+    /**
      * Generate image (Stub for future implementation or redirect to specialized service)
      */
     public function generate_image($request) {
@@ -138,6 +165,26 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
         $output_token_limit = (int) $output_token_limit;
         if ($output_token_limit <= 0) {
             $output_token_limit = 2048;
+        }
+
+        $token_check = $this->count_gemini_input_tokens($api_key, $model_name, $prompt);
+        if (is_wp_error($token_check)) {
+            return $token_check;
+        }
+
+        $input_tokens = (int) ($token_check['inputTokens'] ?? 0);
+        $input_limit = (int) ($token_check['inputTokenLimit'] ?? 0);
+        if ($input_limit > 0 && $input_tokens > $input_limit) {
+            return new WP_Error(
+                'input_token_limit_exceeded',
+                'The input token count exceeds the maximum number of tokens allowed ' . $input_limit . '.',
+                array(
+                    'status' => 400,
+                    'inputTokens' => $input_tokens,
+                    'inputTokenLimit' => $input_limit,
+                    'model' => $model_name,
+                )
+            );
         }
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/' . $model_name . ':generateContent?key=' . $api_key;
@@ -195,7 +242,62 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
         return array(
             'success' => true,
             'text' => $text,
-            'provider' => 'gemini'
+            'provider' => 'gemini',
+            'tokenUsage' => array(
+                'inputTokens' => $input_tokens,
+                'inputTokenLimit' => $input_limit,
+            ),
+        );
+    }
+
+    /**
+     * Preflight token count to avoid expensive generateContent failures.
+     */
+    private function count_gemini_input_tokens($api_key, $model_name, $prompt) {
+        $url = 'https://generativelanguage.googleapis.com/v1beta/' . $model_name . ':countTokens?key=' . $api_key;
+        $body = array(
+            'contents' => array(
+                array(
+                    'parts' => array(
+                        array('text' => $prompt)
+                    )
+                )
+            )
+        );
+
+        $response = wp_remote_post($url, array(
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => wp_json_encode($body),
+            'timeout' => 30
+        ));
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $response_body = wp_remote_retrieve_body($response);
+        $data = json_decode($response_body, true);
+        if (isset($data['error'])) {
+            return new WP_Error('gemini_count_tokens_error', $data['error']['message'] ?? 'Failed to count tokens', array('status' => 400));
+        }
+
+        $total_tokens = isset($data['totalTokens']) ? (int) $data['totalTokens'] : 0;
+        $input_limit = 0;
+
+        if (isset($data['model']['inputTokenLimit'])) {
+            $input_limit = (int) $data['model']['inputTokenLimit'];
+        } elseif (isset($data['inputTokenLimit'])) {
+            $input_limit = (int) $data['inputTokenLimit'];
+        }
+
+        $options = get_option('ai_web_site_options', array());
+        if ($input_limit <= 0 && isset($options['ai_gemini_input_token_limit'])) {
+            $input_limit = (int) $options['ai_gemini_input_token_limit'];
+        }
+
+        return array(
+            'inputTokens' => $total_tokens,
+            'inputTokenLimit' => $input_limit,
         );
     }
 
