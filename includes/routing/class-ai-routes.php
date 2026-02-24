@@ -51,7 +51,8 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
             '/ai/model-limits' => array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_model_limits'),
-                'permission_callback' => array($this, 'check_authenticated_permission'),
+                // Public read-only diagnostic endpoint (no secrets returned).
+                'permission_callback' => '__return_true',
             ),
             '/ai/generate-image' => array(
                 'methods' => 'POST',
