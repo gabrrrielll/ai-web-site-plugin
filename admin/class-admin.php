@@ -161,6 +161,8 @@ class AI_Web_Site_Admin
         $options['ai_gemini_api_key'] = sanitize_text_field($_POST['ai_gemini_api_key']);
         $options['ai_deepseek_api_key'] = sanitize_text_field($_POST['ai_deepseek_api_key']);
         $options['ai_gemini_model'] = sanitize_text_field($_POST['ai_gemini_model'] ?? '');
+        $options['ai_gemini_input_token_limit'] = max(0, (int) sanitize_text_field($_POST['ai_gemini_input_token_limit'] ?? 0));
+        $options['ai_gemini_output_token_limit'] = max(0, (int) sanitize_text_field($_POST['ai_gemini_output_token_limit'] ?? 0));
         
         // Security settings
         $options['rate_limit_requests'] = max(1, min(10000, (int)sanitize_text_field($_POST['rate_limit_requests'] ?? 100)));
@@ -285,9 +287,13 @@ class AI_Web_Site_Admin
             }
 
             $display_name = $model['displayName'] ?? $name;
+            $input_token_limit = (int) ($model['inputTokenLimit'] ?? 0);
+            $output_token_limit = (int) ($model['outputTokenLimit'] ?? 0);
             $models[] = array(
                 'value' => $name,
-                'label' => $display_name . ' (' . $name . ')'
+                'label' => $display_name . ' (' . $name . ') - in: ' . $input_token_limit . ', out: ' . $output_token_limit,
+                'inputTokenLimit' => $input_token_limit,
+                'outputTokenLimit' => $output_token_limit
             );
         }
 

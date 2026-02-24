@@ -11,6 +11,8 @@ if (!defined('ABSPATH')) {
 // Get current options
 $options = get_option('ai_web_site_options', array());
 $selected_gemini_model = $options['ai_gemini_model'] ?? '';
+$selected_gemini_input_limit = (int)($options['ai_gemini_input_token_limit'] ?? 0);
+$selected_gemini_output_limit = (int)($options['ai_gemini_output_token_limit'] ?? 0);
 $admin = AI_Web_Site_Admin::get_instance();
 $messages = $admin->get_admin_messages();
 
@@ -195,6 +197,15 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                             <p class="description">
                                 <?php _e('Load live Gemini models from Google API (using the saved API key) and select one for text generation.', 'ai-web-site-plugin'); ?>
                             </p>
+                            <p class="description" id="gemini_model_limits_info">
+                                <?php if (!empty($selected_gemini_model)): ?>
+                                    <?php echo esc_html('Current limits - input: ' . $selected_gemini_input_limit . ', output: ' . $selected_gemini_output_limit); ?>
+                                <?php else: ?>
+                                    <?php _e('Select a model and refresh list to see limits.', 'ai-web-site-plugin'); ?>
+                                <?php endif; ?>
+                            </p>
+                            <input type="hidden" id="ai_gemini_input_token_limit" name="ai_gemini_input_token_limit" value="<?php echo esc_attr($selected_gemini_input_limit); ?>">
+                            <input type="hidden" id="ai_gemini_output_token_limit" name="ai_gemini_output_token_limit" value="<?php echo esc_attr($selected_gemini_output_limit); ?>">
                             <p id="gemini_models_status" class="description"></p>
                         </td>
                     </tr>

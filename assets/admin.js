@@ -288,6 +288,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var refreshGeminiModelsButton = document.getElementById('refresh_gemini_models');
     var geminiModelSelect = document.getElementById('ai_gemini_model');
     var geminiModelStatus = document.getElementById('gemini_models_status');
+    var geminiModelLimitsInfo = document.getElementById('gemini_model_limits_info');
+    var geminiInputTokenLimitInput = document.getElementById('ai_gemini_input_token_limit');
+    var geminiOutputTokenLimitInput = document.getElementById('ai_gemini_output_token_limit');
     var geminiApiKeyInput = document.getElementById('ai_gemini_api_key');
 
     function setGeminiModelStatus(message, isError) {
@@ -311,12 +314,41 @@ document.addEventListener('DOMContentLoaded', function () {
             var option = document.createElement('option');
             option.value = model.value;
             option.textContent = model.label;
+            option.dataset.inputTokenLimit = String(model.inputTokenLimit || 0);
+            option.dataset.outputTokenLimit = String(model.outputTokenLimit || 0);
             geminiModelSelect.appendChild(option);
         });
 
         var preferredSelection = previousSelection || (aiWebSite.options && aiWebSite.options.ai_gemini_model) || '';
         if (preferredSelection) {
             geminiModelSelect.value = preferredSelection;
+        }
+
+        updateGeminiModelLimitsFromSelection();
+    }
+
+    function updateGeminiModelLimitsFromSelection() {
+        if (!geminiModelSelect) return;
+
+        var selectedOption = geminiModelSelect.options[geminiModelSelect.selectedIndex];
+        var inputLimit = selectedOption ? parseInt(selectedOption.dataset.inputTokenLimit || '0', 10) : 0;
+        var outputLimit = selectedOption ? parseInt(selectedOption.dataset.outputTokenLimit || '0', 10) : 0;
+
+        if (geminiInputTokenLimitInput) {
+            geminiInputTokenLimitInput.value = String(inputLimit > 0 ? inputLimit : 0);
+        }
+
+        if (geminiOutputTokenLimitInput) {
+            geminiOutputTokenLimitInput.value = String(outputLimit > 0 ? outputLimit : 0);
+        }
+
+        if (geminiModelLimitsInfo) {
+            if (!selectedOption || !selectedOption.value) {
+                geminiModelLimitsInfo.textContent = 'Auto mode: backend default limits will be used.';
+            } else {
+                geminiModelLimitsInfo.textContent =
+                    'Model limits - input: ' + (inputLimit || 'unknown') + ', output: ' + (outputLimit || 'unknown');
+            }
         }
     }
 
@@ -366,6 +398,14 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshGeminiModelsButton.addEventListener('click', function () {
             fetchGeminiModels();
         });
+    }
+
+    if (geminiModelSelect) {
+        geminiModelSelect.addEventListener('change', function () {
+            updateGeminiModelLimitsFromSelection();
+        });
+
+        updateGeminiModelLimitsFromSelection();
     }
 
     // Tab functionality
