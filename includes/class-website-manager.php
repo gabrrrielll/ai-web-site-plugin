@@ -65,7 +65,7 @@ class AI_Web_Site_Website_Manager
         add_action('template_redirect', array($this, 'set_cors_headers_early'), 1);
 
         // Forțează header-ele CORS prin filtrele WordPress
-        add_filter('rest_pre_serve_request', array($this, 'force_cors_headers'), 10, 1);
+        add_filter('rest_pre_serve_request', array($this, 'force_cors_headers'), 10, 4);
 
         // Debug filter pentru a vedea toate requesturile REST
         add_filter('rest_request_before_callbacks', array($this, 'debug_rest_request'));
@@ -1107,7 +1107,10 @@ class AI_Web_Site_Website_Manager
         $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', '=== FUNCȚIA REST_GET_BY_DOMAIN A FOST APELATĂ ===');
         $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'REST API GET by domain request received');
 
-        $domain = $request['domain'];
+        $domain = strtolower(trim(sanitize_text_field((string) $request->get_param('domain'))));
+        $domain = preg_replace('#^https?://#', '', $domain);
+        // Extract domain part only (everything before first '/')
+        $domain = explode('/', $domain, 2)[0];
         $logger->info('WEBSITE_MANAGER', 'REST_GET_BY_DOMAIN', 'Domain parameter:', array('domain' => $domain));
 
         if (empty($domain)) {
@@ -1789,18 +1792,21 @@ class AI_Web_Site_Website_Manager
     /**
      * Force CORS headers through WordPress filters
      */
-    public function force_cors_headers($headers)
+    public function force_cors_headers($served, $result, $request, $server)
     {
-        if (strpos($_SERVER['REQUEST_URI'], '/wp-json/ai-web-site/') !== false) {
-            $headers['Access-Control-Allow-Origin'] = '*';
-            $headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
-            $headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce';
-            $headers['Access-Control-Allow-Credentials'] = 'true';
-
-            error_log('AI-WEB-SITE: CORS headers forced through WordPress filters');
+        if ($request && strpos($request->get_route(), '/ai-web-site/') !== false) {
+            $origin = get_http_origin();
+            if ($origin) {
+                header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+                header('Access-Control-Allow-Credentials: true');
+            } else {
+                header('Access-Control-Allow-Origin: *');
+            }
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
         }
 
-        return $headers;
+        return $served;
     }
 
     /**
