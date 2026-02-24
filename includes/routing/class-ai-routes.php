@@ -128,7 +128,9 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
      * Call Gemini API for text
      */
     private function call_gemini_text($api_key, $prompt, $format) {
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' . $api_key;
+        // gemini-pro is deprecated/not available for many API keys on v1beta.
+        // Use a currently supported text model.
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $api_key;
         
         $body = array(
             'contents' => array(
