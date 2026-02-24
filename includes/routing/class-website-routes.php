@@ -70,7 +70,7 @@ class AI_Web_Site_Website_Routes extends AI_Web_Site_Base_Routes {
             '/website-config' => array(
                 'methods' => 'POST',
                 'callback' => array($this->manager, 'rest_save_website_config'),
-                'permission_callback' => '__return_true', // Permission check done inside callback
+                'permission_callback' => array($this->manager, 'check_save_permissions'),
                 'args' => array(
                     'config' => array(
                         'description' => 'Website configuration object',

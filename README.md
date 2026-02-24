@@ -68,15 +68,39 @@ The plugin handles:
 
 ## 📡 REST API Endpoints
 
-### Site Configuration
-- **GET** `/wp-json/ai-web-site/v1/site-config/{subdomain}` - Get site config
-- **POST** `/wp-json/ai-web-site/v1/site-config/{subdomain}` - Save site config
-- **DELETE** `/wp-json/ai-web-site/v1/site-config/{subdomain}` - Delete site config
+Base namespace: `/wp-json/ai-web-site/v1`
 
-### Subdomain Management
-- **GET** `/wp-json/ai-web-site/v1/subdomains` - List all subdomains
-- **POST** `/wp-json/ai-web-site/v1/subdomains` - Create new subdomain
-- **DELETE** `/wp-json/ai-web-site/v1/subdomains/{subdomain}` - Delete subdomain
+| Route | Method | Description |
+|---|---|---|
+| `/website-config/{domain}` | GET | Load website configuration by domain |
+| `/website-config` | POST | Save website configuration |
+| `/website/{domain}` | GET | Backward-compatibility endpoint for reading configuration |
+| `/wp-nonce` | GET | Return WordPress nonce used for authentication |
+| `/user-site/add-subdomain` | POST | Add subdomain for a user website |
+| `/user-site/delete` | POST | Delete user website |
+| `/ai/generate-text` | POST | Generate text using configured AI provider |
+| `/ai/generate-image` | POST | Generate image using configured AI provider |
+| `/site-config` | GET | Return site configuration by `subdomain` parameter |
+| `/logs` | GET | Return debugging logs |
+
+### 🧪 Postman Testing
+
+Import these files in Postman:
+
+- Collection: `/postman/ai-web-site-plugin.postman_collection.json`
+- Environment: `/postman/ai-web-site-plugin.postman_environment.json`
+
+After import:
+
+1. Select the imported environment in Postman.
+2. Set `base_url` to your site URL (example: `https://your-domain.com/wp-json/ai-web-site/v1`).
+3. Run `GET /wp-nonce` (while authenticated in WordPress) and copy the returned nonce to `wp_nonce` environment variable.
+4. Run the remaining requests from the collection.
+
+The collection also includes Postman test scripts (smoke checks) for each route:
+- validates expected status codes per endpoint type
+- validates JSON responses
+- automatically stores `wp_nonce` from `GET /wp-nonce` into environment variable
 
 ## 🔄 Auto-Update
 

@@ -40,29 +40,9 @@ class AI_Web_Site_Database
      */
     public static function create_tables()
     {
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'ai_web_sites';
-
-        $charset_collate = $wpdb->get_charset_collate();
-
-        $sql = "CREATE TABLE $table_name (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            user_id bigint(20) NOT NULL,
-            subdomain varchar(255) NOT NULL,
-            domain varchar(255) NOT NULL,
-            site_config longtext NOT NULL,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            status enum('active', 'inactive', 'suspended') DEFAULT 'active',
-            PRIMARY KEY (id),
-            UNIQUE KEY unique_subdomain (subdomain, domain),
-            KEY user_id (user_id),
-            KEY status (status)
-        ) $charset_collate;";
-
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
+        // Use canonical table managed by Website Manager to avoid legacy duplicate table creation
+        $website_manager = AI_Web_Site_Website_Manager::get_instance();
+        $website_manager->create_table();
     }
 
     /**
@@ -76,7 +56,7 @@ class AI_Web_Site_Database
             $user_id = get_current_user_id();
         }
 
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         // Check if subdomain already exists (active or inactive)
         $existing_subdomain = $wpdb->get_row($wpdb->prepare(
@@ -91,7 +71,7 @@ class AI_Web_Site_Database
                 $table_name,
                 array(
                     'user_id' => $user_id,
-                    'site_config' => json_encode($site_config),
+                    'config' => json_encode($site_config),
                     'status' => 'active',
                     'updated_at' => current_time('mysql')
                 ),
@@ -111,7 +91,7 @@ class AI_Web_Site_Database
                     'user_id' => $user_id,
                     'subdomain' => $subdomain,
                     'domain' => $domain,
-                    'site_config' => json_encode($site_config),
+                    'config' => json_encode($site_config),
                     'status' => 'active'
                 ),
                 array(
@@ -138,7 +118,7 @@ class AI_Web_Site_Database
     public function update_subdomain_for_website_id($website_id, $subdomain, $domain, $status = 'active')
     {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         $result = $wpdb->update(
             $table_name,
@@ -164,7 +144,7 @@ class AI_Web_Site_Database
     public function delete_website($website_id)
     {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         $result = $wpdb->delete(
             $table_name,
@@ -182,7 +162,7 @@ class AI_Web_Site_Database
     {
         global $wpdb;
 
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         $result = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$table_name} WHERE subdomain = %s AND domain = %s AND status = 'active'",
@@ -191,7 +171,7 @@ class AI_Web_Site_Database
         ));
 
         if ($result) {
-            $result->site_config = json_decode($result->site_config, true);
+            $result->config = json_decode($result->config, true);
         }
 
         return $result;
@@ -204,12 +184,12 @@ class AI_Web_Site_Database
     {
         global $wpdb;
 
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         $result = $wpdb->update(
             $table_name,
             array(
-                'site_config' => json_encode($site_config),
+                'config' => json_encode($site_config),
                 'updated_at' => current_time('mysql')
             ),
             array(
@@ -230,7 +210,7 @@ class AI_Web_Site_Database
     {
         global $wpdb;
 
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         // DELETE real from database (not just marking as inactive)
         $result = $wpdb->delete(
@@ -288,7 +268,7 @@ class AI_Web_Site_Database
         global $wpdb;
 
         // Use the correct subdomains table
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         $results = $wpdb->get_results(
             "SELECT s.*, u.user_login, u.display_name 
@@ -299,8 +279,8 @@ class AI_Web_Site_Database
 
         // Decode JSON for each result
         foreach ($results as $result) {
-            if (isset($result->site_config)) {
-                $result->site_config = json_decode($result->site_config, true);
+            if (isset($result->config)) {
+                $result->config = json_decode($result->config, true);
             }
         }
 
@@ -314,7 +294,7 @@ class AI_Web_Site_Database
     {
         global $wpdb;
 
-        $table_name = $wpdb->prefix . 'ai_web_sites';
+        $table_name = $wpdb->prefix . 'ai_web_site_websites';
 
         $count = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table_name} WHERE subdomain = %s AND domain = %s AND status = 'active'",
