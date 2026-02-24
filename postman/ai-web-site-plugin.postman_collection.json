@@ -39,7 +39,7 @@
                   "  pm.expect([200, 400, 401, 403, 404]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
@@ -84,7 +84,7 @@
                   "  pm.expect([200, 400, 401, 403, 429]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
@@ -117,7 +117,7 @@
                   "  pm.expect([200, 400, 401, 403, 404]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
@@ -155,7 +155,7 @@
                   "  pm.expect([200, 400, 401, 403, 404]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
@@ -192,7 +192,7 @@
                   "  pm.expect([200, 401]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});",
                   "if (pm.response.code === 200) {",
                   "  var body = pm.response.json();",
@@ -246,7 +246,7 @@
                   "  pm.expect([200, 400, 401, 403, 404, 409, 500]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
@@ -288,7 +288,7 @@
                   "  pm.expect([200, 400, 401, 403, 404, 409, 500]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
@@ -335,7 +335,7 @@
                   "  pm.expect([200, 400, 401, 403, 500, 501]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
@@ -377,7 +377,7 @@
                   "  pm.expect([200, 400, 401, 403, 500, 501]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
@@ -420,7 +420,7 @@
                   "  pm.expect([200, 400, 401, 403, 404]).to.include(pm.response.code);",
                   "});",
                   "pm.test('Response is JSON', function () {",
-                  "  pm.response.to.be.json;",
+                  "  pm.expect(function () { pm.response.json(); }).to.not.throw();",
                   "});"
                 ]
               }
