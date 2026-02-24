@@ -83,6 +83,20 @@ Base namespace: `/wp-json/ai-web-site/v1`
 | `/site-config` | GET | Return site configuration by `subdomain` parameter |
 | `/logs` | GET | Return debugging logs |
 
+### 🧪 Postman Testing
+
+Import these files in Postman:
+
+- Collection: `/postman/ai-web-site-plugin.postman_collection.json`
+- Environment: `/postman/ai-web-site-plugin.postman_environment.json`
+
+After import:
+
+1. Select the imported environment in Postman.
+2. Set `base_url` to your site URL (example: `https://your-domain.com/wp-json/ai-web-site/v1`).
+3. Run `GET /wp-nonce` (while authenticated in WordPress) and copy the returned nonce to `wp_nonce` environment variable.
+4. Run the remaining requests from the collection.
+
 ## 🔄 Auto-Update
 
 This repository is automatically updated when:

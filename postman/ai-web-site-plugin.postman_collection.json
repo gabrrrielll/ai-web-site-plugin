@@ -1,0 +1,292 @@
+{
+  "info": {
+    "name": "AI Web Site Plugin API",
+    "description": "Collection for testing all current AI Web Site Plugin REST routes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "item": [
+    {
+      "name": "Website Config",
+      "item": [
+        {
+          "name": "GET website-config by domain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/website-config/{{domain}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "website-config",
+                "{{domain}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST website-config",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-WP-Nonce",
+                "value": "{{wp_nonce}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": \"{{domain}}\",\n  \"subdomain\": \"{{subdomain}}\",\n  \"config\": {\n    \"title\": \"Test from Postman\",\n    \"updatedFrom\": \"postman\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/website-config",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "website-config"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET website legacy endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/website/{{domain}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "website",
+                "{{domain}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET site-config (legacy query endpoint)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/site-config?subdomain={{subdomain}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "site-config"
+              ],
+              "query": [
+                {
+                  "key": "subdomain",
+                  "value": "{{subdomain}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "GET wp-nonce",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/wp-nonce",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wp-nonce"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Site",
+      "item": [
+        {
+          "name": "POST user-site/add-subdomain",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"website_id\": {{website_id}},\n  \"subdomain_name\": \"{{new_subdomain_name}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/user-site/add-subdomain",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user-site",
+                "add-subdomain"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST user-site/delete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"website_id\": {{website_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/user-site/delete",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user-site",
+                "delete"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "POST ai/generate-text",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Write a short welcome text for an AI website builder\",\n  \"format\": \"text\",\n  \"provider\": \"gemini\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/generate-text",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ai",
+                "generate-text"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST ai/generate-image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"A modern hero image for a SaaS website\",\n  \"aspect_ratio\": \"16:9\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/generate-image",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ai",
+                "generate-image"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logs",
+      "item": [
+        {
+          "name": "GET logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/logs?limit=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://example.com/wp-json/ai-web-site/v1"
+    },
+    {
+      "key": "domain",
+      "value": "editor.ai-web.site"
+    },
+    {
+      "key": "subdomain",
+      "value": "editor"
+    },
+    {
+      "key": "new_subdomain_name",
+      "value": "my-test-site"
+    },
+    {
+      "key": "website_id",
+      "value": "1"
+    },
+    {
+      "key": "wp_nonce",
+      "value": ""
+    }
+  ]
+}
