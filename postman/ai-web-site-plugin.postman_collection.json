@@ -28,7 +28,23 @@
                 "{{domain}}"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for GET route', function () {",
+                  "  pm.expect([200, 400, 401, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST website-config",
@@ -57,7 +73,23 @@
                 "website-config"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for save config', function () {",
+                  "  pm.expect([200, 400, 401, 403, 429]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "GET website legacy endpoint",
@@ -74,7 +106,23 @@
                 "{{domain}}"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for GET route', function () {",
+                  "  pm.expect([200, 400, 401, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "GET site-config (legacy query endpoint)",
@@ -96,7 +144,23 @@
                 }
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for GET route', function () {",
+                  "  pm.expect([200, 400, 401, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -117,7 +181,30 @@
                 "wp-nonce"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 401', function () {",
+                  "  pm.expect([200, 401]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  var body = pm.response.json();",
+                  "  pm.test('Nonce exists on success', function () {",
+                  "    pm.expect(body.nonce).to.be.a('string').and.not.empty;",
+                  "  });",
+                  "  pm.environment.set('wp_nonce', body.nonce);",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -148,7 +235,23 @@
                 "add-subdomain"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for user-site operation', function () {",
+                  "  pm.expect([200, 400, 401, 403, 404, 409, 500]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST user-site/delete",
@@ -174,7 +277,23 @@
                 "delete"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for user-site operation', function () {",
+                  "  pm.expect([200, 400, 401, 403, 404, 409, 500]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -205,7 +324,23 @@
                 "generate-text"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for AI operation', function () {",
+                  "  pm.expect([200, 400, 401, 403, 500, 501]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST ai/generate-image",
@@ -231,7 +366,23 @@
                 "generate-image"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for AI operation', function () {",
+                  "  pm.expect([200, 400, 401, 403, 500, 501]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -258,7 +409,23 @@
                 }
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is expected for GET route', function () {",
+                  "  pm.expect([200, 400, 401, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

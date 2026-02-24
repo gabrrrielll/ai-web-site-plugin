@@ -97,6 +97,11 @@ After import:
 3. Run `GET /wp-nonce` (while authenticated in WordPress) and copy the returned nonce to `wp_nonce` environment variable.
 4. Run the remaining requests from the collection.
 
+The collection also includes Postman test scripts (smoke checks) for each route:
+- validates expected status codes per endpoint type
+- validates JSON responses
+- automatically stores `wp_nonce` from `GET /wp-nonce` into environment variable
+
 ## 🔄 Auto-Update
 
 This repository is automatically updated when:
