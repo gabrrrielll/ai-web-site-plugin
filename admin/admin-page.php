@@ -173,7 +173,7 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                             <input type="password" id="ai_deepseek_api_key" name="ai_deepseek_api_key" 
                                    value="<?php echo esc_attr($options['ai_deepseek_api_key'] ?? ''); ?>" 
                                    class="regular-text">
-                            <p class="description"><?php _e('API Key for DeepSeek (optional)', 'ai-web-site-plugin'); ?></p>
+                            <p class="description"><?php _e('Not available yet — key ignored until implemented.', 'ai-web-site-plugin'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -248,6 +248,30 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
 
                    <tr>
                        <th scope="row">
+                           <label for="ai_text_daily_limit"><?php _e('AI Text Daily Limit', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="number" id="ai_text_daily_limit" name="ai_text_daily_limit"
+                                  value="<?php echo esc_attr($options['ai_text_daily_limit'] ?? 50); ?>"
+                                  class="small-text" min="1" max="10000" required>
+                           <p class="description"><?php _e('Maximum text-generation requests per user per UTC day.', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+
+                   <tr>
+                       <th scope="row">
+                           <label for="ai_image_daily_limit"><?php _e('AI Image Daily Limit', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="number" id="ai_image_daily_limit" name="ai_image_daily_limit"
+                                  value="<?php echo esc_attr($options['ai_image_daily_limit'] ?? 20); ?>"
+                                  class="small-text" min="1" max="10000" required>
+                           <p class="description"><?php _e('Maximum image-generation requests per user per UTC day.', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+
+                   <tr>
+                       <th scope="row">
                            <label for="max_config_size"><?php _e('Max Configuration Size', 'ai-web-site-plugin'); ?></label>
                        </th>
                        <td>
@@ -280,6 +304,18 @@ $current_ump_level = (int)($options['required_ump_level_id'] ?? 0);
                                   <?php checked(($options['enable_security_logging'] ?? 0), 1); ?>>
                            <label for="enable_security_logging"><?php _e('Log security events (failed auth, rate limits, etc.)', 'ai-web-site-plugin'); ?></label>
                            <p class="description"><?php _e('Enables detailed logging of security events for audit purposes. May increase log file size.', 'ai-web-site-plugin'); ?></p>
+                       </td>
+                   </tr>
+
+                   <tr>
+                       <th scope="row">
+                           <label for="local_dev_api_key"><?php _e('Local Development API Key', 'ai-web-site-plugin'); ?></label>
+                       </th>
+                       <td>
+                           <input type="password" id="local_dev_api_key" name="local_dev_api_key"
+                                  value="<?php echo esc_attr($options['local_dev_api_key'] ?? ''); ?>"
+                                  class="regular-text" minlength="16">
+                           <p class="description"><?php _e('Only used when WP_DEBUG is true. Min 16 chars. Never commit this key.', 'ai-web-site-plugin'); ?></p>
                        </td>
                    </tr>
                </table>

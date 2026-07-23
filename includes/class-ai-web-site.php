@@ -117,7 +117,7 @@ class AI_Web_Site
         register_rest_route('ai-web-site/v1', '/logs', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_logs'),
-            'permission_callback' => '__return_true', // Public for debugging
+            'permission_callback' => array($this, 'check_logs_permission'),
             'args' => array(
                 'limit' => array(
                     'required' => false,
@@ -135,6 +135,16 @@ class AI_Web_Site
                 ),
             ),
         ));
+    }
+
+    /**
+     * Restrict diagnostic logs to site administrators.
+     *
+     * @return bool
+     */
+    public function check_logs_permission()
+    {
+        return current_user_can('manage_options');
     }
 
     /**

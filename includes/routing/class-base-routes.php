@@ -93,31 +93,34 @@ abstract class AI_Web_Site_Base_Routes {
      * @return bool|WP_Error True if authenticated, WP_Error otherwise
      */
     public function check_authenticated_permission($request) {
-        // Get user ID
-        $user_id = get_current_user_id();
-        
         // Allow OPTIONS requests for CORS preflight
         if ($request->get_method() === 'OPTIONS') {
             return true;
         }
-        
-        // Check origin for localhost bypass
-        $headers = getallheaders();
-        $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
-        
-        // Localhost bypass for development
-        if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
+
+        // Origin is not an authentication mechanism and must never grant access.
+        $options = get_option('ai_web_site_options', array());
+        $configured_local_key = isset($options['local_dev_api_key']) ? (string) $options['local_dev_api_key'] : '';
+        $provided_local_key = (string) $request->get_header('X-Local-API-Key');
+
+        // The local key is deliberately opt-in, only works in debug mode, and is
+        // compared in constant time. It must not be a hard-coded development secret.
+        if (
+            defined('WP_DEBUG') &&
+            WP_DEBUG &&
+            strlen($configured_local_key) >= 16 &&
+            !empty($provided_local_key) &&
+            hash_equals($configured_local_key, $provided_local_key)
+        ) {
             return true;
         }
-        
-        // Local API key bypass
-        $local_api_key = $headers['X-Local-API-Key'] ?? $headers['x-local-api-key'] ?? '';
-        if ($local_api_key === 'dev-local-key-2024') {
-            return true;
+
+        $user_id = (int) get_current_user_id();
+        if ($user_id <= 0) {
+            $user_id = (int) wp_validate_auth_cookie('', 'logged_in');
         }
-        
-        // Check if user is logged in
-        if (!$user_id || $user_id <= 0) {
+
+        if ($user_id <= 0) {
             return new WP_Error(
                 'not_logged_in',
                 'You must be logged in to access this resource',

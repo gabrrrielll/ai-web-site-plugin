@@ -18,6 +18,10 @@ if (!defined('ABSPATH')) {
  * AI Routes class
  */
 class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
+    /**
+     * Timeout for external AI API requests (seconds).
+     */
+    private const AI_REQUEST_TIMEOUT = 120;
     
     /**
      * Get routes
@@ -82,33 +86,39 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
         $prompt = $params['prompt'];
         $format = $params['format'];
         $provider = $params['provider'];
-        
-        $options = get_option('ai_web_site_options', array());
-        $api_key = '';
-        
+
         if ($provider === 'deepseek') {
-            $api_key = $options['ai_deepseek_api_key'] ?? '';
-            if (empty($api_key)) {
-                // Fallback to Gemini if DeepSeek is not configured
-                $provider = 'gemini';
-                $api_key = $options['ai_gemini_api_key'] ?? '';
-            }
-        } else {
-            $api_key = $options['ai_gemini_api_key'] ?? '';
+            return new WP_Error('not_implemented', 'DeepSeek provider is not implemented yet.', array('status' => 501));
         }
+
+        $user_id = (int) get_current_user_id();
+        if ($user_id <= 0) {
+            $user_id = (int) wp_validate_auth_cookie('', 'logged_in');
+        }
+        if ($user_id <= 0) {
+            return new WP_Error('not_logged_in', 'You must be logged in to use AI generation.', array('status' => 401));
+        }
+
+        $usage = AI_Web_Site_Security_Manager::get_instance()->check_and_increment_ai_usage($user_id, 'generate_text');
+        if (!$usage['allowed']) {
+            return new WP_Error('ai_daily_limit_exceeded', $usage['message'], array(
+                'status' => 429,
+                'limit' => $usage['limit'],
+                'used' => $usage['used'],
+                'remaining' => $usage['remaining'],
+            ));
+        }
+
+        $options = get_option('ai_web_site_options', array());
+        $api_key = $options['ai_gemini_api_key'] ?? '';
 
         if (empty($api_key)) {
             return new WP_Error('missing_api_key', 'AI API Key is not configured in settings', array('status' => 500));
         }
-        
-        if ($provider === 'gemini') {
-            $gemini_model = $options['ai_gemini_model'] ?? 'models/gemini-1.5-flash';
-            $gemini_output_limit = isset($options['ai_gemini_output_token_limit']) ? (int) $options['ai_gemini_output_token_limit'] : 0;
-            return $this->call_gemini_text($api_key, $prompt, $format, $gemini_model, $gemini_output_limit);
-        } else {
-            // Placeholder for DeepSeek implementation
-            return new WP_Error('not_implemented', 'DeepSeek provider not fully implemented yet', array('status' => 501));
-        }
+
+        $gemini_model = $options['ai_gemini_model'] ?? 'models/gemini-1.5-flash';
+        $gemini_output_limit = isset($options['ai_gemini_output_token_limit']) ? (int) $options['ai_gemini_output_token_limit'] : 0;
+        return $this->call_gemini_text($api_key, $prompt, $format, $gemini_model, $gemini_output_limit);
     }
 
     /**
@@ -143,6 +153,24 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
          $params = $request->get_params();
          $prompt = $params['prompt'];
          $aspect_ratio = $params['aspect_ratio'];
+
+         $user_id = (int) get_current_user_id();
+         if ($user_id <= 0) {
+             $user_id = (int) wp_validate_auth_cookie('', 'logged_in');
+         }
+         if ($user_id <= 0) {
+             return new WP_Error('not_logged_in', 'You must be logged in to use AI generation.', array('status' => 401));
+         }
+
+         $usage = AI_Web_Site_Security_Manager::get_instance()->check_and_increment_ai_usage($user_id, 'generate_image');
+         if (!$usage['allowed']) {
+             return new WP_Error('ai_daily_limit_exceeded', $usage['message'], array(
+                 'status' => 429,
+                 'limit' => $usage['limit'],
+                 'used' => $usage['used'],
+                 'remaining' => $usage['remaining'],
+             ));
+         }
          
          $options = get_option('ai_web_site_options', array());
          $api_key = $options['ai_gemini_api_key'] ?? '';
@@ -220,7 +248,7 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
         $response = wp_remote_post($url, array(
             'headers' => array('Content-Type' => 'application/json'),
             'body' => json_encode($body),
-            'timeout' => 30
+            'timeout' => self::AI_REQUEST_TIMEOUT
         ));
 
         if (is_wp_error($response)) {
@@ -269,7 +297,7 @@ class AI_Web_Site_AI_Routes extends AI_Web_Site_Base_Routes {
         $response = wp_remote_post($url, array(
             'headers' => array('Content-Type' => 'application/json'),
             'body' => wp_json_encode($body),
-            'timeout' => 30
+            'timeout' => self::AI_REQUEST_TIMEOUT
         ));
 
         if (is_wp_error($response)) {

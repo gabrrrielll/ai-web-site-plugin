@@ -58,35 +58,24 @@ class AI_Web_Site_Security_Manager
      */
     public function check_rate_limit($user_id)
     {
-        // Get rate limit settings
-        $max_requests = (int)($this->options['rate_limit_requests'] ?? 100);
-        $time_period = (int)($this->options['rate_limit_period'] ?? 3600);
+        $max_requests = max(1, (int) ($this->options['rate_limit_requests'] ?? 100));
+        $time_period = max(1, (int) ($this->options['rate_limit_period'] ?? 3600));
+        $transient_key = 'ai_web_site_rate_limit_' . absint($user_id);
+        $now = time();
+        $state = get_transient($transient_key);
 
-        // Transient key for this user
-        $transient_key = 'ai_web_site_rate_limit_' . $user_id;
-        
-        // Get current count
-        $current_count = get_transient($transient_key);
-        
-        if ($current_count === false) {
-            // First request in this period
-            set_transient($transient_key, 1, $time_period);
-            
-            $this->logger->info('SECURITY_MANAGER', 'RATE_LIMIT_START', 'Rate limit tracking started', array(
-                'user_id' => $user_id,
-                'period' => $time_period . 's',
-                'max_requests' => $max_requests
-            ));
-            
-            return array(
-                'allowed' => true,
-                'remaining' => $max_requests - 1,
-                'message' => 'Request allowed'
+        // Preserve a fixed time window instead of extending the transient on
+        // every request. Legacy numeric values are safely treated as expired.
+        if (!is_array($state) || !isset($state['count'], $state['expires_at']) || (int) $state['expires_at'] <= $now) {
+            $state = array(
+                'count' => 0,
+                'expires_at' => $now + $time_period,
             );
         }
-        
-        $current_count = (int)$current_count;
-        
+
+        $current_count = max(0, (int) $state['count']);
+        $remaining_ttl = max(1, (int) $state['expires_at'] - $now);
+
         if ($current_count >= $max_requests) {
             // Rate limit exceeded
             if ($this->is_security_logging_enabled()) {
@@ -111,13 +100,69 @@ class AI_Web_Site_Security_Manager
             );
         }
         
-        // Increment counter
-        set_transient($transient_key, $current_count + 1, $time_period);
+        $state['count'] = $current_count + 1;
+        set_transient($transient_key, $state, $remaining_ttl);
         
         return array(
             'allowed' => true,
-            'remaining' => $max_requests - ($current_count + 1),
+            'remaining' => $max_requests - $state['count'],
             'message' => 'Request allowed'
+        );
+    }
+
+    /**
+     * Check and record a user's daily AI usage.
+     *
+     * @param int    $user_id WordPress user ID.
+     * @param string $service One of generate_text or generate_image.
+     * @return array Usage decision and counters.
+     */
+    public function check_and_increment_ai_usage($user_id, $service)
+    {
+        $limits = array(
+            'generate_text' => max(1, (int) ($this->options['ai_text_daily_limit'] ?? 50)),
+            'generate_image' => max(1, (int) ($this->options['ai_image_daily_limit'] ?? 20)),
+        );
+
+        if (!isset($limits[$service])) {
+            return array(
+                'allowed' => false,
+                'remaining' => 0,
+                'message' => 'Unknown AI service.',
+                'limit' => 0,
+                'used' => 0,
+            );
+        }
+
+        $limit = $limits[$service];
+        $date = gmdate('Y-m-d');
+        $transient_key = 'ai_web_site_ai_usage_' . absint($user_id) . '_' . $service . '_' . $date;
+        $now = time();
+        $tomorrow_utc = strtotime(gmdate('Y-m-d 00:00:00', $now) . ' UTC +1 day');
+        $ttl = max(1, $tomorrow_utc - $now);
+        $used = max(0, (int) get_transient($transient_key));
+
+        if ($used >= $limit) {
+            return array(
+                'allowed' => false,
+                'remaining' => 0,
+                'message' => 'Daily AI usage limit reached. Please try again tomorrow.',
+                'limit' => $limit,
+                'used' => $used,
+            );
+        }
+
+        // Transients provide the portable read-check-increment fallback for
+        // standard WordPress installations.
+        $updated = $used + 1;
+        set_transient($transient_key, $updated, $ttl);
+
+        return array(
+            'allowed' => true,
+            'remaining' => $limit - $updated,
+            'message' => 'AI request allowed.',
+            'limit' => $limit,
+            'used' => $updated,
         );
     }
 
@@ -178,17 +223,79 @@ class AI_Web_Site_Security_Manager
         }
         
         if (is_array($data)) {
-            // Recursively sanitize array
-            return array_map(array($this, 'sanitize_config_data'), $data);
+            $sanitized = array();
+            foreach ($data as $key => $value) {
+                $sanitized[$key] = $this->sanitize_config_value($value, (string) $key);
+            }
+            return $sanitized;
         }
-        
-        if (is_string($data)) {
-            // Sanitize string - allow safe HTML but strip dangerous tags
-            return wp_kses_post($data);
+
+        return $this->sanitize_config_value($data);
+    }
+
+    /**
+     * Reject oversized embedded images before configuration persistence.
+     *
+     * @param mixed $data Configuration data.
+     * @return array WP-style validation result.
+     */
+    public function reject_oversized_data_uris($data)
+    {
+        if (is_array($data)) {
+            foreach ($data as $value) {
+                $result = $this->reject_oversized_data_uris($value);
+                if (!$result['valid']) {
+                    return $result;
+                }
+            }
+        } elseif (is_string($data) && stripos($data, 'data:image') === 0 && strlen($data) > 100000) {
+            return array(
+                'valid' => false,
+                'message' => 'Embedded image data must not exceed 100KB.',
+            );
         }
-        
-        // Return other types as-is (numbers, booleans, etc.)
-        return $data;
+
+        return array('valid' => true, 'message' => 'Embedded image data is valid.');
+    }
+
+    /**
+     * Validate configuration embeds before saving.
+     *
+     * @param array $config_array Configuration data.
+     * @return array WP-style validation result.
+     */
+    public function validate_no_oversized_embeds($config_array)
+    {
+        return $this->reject_oversized_data_uris($config_array);
+    }
+
+    /**
+     * Sanitize one configuration value while preserving valid image sources.
+     *
+     * @param mixed  $value Value to sanitize.
+     * @param string $key   Parent configuration key.
+     * @return mixed
+     */
+    private function sanitize_config_value($value, $key = '')
+    {
+        if (is_array($value)) {
+            return $this->sanitize_config_data($value);
+        }
+
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        if (stripos($value, 'data:') === 0) {
+            return stripos($value, 'data:image') === 0 && strlen($value) > 100000 ? '' : $value;
+        }
+
+        $is_image_url_key = (bool) preg_match('/(?:image|img|logo|thumbnail|avatar|background).*(?:url|src)?|(?:url|src)$/i', $key);
+        if ($is_image_url_key && preg_match('#^https?://#i', $value)) {
+            return $value;
+        }
+
+        return preg_match('/<[^>]+>/', $value) ? wp_kses_post($value) : sanitize_text_field($value);
     }
 
     /**
@@ -253,12 +360,12 @@ class AI_Web_Site_Security_Manager
     public function get_rate_limit_status($user_id)
     {
         $transient_key = 'ai_web_site_rate_limit_' . $user_id;
-        $current_count = get_transient($transient_key);
+        $state = get_transient($transient_key);
         
         $max_requests = (int)($this->options['rate_limit_requests'] ?? 100);
         $time_period = (int)($this->options['rate_limit_period'] ?? 3600);
         
-        if ($current_count === false) {
+        if ($state === false) {
             return array(
                 'requests_used' => 0,
                 'requests_remaining' => $max_requests,
@@ -266,10 +373,12 @@ class AI_Web_Site_Security_Manager
                 'period' => $this->format_time_period($time_period)
             );
         }
-        
+
+        $current_count = is_array($state) ? (int) ($state['count'] ?? 0) : (int) $state;
+
         return array(
-            'requests_used' => (int)$current_count,
-            'requests_remaining' => max(0, $max_requests - (int)$current_count),
+            'requests_used' => $current_count,
+            'requests_remaining' => max(0, $max_requests - $current_count),
             'max_requests' => $max_requests,
             'period' => $this->format_time_period($time_period)
         );

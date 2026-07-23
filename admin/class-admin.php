@@ -126,12 +126,19 @@ class AI_Web_Site_Admin
      */
     public function save_options()
     {
-        // NEW LOG: Confirm this method is called and capture all POST data
+        $log_post_data = $_POST;
+        foreach (array('cpanel_api_token', 'ai_gemini_api_key', 'ai_deepseek_api_key', 'local_dev_api_key') as $secret_field) {
+            if (isset($log_post_data[$secret_field])) {
+                $log_post_data[$secret_field] = '[redacted]';
+            }
+        }
+
+        // Confirm this method is called without logging secret option values.
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $logger->info('ADMIN', 'SAVE_OPTIONS_ENTRY', 'Entering save_options method and capturing POST data', array(
             'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
             'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
-            'all_post_data' => $_POST
+            'all_post_data' => $log_post_data
         ));
 
         // Nonce and permissions check
@@ -167,9 +174,14 @@ class AI_Web_Site_Admin
         // Security settings
         $options['rate_limit_requests'] = max(1, min(10000, (int)sanitize_text_field($_POST['rate_limit_requests'] ?? 100)));
         $options['rate_limit_period'] = (int)sanitize_text_field($_POST['rate_limit_period'] ?? 3600);
+        $options['ai_text_daily_limit'] = max(1, min(10000, (int) sanitize_text_field($_POST['ai_text_daily_limit'] ?? 50)));
+        $options['ai_image_daily_limit'] = max(1, min(10000, (int) sanitize_text_field($_POST['ai_image_daily_limit'] ?? 20)));
         $options['max_config_size'] = max(1, min(50, (float)sanitize_text_field($_POST['max_config_size'] ?? 5)));
         $options['enable_input_sanitization'] = isset($_POST['enable_input_sanitization']) ? 1 : 0;
         $options['enable_security_logging'] = isset($_POST['enable_security_logging']) ? 1 : 0;
+
+        $local_dev_api_key = isset($_POST['local_dev_api_key']) ? trim((string) wp_unslash($_POST['local_dev_api_key'])) : '';
+        $options['local_dev_api_key'] = strlen($local_dev_api_key) >= 16 ? $local_dev_api_key : '';
 
         // Save options
         $result = update_option('ai_web_site_options', $options);

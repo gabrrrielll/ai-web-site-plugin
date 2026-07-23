@@ -52,7 +52,7 @@ class AI_Web_Site_Website_Manager
     private function init_hooks()
     {
         add_action('wp_ajax_save_website_config', array($this, 'ajax_save_website_config'));
-        add_action('wp_ajax_nopriv_save_website_config', array($this, 'ajax_save_website_config'));
+        // nopriv save removed — authenticated users only
         add_action('wp_ajax_get_website_config', array($this, 'ajax_get_website_config'));
         add_action('wp_ajax_nopriv_get_website_config', array($this, 'ajax_get_website_config'));
         add_action('wp_ajax_delete_website', array($this, 'ajax_delete_website'));
@@ -106,133 +106,136 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
-     * REST API Permission Check - permite user-ii cu abonament activ
+     * Allowed CORS origins (never reflect arbitrary Origin with credentials).
+     */
+    private function get_allowed_cors_origins()
+    {
+        $allowed = array(
+            'https://editor.ai-web.site',
+            'https://ai-web.site',
+            'https://www.ai-web.site',
+            'https://admin.ai-web.site',
+        );
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            $allowed[] = 'http://localhost:3000';
+            $allowed[] = 'http://localhost:5173';
+            $allowed[] = 'http://127.0.0.1:3000';
+            $allowed[] = 'http://127.0.0.1:5173';
+        }
+
+        /**
+         * Filter allowed CORS origins for AI Web Site REST API.
+         *
+         * @param string[] $allowed Allowed Origin values.
+         */
+        return apply_filters('ai_web_site_cors_origins', $allowed);
+    }
+
+    /**
+     * Apply allowlisted CORS headers. Does not use wildcard with credentials.
+     */
+    private function apply_cors_headers()
+    {
+        if (headers_sent()) {
+            return;
+        }
+
+        $origin = get_http_origin();
+        $allowed = $this->get_allowed_cors_origins();
+
+        if ($origin && in_array($origin, $allowed, true)) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Access-Control-Allow-Credentials: true');
+            header('Vary: Origin');
+        }
+
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce, X-Local-API-Key');
+    }
+
+    /**
+     * WP_DEBUG-only local API key from plugin options (never a hardcoded fallback).
+     */
+    private function is_valid_local_dev_request($request)
+    {
+        if (!defined('WP_DEBUG') || !WP_DEBUG) {
+            return false;
+        }
+
+        $options = get_option('ai_web_site_options', array());
+        $expected = isset($options['local_dev_api_key']) ? (string) $options['local_dev_api_key'] : '';
+        if ($expected === '' || strlen($expected) < 16) {
+            return false;
+        }
+
+        $provided = $request->get_header('X-Local-API-Key');
+        if (empty($provided)) {
+            $headers = function_exists('getallheaders') ? getallheaders() : array();
+            $provided = $headers['X-Local-API-Key'] ?? $headers['x-local-api-key'] ?? '';
+        }
+
+        return is_string($provided) && hash_equals($expected, $provided);
+    }
+
+    /**
+     * Resolve authenticated user ID via WordPress cookie HMAC validation.
+     */
+    private function resolve_authenticated_user_id()
+    {
+        $user_id = get_current_user_id();
+        if ($user_id > 0) {
+            return (int) $user_id;
+        }
+
+        $validated = wp_validate_auth_cookie('', 'logged_in');
+        return $validated ? (int) $validated : 0;
+    }
+
+    /**
+     * REST API Permission Check — authenticated user + active subscription.
+     * Never trusts Origin alone; never uses hardcoded user IDs or shared keys.
      */
     public function rest_permission_check($request)
     {
-        error_log('=== AI-WEB-SITE: rest_permission_check() CALLED ===');
-        error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
-        error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
-
-        // Pentru OPTIONS, permitem întotdeauna
         if ($request->get_method() === 'OPTIONS') {
-            error_log('AI-WEB-SITE: OPTIONS request - allowing CORS preflight');
             return true;
         }
 
-        // Verifică origin pentru localhost
-        $headers = getallheaders();
-        $origin = $headers['Origin'] ?? $headers['origin'] ?? '';
-        error_log('AI-WEB-SITE: Request origin: ' . $origin);
-
-        // ✅ LOCALHOST BYPASS - Pentru development
-        if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
-            error_log('AI-WEB-SITE: ✅ LOCALHOST REQUEST - Bypassing all checks for development');
+        if ($this->is_valid_local_dev_request($request)) {
             return true;
         }
 
-        // Pentru editor.ai-web.site, verifică user-ul și abonamentul
-        if (strpos($origin, 'editor.ai-web.site') !== false) {
-            error_log('AI-WEB-SITE: ✅ EDITOR REQUEST - Checking user and subscription');
+        $user_id = $this->resolve_authenticated_user_id();
+        if ($user_id <= 0) {
+            return new WP_Error('not_logged_in', 'Trebuie să fii autentificat', array('status' => 401));
+        }
 
-            // SECURITATE: Blochează test nonce-ul în production
+        $nonce = $request->get_header('X-WP-Nonce');
+        if (empty($nonce)) {
+            $headers = function_exists('getallheaders') ? getallheaders() : array();
             $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
-            if ($nonce === 'test-nonce-12345') {
-                error_log('AI-WEB-SITE: ❌ SECURITY ALERT - Test nonce from editor.ai-web.site REJECTED!');
-                return new WP_Error('invalid_nonce', 'Test nonce not allowed in production', array('status' => 403));
-            }
-
-            // TEMPORAR: Suspendăm verificarea de autentificare pentru testare
-            error_log('AI-WEB-SITE: 🧪 TEMPORARY: Skipping authentication check for testing');
-
-            // Folosește un user ID fixat pentru testare (user-ul tester cu ID 2)
-            $user_id = 2;
-            error_log('AI-WEB-SITE: 🧪 TEMPORARY: Using fixed user ID for testing: ' . $user_id);
-
-            /* COMENTAT TEMPORAR - Verificarea de autentificare
-            // Verifică dacă user-ul este logat
-            $user_id = get_current_user_id();
-            $is_logged_in = is_user_logged_in();
-
-            error_log('AI-WEB-SITE: 🔍 DEBUG - WordPress Auth State in permission check:');
-            error_log('AI-WEB-SITE: - is_user_logged_in(): ' . ($is_logged_in ? 'TRUE' : 'FALSE'));
-            error_log('AI-WEB-SITE: - get_current_user_id(): ' . $user_id);
-
-            // Dacă WordPress nu recunoaște user-ul, încearcă fallback-ul
-            if (!$is_logged_in || $user_id === 0) {
-                error_log('AI-WEB-SITE: 🔧 FALLBACK: WordPress auth failed in permission check, trying cookie fallback');
-
-                // Extrage user ID din cookie dacă este posibil
-                $fallback_user_id = 0;
-                foreach ($_COOKIE as $cookie_name => $cookie_value) {
-                    if (strpos($cookie_name, 'wordpress_logged_in_') === 0) {
-                        // WordPress logged in cookie format: username|expiration|token|hash
-                        $cookie_parts = explode('|', urldecode($cookie_value));
-                        if (count($cookie_parts) >= 3) {
-                            $username = $cookie_parts[0];
-                            $expiration = $cookie_parts[1];
-
-                            // Verifică dacă cookie-ul nu a expirat
-                            if ($expiration > time()) {
-                                // Găsește user ID după username
-                                $user = get_user_by('login', $username);
-                                if ($user) {
-                                    $fallback_user_id = $user->ID;
-                                    error_log('AI-WEB-SITE: 🔧 FALLBACK: Found user ID from cookie: ' . $fallback_user_id . ' (username: ' . $username . ')');
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if ($fallback_user_id > 0) {
-                    // Folosește user-ul identificat din cookie
-                    $user_id = $fallback_user_id;
-                    error_log('AI-WEB-SITE: ✅ FALLBACK: Using user ID from cookie: ' . $user_id);
-                } else {
-                    error_log('AI-WEB-SITE: ❌ User NOT logged in and no valid cookie found for editor request');
-                    return new WP_Error('not_logged_in', 'Trebuie să fii autentificat', array('status' => 401));
-                }
-            } else {
-                error_log('AI-WEB-SITE: ✅ User logged in - ID: ' . $user_id);
-            }
-            */
-
-            // Verifică nonce-ul real pentru editor
-            if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
-                error_log('AI-WEB-SITE: ❌ NONCE VERIFICATION FAILED for editor request');
-                error_log('AI-WEB-SITE: Nonce received: ' . $nonce);
-                return new WP_Error('invalid_nonce', 'Invalid security token', array('status' => 403));
-            }
-
-            error_log('AI-WEB-SITE: ✅ NONCE VERIFICATION SUCCESS for editor request');
-
-            // Verifică abonamentul
-            $subscription_manager = AI_Web_Site_Subscription_Manager::get_instance();
-            $can_save = $subscription_manager->can_save_configuration($user_id);
-
-            error_log('AI-WEB-SITE: Subscription check - allowed: ' . ($can_save['allowed'] ? 'YES' : 'NO') . ', reason: ' . $can_save['reason']);
-
-            if (!$can_save['allowed']) {
-                error_log('AI-WEB-SITE: ❌ User does NOT have active subscription');
-                return new WP_Error(
-                    'subscription_required',
-                    $can_save['message'],
-                    array(
-                        'status' => 403,
-                        'reason' => $can_save['reason']
-                    )
-                );
-            }
-
-            error_log('AI-WEB-SITE: ✅ User has active subscription - Permission granted');
-            return true;
         }
 
-        // Pentru alte origins, refuzăm
-        error_log('AI-WEB-SITE: ❌ Unknown origin - denying access: ' . $origin);
-        return new WP_Error('invalid_origin', 'Origin not allowed', array('status' => 403));
+        if (empty($nonce) || $nonce === 'test-nonce-12345' || !wp_verify_nonce($nonce, 'save_site_config')) {
+            return new WP_Error('invalid_nonce', 'Invalid security token', array('status' => 403));
+        }
+
+        $subscription_manager = AI_Web_Site_Subscription_Manager::get_instance();
+        $can_save = $subscription_manager->can_save_configuration($user_id);
+
+        if (!$can_save['allowed']) {
+            return new WP_Error(
+                'subscription_required',
+                $can_save['message'],
+                array(
+                    'status' => 403,
+                    'reason' => $can_save['reason']
+                )
+            );
+        }
+
+        return true;
     }
 
     /**
@@ -382,34 +385,11 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
-     * Debug permission callback pentru a vedea dacă este apelat
+     * Permission callback — no test-nonce bypasses.
      */
     public function debug_permission_callback($request)
     {
-        error_log('=== AI-WEB-SITE: debug_permission_callback() CALLED ===');
-        error_log('AI-WEB-SITE: Request method: ' . $request->get_method());
-        error_log('AI-WEB-SITE: Request route: ' . $request->get_route());
-
-        // Pentru POST requesturi cu nonce-ul nostru de test, returnează true direct
-        if ($request->get_method() === 'POST') {
-            $headers = getallheaders();
-            $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
-
-            if ($nonce === 'test-nonce-12345') {
-                error_log('AI-WEB-SITE: 🎯 DIRECT PERMISSION GRANT for test nonce');
-                return true; // Returnează true direct, fără verificări
-            }
-        }
-
-        // Apelează funcția originală de verificare pentru alte cazuri
-        $result = $this->check_save_permissions($request);
-
-        error_log('AI-WEB-SITE: Permission check result: ' . ($result === true ? 'TRUE' : 'FALSE'));
-        if ($result !== true && is_wp_error($result)) {
-            error_log('AI-WEB-SITE: Permission error - code: ' . $result->get_error_code() . ', message: ' . $result->get_error_message());
-        }
-
-        return $result;
+        return $this->check_save_permissions($request);
     }
 
     /**
@@ -424,7 +404,7 @@ class AI_Web_Site_Website_Manager
      */
 
     /**
-     * Check permissions for saving website config (ETAPA 1)
+     * Check permissions for saving website config
      */
     public function check_save_permissions($request)
     {
@@ -432,14 +412,19 @@ class AI_Web_Site_Website_Manager
             return true;
         }
 
-        $headers = getallheaders();
+        if ($this->is_valid_local_dev_request($request)) {
+            return true;
+        }
+
+        $user_id = $this->resolve_authenticated_user_id();
+        if ($user_id <= 0) {
+            return new WP_Error('not_logged_in', 'Trebuie să fii autentificat pentru a salva configurații', array('status' => 401));
+        }
+
+        $headers = function_exists('getallheaders') ? getallheaders() : array();
         $nonce = $request->get_header('X-WP-Nonce');
         if (empty($nonce)) {
             $nonce = $headers['X-WP-Nonce'] ?? $headers['x-wp-nonce'] ?? '';
-        }
-        $user_id = get_current_user_id();
-        if ($user_id <= 0) {
-            return new WP_Error('not_logged_in', 'Trebuie să fii autentificat pentru a salva configurații', array('status' => 401));
         }
 
         $subscription_manager = AI_Web_Site_Subscription_Manager::get_instance();
@@ -458,7 +443,7 @@ class AI_Web_Site_Website_Manager
             );
         }
 
-        if (empty($nonce) || !wp_verify_nonce($nonce, 'save_site_config')) {
+        if (empty($nonce) || $nonce === 'test-nonce-12345' || !wp_verify_nonce($nonce, 'save_site_config')) {
             return new WP_Error('invalid_nonce', 'Invalid security token', array('status' => 403));
         }
 
@@ -466,45 +451,11 @@ class AI_Web_Site_Website_Manager
     }
 
     /**
-     * Extrage user_id din WordPress cookie (folosit pentru X-Local-API-Key)
+     * @deprecated Use resolve_authenticated_user_id()
      */
     private function get_user_id_from_cookie()
     {
-        $cookie_name = 'wordpress_logged_in_' . COOKIEHASH;
-
-        if (!isset($_COOKIE[$cookie_name])) {
-            error_log('AI-WEB-SITE: No WordPress login cookie found');
-            return 0;
-        }
-
-        $cookie_value = $_COOKIE[$cookie_name];
-        error_log('AI-WEB-SITE: Found WordPress cookie: ' . substr($cookie_value, 0, 50) . '...');
-
-        // Parsează cookie-ul WordPress
-        $cookie_parts = explode('|', $cookie_value);
-        if (count($cookie_parts) < 4) {
-            error_log('AI-WEB-SITE: Invalid cookie format');
-            return 0;
-        }
-
-        $username = $cookie_parts[0];
-        $expiration = intval($cookie_parts[1]);
-
-        // Verifică dacă cookie-ul nu a expirat
-        if ($expiration < time()) {
-            error_log('AI-WEB-SITE: Cookie expired');
-            return 0;
-        }
-
-        // Găsește user-ul în baza de date
-        $user = get_user_by('login', $username);
-        if (!$user) {
-            error_log('AI-WEB-SITE: User not found in database: ' . $username);
-            return 0;
-        }
-
-        error_log('AI-WEB-SITE: Valid user found from cookie: ' . $username . ' (ID: ' . $user->ID . ')');
-        return $user->ID;
+        return $this->resolve_authenticated_user_id();
     }
 
     /**
@@ -635,107 +586,71 @@ class AI_Web_Site_Website_Manager
         $logger = AI_Web_Site_Debug_Logger::get_instance();
         $security_manager = AI_Web_Site_Security_Manager::get_instance();
 
-        // 🔧 MODIFICARE: Folosește MEREU get_user_id_from_cookie() în loc de get_current_user_id()
-        $user_id_wordpress = get_current_user_id();
-        $user_id = $this->get_user_id_from_cookie();
+        $is_local_dev = $this->is_valid_local_dev_request($request);
+        $user_id = $this->resolve_authenticated_user_id();
 
-        error_log('🔍 DEBUG USER_ID: get_current_user_id() = ' . $user_id_wordpress);
-        error_log('🔍 DEBUG USER_ID: get_user_id_from_cookie() = ' . $user_id);
-
-        // ETAPA 1: Verificare autentificare user
-        // Verifică dacă există cheia locală pentru dezvoltare
-        $local_api_key = $request->get_header('X-Local-API-Key');
-        $expected_local_key = 'dev-local-key-2024'; // Aceeași cheie ca în .env.local
-
-        // Verifică dacă user-ul este identificat (din cookie SAU WordPress standard)
-        if ($user_id <= 0 && $user_id_wordpress > 0) {
-            // Fallback la WordPress standard dacă cookie-ul nu funcționează
-            $user_id = $user_id_wordpress;
-            error_log('🔍 DEBUG USER_ID: Fallback to WordPress user_id = ' . $user_id);
-        }
-
-        if (!$user_id && $local_api_key !== $expected_local_key) {
-            $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Unauthorized access attempt - user not logged in and no valid local API key.');
-            return new WP_REST_Response(array(
-                'error' => 'Unauthorized',
-                'message' => 'You must be logged in to save website configurations.',
-                'timestamp' => date('c')
-            ), 401);
-        }
-
-        // Dacă nu am identificat user-ul din cookie, folosim fallback
-        if ($user_id <= 0) {
-            if ($local_api_key === $expected_local_key) {
-                // Cu local API key, folosim admin ca fallback
-                $user_id = 1;
-                error_log('🔍 DEBUG USER_ID: Using admin user_id as fallback (local API key) = ' . $user_id);
-            } else {
-                // Fără local API key și fără user identificat - eroare
-                $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'No user identified from cookie or WordPress.');
+        if ($user_id <= 0 && $is_local_dev) {
+            $user_id = get_current_user_id();
+            if ($user_id <= 0) {
                 return new WP_REST_Response(array(
                     'error' => 'Unauthorized',
-                    'message' => 'Could not identify user from cookies.',
-                    'timestamp' => date('c')
+                    'message' => 'Local dev key accepted only with a valid WordPress login session.',
+                    'timestamp' => gmdate('c')
                 ), 401);
             }
         }
 
-        error_log('🔍 DEBUG USER_ID: FINAL user_id before save = ' . $user_id);
-        $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'User identified successfully.', array('user_id' => $user_id, 'method' => $user_id === $user_id_wordpress ? 'WordPress' : 'Cookie'));
+        if ($user_id <= 0) {
+            $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Unauthorized access attempt - user not logged in.');
+            return new WP_REST_Response(array(
+                'error' => 'Unauthorized',
+                'message' => 'You must be logged in to save website configurations.',
+                'timestamp' => gmdate('c')
+            ), 401);
+        }
 
-        // ETAPA 2: Verificare abonament activ (IHC)
-        // Include clasa UMP Integration dacă nu a fost deja inclusă
+        // ETAPA 2: Verificare abonament activ (IHC) — not skipped in production
         if (!class_exists('AI_Web_Site_UMP_Integration')) {
             require_once AI_WEB_SITE_PLUGIN_DIR . 'includes/class-ump-integration.php';
         }
         $ump_integration = AI_Web_Site_UMP_Integration::get_instance();
         $required_ump_level_id = $ump_integration->get_required_ump_level_id();
 
-        // Dacă există un nivel UMP necesar și utilizatorul nu are un abonament activ
-        // Sări peste verificarea UMP dacă folosim cheia locală pentru dezvoltare
-        if ($required_ump_level_id > 0 && $local_api_key !== $expected_local_key && !$ump_integration->user_has_active_ump_level($user_id, $required_ump_level_id)) {
+        if (!$is_local_dev && $required_ump_level_id > 0 && !$ump_integration->user_has_active_ump_level($user_id, $required_ump_level_id)) {
             $logger->warning('WEBSITE_MANAGER', 'REST_SAVE', 'Access denied - user does not have active UMP subscription.', array('user_id' => $user_id));
             return new WP_REST_Response(array(
                 'error' => 'Subscription Required',
                 'message' => 'You must have an active subscription to save website configurations.',
-                'timestamp' => date('c')
+                'timestamp' => gmdate('c')
             ), 403);
         }
-        $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'User authenticated and has active subscription.', array('user_id' => $user_id));
 
+        // ETAPA 3: Rate Limiting — always applied (including local when user is identified)
+        $rate_limit_check = $security_manager->check_rate_limit($user_id);
+        if (!$rate_limit_check['allowed']) {
+            $security_manager->log_security_event('RATE_LIMIT_EXCEEDED', array(
+                'user_id' => $user_id,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+            ));
 
-        // ETAPA 3: Rate Limiting Check
-        // Sări peste verificarea rate limiting dacă folosim cheia locală pentru dezvoltare
-        if ($local_api_key !== $expected_local_key) {
-            $rate_limit_check = $security_manager->check_rate_limit($user_id);
-            if (!$rate_limit_check['allowed']) {
-                error_log('AI-WEB-SITE: ❌ RATE LIMIT EXCEEDED');
-                $security_manager->log_security_event('RATE_LIMIT_EXCEEDED', array(
-                    'user_id' => $user_id,
-                    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-                ));
-
-                return new WP_REST_Response(array(
-                    'error' => 'rate_limit_exceeded',
-                    'message' => $rate_limit_check['message'],
-                    'remaining' => $rate_limit_check['remaining'],
-                    'timestamp' => date('c')
-                ), 429);
-            }
-            error_log('AI-WEB-SITE: ✅ RATE LIMIT CHECK PASSED - Remaining: ' . $rate_limit_check['remaining']);
-        } else {
-            error_log('AI-WEB-SITE: ✅ LOCAL API KEY - Rate limiting skipped for development');
+            return new WP_REST_Response(array(
+                'error' => 'rate_limit_exceeded',
+                'message' => $rate_limit_check['message'],
+                'remaining' => $rate_limit_check['remaining'],
+                'timestamp' => gmdate('c')
+            ), 429);
         }
 
         $logger->info('WEBSITE_MANAGER', 'REST_SAVE', 'REST API POST request received', array(
             'user_id' => $user_id,
-            'user_login' => wp_get_current_user()->user_login,
-            'rate_limit_remaining' => $local_api_key === $expected_local_key ? 'unlimited (local dev)' : ($rate_limit_check['remaining'] ?? 'unknown')
+            'rate_limit_remaining' => $rate_limit_check['remaining'] ?? 'unknown'
         ));
 
         try {
             $input_data = $request->get_json_params();
-            error_log('AI-WEB-SITE: Input data received - domain: ' . ($input_data['domain'] ?? 'N/A') . ', config size: ' . strlen(json_encode($input_data['config'] ?? [])) . ' bytes');
+            // Never trust client-supplied user_id
+            unset($input_data['user_id']);
+            $input_data['user_id'] = $user_id;
 
             if (!$input_data || !isset($input_data['config'])) {
                 $logger->error('WEBSITE_MANAGER', 'REST_SAVE', 'Missing config data');
@@ -784,16 +699,7 @@ class AI_Web_Site_Website_Manager
                 if (!headers_sent()) {
                     header('Content-Type: application/json; charset=utf-8');
                     header('Content-Length: ' . strlen($json_output));
-                    // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-                    $origin = get_http_origin();
-                    if ($origin) {
-                        header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-                    } else {
-                        // Fallback for non-browser requests or if origin is not set
-                        header('Access-Control-Allow-Origin: *');
-                    }
-                    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-                    header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
+                    $this->apply_cors_headers();
 
                     echo $json_output;
                     exit;
@@ -1279,8 +1185,12 @@ class AI_Web_Site_Website_Manager
      */
     public function ajax_save_website_config()
     {
+        if (!is_user_logged_in()) {
+            wp_send_json_error('Authentication required', 401);
+        }
+
         // Verify nonce for security
-        if (!wp_verify_nonce($_POST['nonce'], 'ai_web_site_website_nonce')) {
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'ai_web_site_website_nonce')) {
             wp_die('Security check failed');
         }
 
@@ -1290,6 +1200,9 @@ class AI_Web_Site_Website_Manager
         if (!$data || !isset($data['config'])) {
             wp_send_json_error('Missing configuration data');
         }
+
+        // Never trust client-supplied user_id
+        $data['user_id'] = get_current_user_id();
 
         try {
             $result = $this->save_website_config($data);
@@ -1352,12 +1265,23 @@ class AI_Web_Site_Website_Manager
             throw new Exception('Configuration data is required');
         }
 
-        // Get user ID (for logged in users) or create anonymous user
-        $user_id = $data['user_id'] ?? get_current_user_id(); // Use provided user_id or current user
-        if ($user_id === 0) {
-            // For anonymous users, we'll use a special approach
-            // You might want to implement session-based tracking or require authentication
-            $user_id = 0; // Anonymous user
+        // Get user ID from authenticated session only — never from client payload
+        $user_id = get_current_user_id();
+        if ($user_id <= 0 && isset($data['user_id'])) {
+            // Allow only when caller already resolved auth and injected user_id server-side
+            $user_id = absint($data['user_id']);
+        }
+        if ($user_id <= 0) {
+            throw new Exception('Authentication required to save website configurations');
+        }
+
+        // Reject oversized base64 embeds early
+        $security_manager = AI_Web_Site_Security_Manager::get_instance();
+        if (method_exists($security_manager, 'validate_no_oversized_embeds')) {
+            $embed_check = $security_manager->validate_no_oversized_embeds($data['config']);
+            if (empty($embed_check['valid'])) {
+                throw new Exception($embed_check['message'] ?? 'Configuration contains oversized embedded images. Upload to media/CDN and store URLs instead.');
+            }
         }
 
         // Extract domain and subdomain
@@ -1731,27 +1655,10 @@ class AI_Web_Site_Website_Manager
      */
     private function set_cors_headers()
     {
-        // Setează header-ele CORS înainte de orice altceva
-        // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-        $origin = get_http_origin();
-
-        error_log('AI-WEB-SITE: set_cors_headers() - Origin: ' . ($origin ?: 'NULL'));
-
-        if ($origin) {
-            header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-            error_log('AI-WEB-SITE: set_cors_headers() - Set dynamic origin: ' . esc_url_raw($origin));
-        } else {
-            // Fallback for non-browser requests or if origin is not set
-            header('Access-Control-Allow-Origin: *');
-            error_log('AI-WEB-SITE: set_cors_headers() - Set wildcard origin (fallback)');
-        }
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
-        header('Access-Control-Allow-Credentials: true');
+        $this->apply_cors_headers();
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(200);
-            // Pentru OPTIONS, returnează direct răspunsul gol cu header-ele CORS
             exit;
         }
     }
@@ -1761,29 +1668,11 @@ class AI_Web_Site_Website_Manager
      */
     public function set_cors_headers_early()
     {
-        // Pentru cereri REST API, setează header-ele CORS foarte devreme
-        if (strpos($_SERVER['REQUEST_URI'], '/wp-json/ai-web-site/') !== false) {
-            // Încearcă să seteze header-ele prin funcții WordPress
-            if (!headers_sent()) {
-                // Setează Access-Control-Allow-Origin dinamic pentru cererile cu credențiale
-                $origin = get_http_origin();
-                if ($origin) {
-                    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-                } else {
-                    // Fallback for non-browser requests or if origin is not set
-                    header('Access-Control-Allow-Origin: *');
-                }
-                header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-                header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
-                header('Access-Control-Allow-Credentials: true');
-
-                // Log pentru debugging
-                error_log('AI-WEB-SITE: CORS headers set early for REST API');
-            }
+        if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/wp-json/ai-web-site/') !== false) {
+            $this->apply_cors_headers();
 
             if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
                 http_response_code(200);
-                // Pentru OPTIONS, returnează direct răspunsul gol cu header-ele CORS
                 exit;
             }
         }
@@ -1795,15 +1684,7 @@ class AI_Web_Site_Website_Manager
     public function force_cors_headers($served, $result, $request, $server)
     {
         if ($request && strpos($request->get_route(), '/ai-web-site/') !== false) {
-            $origin = get_http_origin();
-            if ($origin) {
-                header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
-                header('Access-Control-Allow-Credentials: true');
-            } else {
-                header('Access-Control-Allow-Origin: *');
-            }
-            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-            header('Access-Control-Allow-Headers: Content-Type, Authorization, Origin, X-Local-API-Key, X-WP-Nonce');
+            $this->apply_cors_headers();
         }
 
         return $served;
